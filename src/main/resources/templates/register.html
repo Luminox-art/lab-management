@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Đăng ký tài khoản</title>
+</head>
+<body>
+<main>
+    <h1>Đăng ký tài khoản</h1>
+    <form method="post" th:action="@{/register}" th:object="${registration}">
+        <input th:name="${_csrf.parameterName}" th:value="${_csrf.token}" type="hidden">
+        <div role="alert" th:if="${#fields.hasGlobalErrors()}">
+            <p th:each="error : ${#fields.globalErrors()}" th:text="${error}"></p>
+        </div>
+        <div>
+            <label for="identifier">Mã định danh</label>
+            <input id="identifier" type="text" th:field="*{identifier}" maxlength="50" required autofocus>
+            <p role="alert" th:errors="*{identifier}"></p>
+        </div>
+        <div>
+            <label for="fullName">Họ và tên</label>
+            <input id="fullName" type="text" th:field="*{fullName}" maxlength="150" required>
+            <p role="alert" th:errors="*{fullName}"></p>
+        </div>
+        <div>
+            <label for="email">Email</label>
+            <input id="email" type="email" th:field="*{email}" maxlength="254" autocomplete="email" required>
+            <p role="alert" th:errors="*{email}"></p>
+        </div>
+        <div>
+            <label for="password">Mật khẩu</label>
+            <input id="password" name="password" type="password" minlength="8" maxlength="72"
+                   autocomplete="new-password" required>
+            <p role="alert" th:errors="*{password}"></p>
+        </div>
+        <div>
+            <label for="organization">Lớp/đơn vị</label>
+            <input id="organization" type="text" th:field="*{organization}" maxlength="150">
+            <p role="alert" th:errors="*{organization}"></p>
+        </div>
+        <div>
+            <label for="role">Vai trò đăng ký</label>
+            <select id="role" th:field="*{role}" required>
+                <option th:each="roleOption : ${roles}" th:value="${roleOption}"
+                        th:text="${roleOption == T(com.example.labmanagement.identity.application.RegistrationRole).GV ? 'Giảng viên' : 'Sinh viên'}"></option>
+            </select>
+            <p role="alert" th:errors="*{role}"></p>
+        </div>
+        <button type="submit">Gửi đăng ký</button>
+    </form>
+    <p><a th:href="@{/login}">Quay lại đăng nhập</a></p>
+</main>
+</body>
+</html>

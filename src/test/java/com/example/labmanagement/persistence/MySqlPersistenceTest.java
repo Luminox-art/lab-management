@@ -207,7 +207,7 @@ class MySqlPersistenceTest {
 		entityManager.flush();
 		entityManager.clear();
 
-		assertThat(userRepository.findByEmail("s1-user@lab.local")).isPresent();
+		assertThat(userRepository.findByEmailIgnoreCase("s1-user@lab.local")).isPresent();
 		assertThat(deviceRepository.findBySerialNumber("S1-SERIAL")).isPresent();
 		assertThat(registrationRepository.findById("S1REG")).isPresent();
 		assertThat(blockedScheduleRepository.findById(blockedSchedule.getId())).isPresent();

@@ -7,12 +7,15 @@ import jakarta.validation.ConstraintViolationException;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -32,6 +35,17 @@ public class GlobalExceptionHandler {
 				violation -> new FieldErrorResponse(violation.getPropertyPath().toString(), violation.getMessage()))
 				.toList();
 		return error(HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR, "Dữ liệu đầu vào không hợp lệ.", fieldErrors);
+	}
+
+	@ExceptionHandler({HttpMessageNotReadableException.class, MethodArgumentTypeMismatchException.class})
+	ResponseEntity<ApiErrorResponse> handleUnreadableInput(Exception exception) {
+		return error(HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR, "Dữ liệu đầu vào không hợp lệ.", List.of());
+	}
+
+	@ExceptionHandler(OptimisticLockingFailureException.class)
+	ResponseEntity<ApiErrorResponse> handleOptimisticLockingFailure(OptimisticLockingFailureException exception) {
+		return error(HttpStatus.CONFLICT, ErrorCode.RESOURCE_CONFLICT, "Dữ liệu đã được cập nhật bởi yêu cầu khác.",
+				List.of());
 	}
 
 	@ExceptionHandler(ApiException.class)

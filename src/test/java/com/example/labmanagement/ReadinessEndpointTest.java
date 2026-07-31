@@ -2,6 +2,8 @@ package com.example.labmanagement;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.example.labmanagement.identity.persistence.NguoiDungRepository;
+import com.example.labmanagement.identity.persistence.VaiTroRepository;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -14,6 +16,7 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 @SpringBootTest(classes = LabManagementApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
 		"spring.autoconfigure.exclude=" + "org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration,"
@@ -25,6 +28,12 @@ class ReadinessEndpointTest {
 
 	@LocalServerPort
 	private int port;
+
+	@MockitoBean
+	private NguoiDungRepository nguoiDungRepository;
+
+	@MockitoBean
+	private VaiTroRepository vaiTroRepository;
 
 	@Test
 	void readinessIsPublicAndReturnsHttp200() throws Exception {

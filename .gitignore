@@ -3,6 +3,7 @@
 docs/
 AGENTS.md
 target/
+/run-local.ps1
 *.log
 .idea/
 .vscode/

@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Hồ sơ cá nhân</title>
+</head>
+<body>
+<main>
+    <h1>Hồ sơ cá nhân</h1>
+    <dl>
+        <dt>Mã định danh</dt>
+        <dd th:text="${profile.id}"></dd>
+        <dt>Họ và tên</dt>
+        <dd th:text="${profile.fullName}"></dd>
+        <dt>Email</dt>
+        <dd th:text="${profile.email}"></dd>
+        <dt>Lớp/đơn vị</dt>
+        <dd th:text="${profile.classOrUnit ?: '—'}"></dd>
+        <dt>Vai trò</dt>
+        <dd th:text="${profile.roleId}"></dd>
+        <dt>Trạng thái</dt>
+        <dd th:text="${profile.status}"></dd>
+    </dl>
+    <form method="post" th:action="@{/logout}">
+        <input th:name="${_csrf.parameterName}" th:value="${_csrf.token}" type="hidden">
+        <button type="submit">Đăng xuất</button>
+    </form>
+</main>
+</body>
+</html>

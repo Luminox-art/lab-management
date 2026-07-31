@@ -57,8 +57,20 @@ public class NguoiDung extends AuditedVersionedEntity {
 		return id;
 	}
 
+	public String getFullName() {
+		return fullName;
+	}
+
 	public String getEmail() {
 		return email;
+	}
+
+	public String getPasswordHash() {
+		return passwordHash;
+	}
+
+	public String getClassOrUnit() {
+		return classOrUnit;
 	}
 
 	public VaiTro getRole() {
@@ -67,5 +79,24 @@ public class NguoiDung extends AuditedVersionedEntity {
 
 	public NguoiDungTrangThai getStatus() {
 		return status;
+	}
+
+	public void updateProfile(String fullName, String email, String classOrUnit) {
+		this.fullName = fullName;
+		this.email = email;
+		this.classOrUnit = classOrUnit;
+	}
+
+	public void changePassword(String passwordHash) {
+		this.passwordHash = passwordHash;
+	}
+
+	public void updateByAdministrator(String fullName, String email, String classOrUnit, VaiTro role,
+			NguoiDungTrangThai status) {
+		this.fullName = fullName;
+		this.email = email;
+		this.classOrUnit = classOrUnit;
+		this.role = role;
+		this.status = status;
 	}
 }

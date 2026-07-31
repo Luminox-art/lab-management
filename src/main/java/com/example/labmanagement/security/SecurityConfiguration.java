@@ -1,20 +1,75 @@
 package com.example.labmanagement.security;
 
-import static org.springframework.security.config.Customizer.withDefaults;
-
+import com.example.labmanagement.common.error.ErrorCode;
+import com.example.labmanagement.common.response.ApiErrorResponse;
+import com.example.labmanagement.common.trace.TraceContext;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.List;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
+import org.springframework.security.web.util.matcher.RequestMatcher;
 
 @Configuration
 public class SecurityConfiguration {
 
 	@Bean
-	SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-		http.authorizeHttpRequests(authorization -> authorization.requestMatchers("/actuator/health/readiness")
-				.permitAll().anyRequest().authenticated()).formLogin(withDefaults()).logout(withDefaults())
-				.sessionManagement(session -> session.sessionFixation(fixation -> fixation.migrateSession()));
+	SecurityFilterChain securityFilterChain(HttpSecurity http, ObjectMapper objectMapper) throws Exception {
+		RequestMatcher apiRequest = request -> request.getRequestURI().startsWith(request.getContextPath() + "/api/");
+		LoginUrlAuthenticationEntryPoint loginEntryPoint = new LoginUrlAuthenticationEntryPoint("/login");
+		http.authorizeHttpRequests(authorization -> authorization
+				.requestMatchers("/actuator/health/readiness", "/api/v1/auth/register", "/api/v1/auth/login", "/login",
+						"/register", "/registration-pending", "/error")
+				.permitAll().requestMatchers("/api/v1/users/**").hasRole("CBQL").anyRequest().authenticated())
+				.formLogin(form -> form.loginPage("/login").usernameParameter("email").failureUrl("/login?error")
+						.defaultSuccessUrl("/profile", true).permitAll())
+				.logout(logout -> logout.logoutUrl("/logout").logoutSuccessUrl("/login?logout")
+						.invalidateHttpSession(true).clearAuthentication(true))
+				.sessionManagement(session -> session.sessionFixation(fixation -> fixation.changeSessionId()))
+				.exceptionHandling(exceptions -> exceptions.authenticationEntryPoint((request, response, exception) -> {
+					if (apiRequest.matches(request)) {
+						writeError(objectMapper, response, HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHENTICATED,
+								"Phiên đăng nhập không hợp lệ hoặc đã hết hạn.");
+						return;
+					}
+					loginEntryPoint.commence(request, response, exception);
+				}).accessDeniedHandler((request, response, exception) -> {
+					if (apiRequest.matches(request)) {
+						writeError(objectMapper, response, HttpStatus.FORBIDDEN, ErrorCode.ACCESS_DENIED,
+								"Bạn không có quyền thực hiện thao tác này.");
+						return;
+					}
+					response.sendError(HttpStatus.FORBIDDEN.value());
+				}));
 		return http.build();
+	}
+
+	@Bean
+	PasswordEncoder passwordEncoder() {
+		return new BCryptPasswordEncoder();
+	}
+
+	@Bean
+	AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
+		return configuration.getAuthenticationManager();
+	}
+
+	private static void writeError(ObjectMapper objectMapper, HttpServletResponse response, HttpStatus status,
+			ErrorCode code, String message) throws IOException {
+		response.setStatus(status.value());
+		response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+		response.setCharacterEncoding("UTF-8");
+		objectMapper.writeValue(response.getOutputStream(),
+				new ApiErrorResponse(code.name(), message, List.of(), TraceContext.currentTraceId()));
 	}
 }
