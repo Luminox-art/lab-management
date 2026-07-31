@@ -12,6 +12,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import java.time.Instant;
 import java.time.LocalDate;
 
 @Entity
@@ -70,12 +71,24 @@ public class PhieuDangKy extends AuditedVersionedEntity {
 		return id;
 	}
 
+	public NguoiDung getCreator() {
+		return creator;
+	}
+
 	public LoaiPhieu getType() {
 		return type;
 	}
 
 	public Phong getRoom() {
 		return room;
+	}
+
+	public String getPurpose() {
+		return purpose;
+	}
+
+	public int getAttendeeCount() {
+		return attendeeCount;
 	}
 
 	public LocalDate getStartDate() {
@@ -88,5 +101,20 @@ public class PhieuDangKy extends AuditedVersionedEntity {
 
 	public PhieuDangKyTrangThai getStatus() {
 		return status;
+	}
+
+	public void update(Phong room, LoaiPhieu type, String purpose, int attendeeCount, LocalDate startDate,
+			LocalDate endDate, Instant updatedAt) {
+		this.room = room;
+		this.type = type;
+		this.purpose = purpose;
+		this.attendeeCount = attendeeCount;
+		this.startDate = startDate;
+		this.endDate = endDate;
+		markUpdatedAt(updatedAt);
+	}
+
+	public void cancel() {
+		this.status = PhieuDangKyTrangThai.DA_HUY;
 	}
 }

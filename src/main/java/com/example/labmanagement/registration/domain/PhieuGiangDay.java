@@ -40,4 +40,16 @@ public class PhieuGiangDay {
 	public String getId() {
 		return id;
 	}
+
+	public PhieuDangKy getRegistration() {
+		return registration;
+	}
+
+	public String getCourseId() {
+		return courseId;
+	}
+
+	public String getClassGroupName() {
+		return classGroupName;
+	}
 }

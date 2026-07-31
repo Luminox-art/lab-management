@@ -66,6 +66,9 @@
     --event-in-use-surface: var(--color-warning-surface);
     --event-blocked-color: var(--color-danger);
     --event-blocked-surface: var(--color-danger-surface);
+    --registration-neutral-color: var(--primitive-gray-700);
+    --registration-neutral-surface: var(--primitive-gray-200);
+    --registration-option-hover: var(--table-row-hover);
 }
 
 * {
@@ -272,6 +275,12 @@ input[readonly] {
     background: var(--color-surface-muted);
 }
 
+input[aria-invalid="true"],
+select[aria-invalid="true"],
+textarea[aria-invalid="true"] {
+    border-color: var(--color-danger);
+}
+
 .checkbox-field {
     display: flex;
     align-items: center;
@@ -398,9 +407,26 @@ tbody tr:last-child td {
 }
 
 .status-hong,
-.status-ngung_su_dung {
+.status-ngung_su_dung,
+.status-tu_choi,
+.status-da_huy {
     color: var(--color-danger);
     background: var(--color-danger-surface);
+}
+
+.status-cho_duyet {
+    color: var(--color-warning);
+    background: var(--color-warning-surface);
+}
+
+.status-da_duyet {
+    color: var(--color-success);
+    background: var(--color-success-surface);
+}
+
+.status-hoan_thanh {
+    color: var(--registration-neutral-color);
+    background: var(--registration-neutral-surface);
 }
 
 .message {
@@ -603,6 +629,148 @@ select[multiple] {
     padding: var(--space-5) var(--space-2);
 }
 
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.section-heading,
+.heading-with-status {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.section-heading {
+    justify-content: space-between;
+    margin-bottom: var(--space-4);
+}
+
+.section-heading h2,
+.heading-with-status h1 {
+    margin-bottom: 0;
+}
+
+.schedule-list {
+    display: grid;
+    gap: var(--space-3);
+}
+
+.schedule-row {
+    min-width: 0;
+    margin: 0;
+    padding: var(--space-4);
+    background: var(--color-surface-muted);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+}
+
+.schedule-row legend {
+    padding-inline: var(--space-2);
+}
+
+.schedule-fields {
+    display: grid;
+    grid-template-columns: minmax(10rem, 1fr) minmax(14rem, 1.5fr) auto;
+    align-items: end;
+    gap: var(--space-3);
+}
+
+.schedule-remove {
+    align-self: end;
+}
+
+.device-fieldset {
+    min-width: 0;
+    margin: var(--space-4) 0 0;
+    padding: 0;
+    border: 0;
+}
+
+.device-options {
+    max-height: 24rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
+    gap: 1px;
+    overflow-y: auto;
+    background: var(--color-border);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+}
+
+.device-option {
+    min-width: 0;
+    min-height: 3.5rem;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: start;
+    gap: var(--space-3);
+    padding: var(--space-3);
+    cursor: pointer;
+    background: var(--color-surface);
+}
+
+.device-option:hover,
+.device-option:focus-within {
+    background: var(--registration-option-hover);
+}
+
+.device-option input {
+    width: 1.25rem;
+    min-height: 1.25rem;
+    margin: var(--space-1) 0 0;
+}
+
+.device-option-copy {
+    min-width: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1) var(--space-2);
+    font-weight: 400;
+}
+
+.device-option-copy strong {
+    flex-basis: 100%;
+    overflow-wrap: anywhere;
+}
+
+.device-option-copy small {
+    padding: 0 var(--space-1);
+    color: var(--color-muted);
+    background: var(--color-surface-muted);
+    border-radius: var(--radius-sm);
+}
+
+.conditional-section[hidden] {
+    display: none;
+}
+
+.supervisor-field {
+    max-width: 36rem;
+    margin-top: var(--space-4);
+}
+
+.registration-details .detail-wide {
+    grid-column: 1 / -1;
+}
+
+.detail-purpose {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.danger-panel {
+    border-left: 5px solid var(--color-danger);
+}
+
 @media (max-width: 48rem) {
     .header-inner,
     .page-shell {
@@ -630,6 +798,18 @@ select[multiple] {
     th,
     td {
         padding: var(--space-3);
+    }
+
+    .schedule-fields {
+        grid-template-columns: 1fr;
+    }
+
+    .schedule-remove {
+        width: 100%;
+    }
+
+    .device-options {
+        grid-template-columns: 1fr;
     }
 }
 

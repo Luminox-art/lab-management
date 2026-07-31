@@ -39,4 +39,12 @@ public class PhieuHuongDan {
 	public String getId() {
 		return id;
 	}
+
+	public PhieuDangKy getRegistration() {
+		return registration;
+	}
+
+	public NguoiDung getInstructor() {
+		return instructor;
+	}
 }

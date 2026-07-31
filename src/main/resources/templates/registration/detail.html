@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="|Phiếu ${registration.id}|">Chi tiết phiếu</title>
+    <link rel="stylesheet" th:href="@{/css/catalog.css}">
+</head>
+<body>
+<a class="skip-link" href="#main-content">Bỏ qua điều hướng</a>
+<header class="app-header">
+    <div class="header-inner">
+        <a class="brand" th:href="@{/catalog/rooms}">Quản lý phòng lab</a>
+        <nav class="main-nav" aria-label="Điều hướng chính">
+            <a th:href="@{/catalog/rooms}">Phòng</a>
+            <a th:href="@{/catalog/devices}">Thiết bị</a>
+            <a aria-current="page" th:href="@{/registrations}">Phiếu đăng ký</a>
+            <a th:href="@{/schedule/availability}">Kiểm tra khả dụng</a>
+            <a th:href="@{/schedule/calendar}">Lịch phòng</a>
+            <a th:href="@{/profile}">Hồ sơ</a>
+        </nav>
+    </div>
+</header>
+<main class="page-shell" id="main-content" tabindex="-1">
+    <div class="page-heading">
+        <div>
+            <div class="heading-with-status">
+                <h1 th:text="|Phiếu ${registration.id}|">Chi tiết phiếu</h1>
+                <span class="status-chip" th:classappend="|status-${#strings.toLowerCase(registration.status.name())}|"
+                      th:text="${registration.status.name() == 'CHO_DUYET' ? 'Chờ duyệt' : (registration.status.name() == 'DA_DUYET' ? 'Đã duyệt' : (registration.status.name() == 'TU_CHOI' ? 'Từ chối' : (registration.status.name() == 'DA_HUY' ? 'Đã hủy' : (registration.status.name() == 'DANG_SU_DUNG' ? 'Đang sử dụng' : 'Hoàn thành'))))}"></span>
+            </div>
+            <p class="subtitle" th:text="|Tạo lúc ${#temporals.format(registration.createdAt, 'dd/MM/yyyy HH:mm')} · Cập nhật ${#temporals.format(registration.updatedAt, 'dd/MM/yyyy HH:mm')}|"></p>
+        </div>
+        <div class="actions">
+            <a class="button button-secondary" th:if="${registration.canEdit}"
+               th:href="@{/registrations/{id}/edit(id=${registration.id})}">Sửa phiếu</a>
+            <a class="button button-secondary" th:href="@{/registrations}">Quay lại danh sách</a>
+        </div>
+    </div>
+
+    <p class="message message-success" role="status" th:if="${success}" th:text="${success}"></p>
+    <p class="message message-error" role="alert" th:if="${error}" th:text="${error}"></p>
+
+    <section class="panel" aria-labelledby="registration-information-heading">
+        <h2 id="registration-information-heading">Thông tin phiếu</h2>
+        <dl class="result-details registration-details">
+            <div>
+                <dt>Loại phiếu</dt>
+                <dd th:text="${registration.type.name() == 'GIANG_DAY' ? 'Giảng dạy' : (registration.type.name() == 'HOC_TAP' ? 'Học tập' : 'Nghiên cứu')}"></dd>
+            </div>
+            <div>
+                <dt>Người tạo</dt>
+                <dd th:text="|${registration.creatorId} — ${registration.creatorName}|"></dd>
+            </div>
+            <div>
+                <dt>Phòng</dt>
+                <dd th:text="|${registration.roomId} — ${registration.roomName}|"></dd>
+            </div>
+            <div>
+                <dt>Số người</dt>
+                <dd th:text="${registration.participantCount}"></dd>
+            </div>
+            <div>
+                <dt>Khoảng ngày</dt>
+                <dd th:text="|${#temporals.format(registration.startDate, 'dd/MM/yyyy')} – ${#temporals.format(registration.endDate, 'dd/MM/yyyy')}|"></dd>
+            </div>
+            <div th:if="${registration.type.name() == 'GIANG_DAY'}">
+                <dt>Mã học phần</dt>
+                <dd th:text="${registration.courseCode}"></dd>
+            </div>
+            <div th:if="${registration.type.name() == 'GIANG_DAY'}">
+                <dt>Lớp/nhóm</dt>
+                <dd th:text="${registration.classGroup}"></dd>
+            </div>
+            <div th:if="${registration.supervisorId != null}">
+                <dt>Giảng viên hướng dẫn</dt>
+                <dd th:text="|${registration.supervisorId} — ${registration.supervisorName}|"></dd>
+            </div>
+            <div class="detail-wide">
+                <dt>Mục đích</dt>
+                <dd class="detail-purpose" th:text="${registration.purpose}"></dd>
+            </div>
+        </dl>
+    </section>
+
+    <section class="panel" aria-labelledby="registration-schedule-heading">
+        <h2 id="registration-schedule-heading">Lịch sử dụng</h2>
+        <div class="table-wrap" role="region" aria-label="Lịch sử dụng của phiếu" tabindex="0">
+            <table>
+                <thead>
+                <tr>
+                    <th scope="col">Thứ</th>
+                    <th scope="col">Tiết</th>
+                    <th scope="col">Thời gian</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="schedule : ${registration.schedules}">
+                    <td th:text="${schedule.dayOfWeekLabel}"></td>
+                    <td th:text="${schedule.periodName}"></td>
+                    <td th:text="|${schedule.startTime}–${schedule.endTime}|"></td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(registration.schedules)}">
+                    <td class="empty-state" colspan="3">Phiếu chưa có lịch sử dụng.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="panel" aria-labelledby="registration-device-heading">
+        <h2 id="registration-device-heading">Thiết bị</h2>
+        <div class="table-wrap" role="region" aria-label="Thiết bị của phiếu" tabindex="0">
+            <table>
+                <thead>
+                <tr>
+                    <th scope="col">Mã</th>
+                    <th scope="col">Tên thiết bị</th>
+                    <th scope="col">Loại</th>
+                    <th scope="col">Đặc điểm</th>
+                    <th scope="col">Tình trạng yêu cầu</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="device : ${registration.devices}">
+                    <td th:text="${device.id}"></td>
+                    <td th:text="${device.name}"></td>
+                    <td th:text="${device.typeName}"></td>
+                    <td>
+                        <span th:if="${device.instructorRequired}">Cần GVHD</span>
+                        <span th:if="${device.instructorRequired and device.mobile}"> · </span>
+                        <span th:if="${device.mobile}">Di động</span>
+                        <span th:if="${!device.instructorRequired and !device.mobile}">Tiêu chuẩn</span>
+                    </td>
+                    <td th:text="${device.allocated ? 'Đã phân bổ' : 'Thiết bị mong muốn'}"></td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(registration.devices)}">
+                    <td class="empty-state" colspan="5">Phiếu không yêu cầu thiết bị.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="panel" aria-labelledby="registration-history-heading">
+        <h2 id="registration-history-heading">Lịch sử xử lý</h2>
+        <div class="table-wrap" role="region" aria-label="Lịch sử xử lý phiếu" tabindex="0">
+            <table>
+                <thead>
+                <tr>
+                    <th scope="col">Hành động</th>
+                    <th scope="col">Người xử lý</th>
+                    <th scope="col">Thời điểm</th>
+                    <th scope="col">Lý do</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="history : ${registration.history}">
+                    <td th:text="${history.action.name() == 'PHE_DUYET' ? 'Phê duyệt' : (history.action.name() == 'TU_CHOI' ? 'Từ chối' : 'Hủy')}"></td>
+                    <td th:text="|${history.handlerId} — ${history.handlerName}|"></td>
+                    <td th:text="${#temporals.format(history.occurredAt, 'dd/MM/yyyy HH:mm')}"></td>
+                    <td th:text="${history.reason ?: '—'}"></td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(registration.history)}">
+                    <td class="empty-state" colspan="4">Phiếu chưa có lịch sử xử lý.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="panel danger-panel" aria-labelledby="cancel-registration-heading" th:if="${registration.canCancel}">
+        <h2 id="cancel-registration-heading">Hủy phiếu</h2>
+        <p>Hủy phiếu là thao tác không thể hoàn tác. Vui lòng nêu rõ lý do.</p>
+        <form method="post" th:action="@{/registrations/{id}/cancel(id=${registration.id})}"
+              th:object="${cancellationForm}"
+              onsubmit="return confirm('Bạn có chắc muốn hủy phiếu này? Thao tác không thể hoàn tác.');">
+            <input th:name="${_csrf.parameterName}" th:value="${_csrf.token}" type="hidden">
+            <input th:field="*{version}" type="hidden">
+            <div class="field">
+                <label for="reason">Lý do hủy <span aria-hidden="true">*</span></label>
+                <textarea id="reason" th:field="*{reason}" maxlength="255" required
+                          aria-describedby="cancel-reason-help cancel-reason-error"
+                          th:attr="aria-invalid=${#fields.hasErrors('reason')}"></textarea>
+                <p class="helper" id="cancel-reason-help">Tối đa 255 ký tự.</p>
+                <p class="field-error" id="cancel-reason-error" role="alert" th:errors="*{reason}"></p>
+            </div>
+            <div class="toolbar form-actions">
+                <button class="button-danger" type="submit">Xác nhận hủy phiếu</button>
+            </div>
+        </form>
+    </section>
+</main>
+</body>
+</html>

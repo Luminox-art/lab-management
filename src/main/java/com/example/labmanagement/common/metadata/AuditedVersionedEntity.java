@@ -27,4 +27,8 @@ public abstract class AuditedVersionedEntity extends VersionedEntity {
 	public Instant getUpdatedAt() {
 		return updatedAt;
 	}
+
+	protected void markUpdatedAt(Instant instant) {
+		this.updatedAt = instant;
+	}
 }

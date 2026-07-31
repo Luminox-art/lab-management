@@ -2,6 +2,7 @@ package com.example.labmanagement.identity.persistence;
 
 import com.example.labmanagement.identity.domain.NguoiDung;
 import com.example.labmanagement.identity.domain.NguoiDungTrangThai;
+import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -18,6 +19,9 @@ public interface NguoiDungRepository extends JpaRepository<NguoiDung, String> {
 	boolean existsByEmailIgnoreCase(String email);
 
 	boolean existsByEmailIgnoreCaseAndIdNot(String email, String id);
+
+	@EntityGraph(attributePaths = "role")
+	List<NguoiDung> findAllByRole_IdAndStatusOrderByFullNameAsc(String roleId, NguoiDungTrangThai status);
 
 	@Query("""
 			select user from NguoiDung user

@@ -14,6 +14,16 @@ public interface PhieuDangKyThietBiRepository extends JpaRepository<PhieuDangKyT
 
 	@Query("""
 			select allocation from PhieuDangKyThietBi allocation
+			join fetch allocation.device device
+			join fetch device.type type
+			left join fetch device.room room
+			where allocation.registration.id = :registrationId
+			order by device.name, device.id
+			""")
+	List<PhieuDangKyThietBi> findAllByRegistrationId(@Param("registrationId") String registrationId);
+
+	@Query("""
+			select allocation from PhieuDangKyThietBi allocation
 			join fetch allocation.registration registration
 			join fetch allocation.device device
 			where device.id in :deviceIds

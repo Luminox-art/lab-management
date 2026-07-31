@@ -56,4 +56,24 @@ public class XuLyPhieu {
 	public Long getId() {
 		return id;
 	}
+
+	public PhieuDangKy getRegistration() {
+		return registration;
+	}
+
+	public NguoiDung getHandler() {
+		return handler;
+	}
+
+	public HanhDongXuLyPhieu getAction() {
+		return action;
+	}
+
+	public String getReason() {
+		return reason;
+	}
+
+	public Instant getOccurredAt() {
+		return occurredAt;
+	}
 }

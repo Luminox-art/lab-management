@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Phiếu đăng ký</title>
+    <link rel="stylesheet" th:href="@{/css/catalog.css}">
+</head>
+<body>
+<a class="skip-link" href="#main-content">Bỏ qua điều hướng</a>
+<header class="app-header">
+    <div class="header-inner">
+        <a class="brand" th:href="@{/catalog/rooms}">Quản lý phòng lab</a>
+        <nav class="main-nav" aria-label="Điều hướng chính">
+            <a th:href="@{/catalog/rooms}">Phòng</a>
+            <a th:href="@{/catalog/devices}">Thiết bị</a>
+            <a aria-current="page" th:href="@{/registrations}">Phiếu đăng ký</a>
+            <a th:href="@{/schedule/availability}">Kiểm tra khả dụng</a>
+            <a th:href="@{/schedule/calendar}">Lịch phòng</a>
+            <a th:href="@{/profile}">Hồ sơ</a>
+        </nav>
+    </div>
+</header>
+<main class="page-shell" id="main-content" tabindex="-1">
+    <div class="page-heading">
+        <div>
+            <h1>Phiếu đăng ký</h1>
+            <p class="subtitle" th:text="${manager ? 'Danh sách phiếu trong phạm vi quản lý.' : 'Theo dõi các phiếu bạn được phép xem.'}"></p>
+        </div>
+        <a class="button button-primary" th:if="${canCreate}" th:href="@{/registrations/new}">Tạo phiếu</a>
+    </div>
+
+    <p class="message message-success" role="status" th:if="${success}" th:text="${success}"></p>
+    <p class="message message-error" role="alert" th:if="${error}" th:text="${error}"></p>
+
+    <section class="panel" aria-labelledby="registration-filter-heading">
+        <h2 id="registration-filter-heading">Bộ lọc</h2>
+        <form method="get" th:action="@{/registrations}">
+            <div class="filter-grid">
+                <div class="field">
+                    <label for="type">Loại phiếu</label>
+                    <select id="type" name="type">
+                        <option value="">Tất cả loại</option>
+                        <option th:each="item : ${types}" th:value="${item}" th:selected="${item == type}"
+                                th:text="${item.name() == 'GIANG_DAY' ? 'Giảng dạy' : (item.name() == 'HOC_TAP' ? 'Học tập' : 'Nghiên cứu')}"></option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label for="status">Trạng thái</label>
+                    <select id="status" name="status">
+                        <option value="">Tất cả trạng thái</option>
+                        <option th:each="item : ${statuses}" th:value="${item}" th:selected="${item == status}"
+                                th:text="${item.name() == 'CHO_DUYET' ? 'Chờ duyệt' : (item.name() == 'DA_DUYET' ? 'Đã duyệt' : (item.name() == 'TU_CHOI' ? 'Từ chối' : (item.name() == 'DA_HUY' ? 'Đã hủy' : (item.name() == 'DANG_SU_DUNG' ? 'Đang sử dụng' : 'Hoàn thành'))))}"></option>
+                    </select>
+                </div>
+            </div>
+            <div class="toolbar form-actions">
+                <button type="submit">Áp dụng bộ lọc</button>
+                <a class="button button-secondary" th:href="@{/registrations}">Xóa bộ lọc</a>
+            </div>
+        </form>
+    </section>
+
+    <p class="result-summary" aria-live="polite" th:text="|Tìm thấy ${result.totalElements} phiếu|">Tìm thấy 0 phiếu</p>
+    <div class="table-wrap" role="region" aria-label="Danh sách phiếu đăng ký" tabindex="0">
+        <table>
+            <thead>
+            <tr>
+                <th scope="col">Mã phiếu</th>
+                <th scope="col">Loại</th>
+                <th scope="col">Phòng</th>
+                <th scope="col">Khoảng ngày</th>
+                <th scope="col">Số người</th>
+                <th scope="col">Trạng thái</th>
+                <th scope="col" th:if="${manager}">Người tạo</th>
+                <th scope="col">Thao tác</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="registration : ${result.content}">
+                <td><a th:href="@{/registrations/{id}(id=${registration.id})}" th:text="${registration.id}"></a></td>
+                <td th:text="${registration.type.name() == 'GIANG_DAY' ? 'Giảng dạy' : (registration.type.name() == 'HOC_TAP' ? 'Học tập' : 'Nghiên cứu')}"></td>
+                <td th:text="|${registration.roomId} — ${registration.roomName}|"></td>
+                <td th:text="|${#temporals.format(registration.startDate, 'dd/MM/yyyy')} – ${#temporals.format(registration.endDate, 'dd/MM/yyyy')}|"></td>
+                <td th:text="${registration.participantCount}"></td>
+                <td>
+                    <span class="status-chip" th:classappend="|status-${#strings.toLowerCase(registration.status.name())}|"
+                          th:text="${registration.status.name() == 'CHO_DUYET' ? 'Chờ duyệt' : (registration.status.name() == 'DA_DUYET' ? 'Đã duyệt' : (registration.status.name() == 'TU_CHOI' ? 'Từ chối' : (registration.status.name() == 'DA_HUY' ? 'Đã hủy' : (registration.status.name() == 'DANG_SU_DUNG' ? 'Đang sử dụng' : 'Hoàn thành'))))}"></span>
+                </td>
+                <td th:if="${manager}" th:text="|${registration.creatorId} — ${registration.creatorName}|"></td>
+                <td><a class="button button-secondary" th:href="@{/registrations/{id}(id=${registration.id})}">Chi tiết</a></td>
+            </tr>
+            <tr th:if="${result.empty}">
+                <td class="empty-state" th:colspan="${manager ? 8 : 7}">Không có phiếu phù hợp. Hãy thay đổi bộ lọc.</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <nav class="pagination" aria-label="Phân trang phiếu đăng ký" th:if="${result.totalPages > 1}">
+        <a class="button button-secondary" rel="prev" th:if="${result.hasPrevious()}"
+           th:href="@{/registrations(type=${type},status=${status},page=${result.number - 1},size=${result.size})}">Trang trước</a>
+        <span th:text="|Trang ${result.number + 1} / ${result.totalPages}|">Trang 1 / 1</span>
+        <a class="button button-secondary" rel="next" th:if="${result.hasNext()}"
+           th:href="@{/registrations(type=${type},status=${status},page=${result.number + 1},size=${result.size})}">Trang sau</a>
+    </nav>
+</main>
+</body>
+</html>

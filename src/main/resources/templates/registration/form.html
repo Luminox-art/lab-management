@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${editing ? 'Cập nhật phiếu' : 'Tạo phiếu đăng ký'}">Phiếu đăng ký</title>
+    <link rel="stylesheet" th:href="@{/css/catalog.css}">
+    <script defer th:src="@{/js/registration-form.js}"></script>
+</head>
+<body>
+<a class="skip-link" href="#main-content">Bỏ qua điều hướng</a>
+<header class="app-header">
+    <div class="header-inner">
+        <a class="brand" th:href="@{/catalog/rooms}">Quản lý phòng lab</a>
+        <nav class="main-nav" aria-label="Điều hướng chính">
+            <a th:href="@{/catalog/rooms}">Phòng</a>
+            <a th:href="@{/catalog/devices}">Thiết bị</a>
+            <a aria-current="page" th:href="@{/registrations}">Phiếu đăng ký</a>
+            <a th:href="@{/schedule/availability}">Kiểm tra khả dụng</a>
+            <a th:href="@{/schedule/calendar}">Lịch phòng</a>
+            <a th:href="@{/profile}">Hồ sơ</a>
+        </nav>
+    </div>
+</header>
+<main class="page-shell" id="main-content" tabindex="-1">
+    <div class="page-heading">
+        <div>
+            <h1 th:text="${editing ? 'Cập nhật phiếu đăng ký' : 'Tạo phiếu đăng ký'}"></h1>
+            <p class="subtitle">Phiếu được gửi ngay ở trạng thái chờ duyệt. Hệ thống không hỗ trợ lưu nháp.</p>
+        </div>
+    </div>
+
+    <form method="post" th:action="${editing ? '/registrations/' + registrationId : '/registrations'}"
+          th:object="${registrationForm}" data-registration-form>
+        <input th:name="${_csrf.parameterName}" th:value="${_csrf.token}" type="hidden">
+        <input th:if="${editing}" th:field="*{version}" type="hidden">
+
+        <div class="message message-error" role="alert" th:if="${#fields.hasGlobalErrors()}">
+            <p th:each="item : ${#fields.globalErrors()}" th:text="${item}"></p>
+        </div>
+
+        <section class="panel" aria-labelledby="general-information-heading">
+            <h2 id="general-information-heading">Thông tin chung</h2>
+            <div class="form-grid">
+                <div class="field">
+                    <label for="type">Loại phiếu <span aria-hidden="true">*</span></label>
+                    <select id="type" th:field="*{type}" required aria-describedby="type-help type-error"
+                            th:attr="aria-invalid=${#fields.hasErrors('type')}" data-registration-type>
+                        <option value="">Chọn loại phiếu</option>
+                        <option th:each="item : ${allowedTypes}" th:value="${item}"
+                                th:text="${item.name() == 'GIANG_DAY' ? 'Giảng dạy' : (item.name() == 'HOC_TAP' ? 'Học tập' : 'Nghiên cứu')}"></option>
+                    </select>
+                    <p class="helper" id="type-help">Sinh viên chỉ có thể tạo phiếu học tập hoặc nghiên cứu.</p>
+                    <p class="field-error" id="type-error" role="alert" th:errors="*{type}"></p>
+                </div>
+                <div class="field">
+                    <label for="roomId">Phòng <span aria-hidden="true">*</span></label>
+                    <select id="roomId" th:field="*{roomId}" required aria-describedby="room-error"
+                            th:attr="aria-invalid=${#fields.hasErrors('roomId')}">
+                        <option value="">Chọn phòng</option>
+                        <option th:each="room : ${rooms}" th:value="${room.id}"
+                                th:text="|${room.id} — ${room.name} (${room.capacity} chỗ)|"></option>
+                    </select>
+                    <p class="field-error" id="room-error" role="alert" th:errors="*{roomId}"></p>
+                </div>
+                <div class="field field-wide">
+                    <label for="purpose">Mục đích sử dụng <span aria-hidden="true">*</span></label>
+                    <textarea id="purpose" th:field="*{purpose}" maxlength="2000" required aria-describedby="purpose-help purpose-error"
+                              th:attr="aria-invalid=${#fields.hasErrors('purpose')}"></textarea>
+                    <p class="helper" id="purpose-help">Mô tả ngắn gọn nội dung giảng dạy, học tập hoặc nghiên cứu.</p>
+                    <p class="field-error" id="purpose-error" role="alert" th:errors="*{purpose}"></p>
+                </div>
+                <div class="field">
+                    <label for="participantCount">Số người <span aria-hidden="true">*</span></label>
+                    <input id="participantCount" th:field="*{participantCount}" type="number" min="1"
+                           inputmode="numeric" required aria-describedby="participant-help participant-error"
+                           th:attr="aria-invalid=${#fields.hasErrors('participantCount')}">
+                    <p class="helper" id="participant-help">Số người phải phù hợp với sức chứa phòng.</p>
+                    <p class="field-error" id="participant-error" role="alert" th:errors="*{participantCount}"></p>
+                </div>
+                <div class="field">
+                    <label for="startDate">Từ ngày <span aria-hidden="true">*</span></label>
+                    <input id="startDate" th:field="*{startDate}" type="date" required aria-describedby="start-date-error"
+                           th:attr="aria-invalid=${#fields.hasErrors('startDate')}">
+                    <p class="field-error" id="start-date-error" role="alert" th:errors="*{startDate}"></p>
+                </div>
+                <div class="field">
+                    <label for="endDate">Đến ngày <span aria-hidden="true">*</span></label>
+                    <input id="endDate" th:field="*{endDate}" type="date" required aria-describedby="end-date-error"
+                           th:attr="aria-invalid=${#fields.hasErrors('endDate')}">
+                    <p class="field-error" id="end-date-error" role="alert" th:errors="*{endDate}"></p>
+                </div>
+            </div>
+        </section>
+
+        <section class="panel" aria-labelledby="schedule-heading">
+            <div class="section-heading">
+                <div>
+                    <h2 id="schedule-heading">Lịch sử dụng</h2>
+                    <p class="helper">Thêm từng cặp thứ và tiết. Các dòng lịch trong cùng phiếu không được trùng nhau.</p>
+                </div>
+                <button class="button-secondary" type="button" data-add-schedule hidden>Thêm lịch</button>
+            </div>
+            <p class="field-error" role="alert" th:errors="*{schedules}"></p>
+            <div class="schedule-list" id="schedule-list" aria-live="polite">
+                <fieldset class="schedule-row" data-schedule-row
+                          th:each="schedule, scheduleStatus : *{schedules}">
+                    <legend th:text="|Lịch ${scheduleStatus.index + 1}|" data-schedule-legend>Lịch</legend>
+                    <div class="schedule-fields">
+                        <div class="field">
+                            <label th:for="|schedule-day-${scheduleStatus.index}|" data-day-label>Thứ <span aria-hidden="true">*</span></label>
+                            <select th:id="|schedule-day-${scheduleStatus.index}|"
+                                    th:name="|schedules[${scheduleStatus.index}].dayOfWeek|"
+                                    required data-schedule-day
+                                    th:attr="aria-describedby=|schedule-day-error-${scheduleStatus.index}|,aria-invalid=${#fields.hasErrors('schedules[' + scheduleStatus.index + '].dayOfWeek')}">
+                                <option th:each="day : ${dayOptions}" th:value="${day.value}" th:text="${day.label}"
+                                        th:selected="${day.value == schedule.dayOfWeek}"></option>
+                            </select>
+                            <p class="field-error" th:id="|schedule-day-error-${scheduleStatus.index}|" role="alert"
+                               th:errors="*{schedules[__${scheduleStatus.index}__].dayOfWeek}"></p>
+                        </div>
+                        <div class="field">
+                            <label th:for="|schedule-period-${scheduleStatus.index}|" data-period-label>Tiết học <span aria-hidden="true">*</span></label>
+                            <select th:id="|schedule-period-${scheduleStatus.index}|"
+                                    th:name="|schedules[${scheduleStatus.index}].periodId|"
+                                    required data-schedule-period
+                                    th:attr="aria-describedby=|schedule-period-error-${scheduleStatus.index}|,aria-invalid=${#fields.hasErrors('schedules[' + scheduleStatus.index + '].periodId')}">
+                                <option th:each="period : ${periods}" th:value="${period.id}"
+                                        th:text="|${period.name} (${period.startTime}–${period.endTime})|"
+                                        th:selected="${period.id == schedule.periodId}"></option>
+                            </select>
+                            <p class="field-error" th:id="|schedule-period-error-${scheduleStatus.index}|" role="alert"
+                               th:errors="*{schedules[__${scheduleStatus.index}__].periodId}"></p>
+                        </div>
+                        <button class="button-danger schedule-remove" type="button" data-remove-schedule hidden
+                                th:attr="aria-label=|Xóa lịch ${scheduleStatus.index + 1}|">Xóa lịch</button>
+                    </div>
+                </fieldset>
+            </div>
+            <p class="sr-only" id="schedule-announcement" aria-live="polite"></p>
+            <template id="schedule-row-template">
+                <fieldset class="schedule-row" data-schedule-row>
+                    <legend data-schedule-legend>Lịch</legend>
+                    <div class="schedule-fields">
+                        <div class="field">
+                            <label data-day-label>Thứ <span aria-hidden="true">*</span></label>
+                            <select required data-schedule-day>
+                                <option th:each="day : ${dayOptions}" th:value="${day.value}" th:text="${day.label}"></option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label data-period-label>Tiết học <span aria-hidden="true">*</span></label>
+                            <select required data-schedule-period>
+                                <option th:each="period : ${periods}" th:value="${period.id}"
+                                        th:text="|${period.name} (${period.startTime}–${period.endTime})|"></option>
+                            </select>
+                        </div>
+                        <button class="button-danger schedule-remove" type="button" data-remove-schedule>Xóa lịch</button>
+                    </div>
+                </fieldset>
+            </template>
+        </section>
+
+        <section class="panel" aria-labelledby="device-heading">
+            <h2 id="device-heading">Thiết bị mong muốn</h2>
+            <p class="helper" id="device-help">Thiết bị là yêu cầu mong muốn; cán bộ quản lý sẽ xác nhận phân bổ khi duyệt phiếu.</p>
+            <fieldset class="device-fieldset" aria-describedby="device-help">
+                <legend class="sr-only">Chọn thiết bị</legend>
+                <div class="device-options">
+                    <label class="device-option" th:each="device, deviceStatus : ${devices}"
+                           th:for="|device-${deviceStatus.index}|">
+                        <input th:id="|device-${deviceStatus.index}|" name="deviceIds" type="checkbox"
+                               th:value="${device.id}" th:checked="${#lists.contains(registrationForm.deviceIds, device.id)}"
+                               th:attr="data-instructor-required=${device.instructorRequired}">
+                        <span class="device-option-copy">
+                            <strong th:text="|${device.id} — ${device.name}|"></strong>
+                            <span th:text="${device.typeName}"></span>
+                            <small th:if="${device.instructorRequired}">Cần GVHD</small>
+                            <small th:if="${device.mobile}">Di động</small>
+                            <small th:if="${device.roomId != null}" th:text="|Hiện ở phòng ${device.roomId}|"></small>
+                        </span>
+                    </label>
+                </div>
+                <p class="empty-state compact" th:if="${#lists.isEmpty(devices)}">Không có thiết bị sẵn sàng để yêu cầu.</p>
+            </fieldset>
+        </section>
+
+        <section class="panel conditional-section" aria-labelledby="teaching-heading" data-teaching-section>
+            <h2 id="teaching-heading">Thông tin giảng dạy</h2>
+            <p class="helper">Chỉ bắt buộc đối với phiếu giảng dạy.</p>
+            <div class="form-grid">
+                <div class="field">
+                    <label for="courseCode">Mã học phần <span aria-hidden="true">*</span></label>
+                    <input id="courseCode" th:field="*{courseCode}" type="text" maxlength="50"
+                           aria-describedby="course-help course-error" data-teaching-required
+                           th:attr="aria-invalid=${#fields.hasErrors('courseCode')}">
+                    <p class="helper" id="course-help">Tối đa 50 ký tự.</p>
+                    <p class="field-error" id="course-error" role="alert" th:errors="*{courseCode}"></p>
+                </div>
+                <div class="field">
+                    <label for="classGroup">Lớp/nhóm <span aria-hidden="true">*</span></label>
+                    <input id="classGroup" th:field="*{classGroup}" type="text" maxlength="100"
+                           aria-describedby="class-group-error" data-teaching-required
+                           th:attr="aria-invalid=${#fields.hasErrors('classGroup')}">
+                    <p class="field-error" id="class-group-error" role="alert" th:errors="*{classGroup}"></p>
+                </div>
+            </div>
+        </section>
+
+        <section class="panel conditional-section" aria-labelledby="supervisor-heading" data-supervisor-section
+                 th:if="${student}">
+            <h2 id="supervisor-heading">Giảng viên hướng dẫn</h2>
+            <p class="helper" id="supervisor-help">Bắt buộc khi bạn chọn thiết bị có nhãn “Cần GVHD”.</p>
+            <div class="field supervisor-field">
+                <label for="supervisorId">Giảng viên hướng dẫn</label>
+                <select id="supervisorId" th:field="*{supervisorId}" aria-describedby="supervisor-help supervisor-error"
+                        data-supervisor-input th:attr="aria-invalid=${#fields.hasErrors('supervisorId')}">
+                    <option value="">Chọn giảng viên</option>
+                    <option th:each="supervisor : ${supervisors}" th:value="${supervisor.id}"
+                            th:text="|${supervisor.id} — ${supervisor.fullName}${supervisor.classOrUnit == null ? '' : ' · ' + supervisor.classOrUnit}|"></option>
+                </select>
+                <p class="field-error" id="supervisor-error" role="alert" th:errors="*{supervisorId}"></p>
+            </div>
+        </section>
+
+        <div class="toolbar form-actions">
+            <button type="submit" th:text="${editing ? 'Lưu thay đổi' : 'Gửi phiếu'}"></button>
+            <a class="button button-secondary"
+               th:href="${editing ? '/registrations/' + registrationId : '/registrations'}">Quay lại</a>
+        </div>
+    </form>
+</main>
+</body>
+</html>
