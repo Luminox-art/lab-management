@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${editing ? 'Cập nhật phòng' : 'Thêm phòng'}">Phòng</title>
+    <link rel="stylesheet" th:href="@{/css/catalog.css}">
+</head>
+<body>
+<a class="skip-link" href="#main-content">Bỏ qua điều hướng</a>
+<header class="app-header">
+    <div class="header-inner">
+        <a class="brand" th:href="@{/catalog/rooms}">Quản lý phòng lab</a>
+        <nav class="main-nav" aria-label="Điều hướng danh mục">
+            <a aria-current="page" th:href="@{/catalog/rooms}">Phòng</a>
+            <a th:href="@{/catalog/devices}">Thiết bị</a>
+            <a th:href="@{/catalog/room-groups}">Nhóm phòng</a>
+            <a th:href="@{/catalog/device-types}">Loại thiết bị</a>
+        </nav>
+    </div>
+</header>
+<main class="page-shell" id="main-content" tabindex="-1">
+    <div class="page-heading">
+        <div>
+            <h1 th:text="${editing ? 'Cập nhật phòng' : 'Thêm phòng'}"></h1>
+            <p class="subtitle">Sức chứa phải lớn hơn 0. Phòng mới sẽ được tạo cùng một tài nguyên liên kết trong một transaction.</p>
+        </div>
+    </div>
+    <section class="panel" aria-labelledby="room-form-heading">
+        <h2 id="room-form-heading">Thông tin phòng</h2>
+        <form method="post" th:action="${editing ? '/catalog/rooms/' + roomForm.id : '/catalog/rooms'}"
+              th:object="${roomForm}">
+            <input th:name="${_csrf.parameterName}" th:value="${_csrf.token}" type="hidden">
+            <input th:field="*{version}" type="hidden">
+            <div class="message message-error" role="alert" th:if="${#fields.hasGlobalErrors()}">
+                <p th:each="item : ${#fields.globalErrors()}" th:text="${item}"></p>
+            </div>
+            <div class="form-grid">
+                <div class="field">
+                    <label for="id">Mã phòng <span aria-hidden="true">*</span></label>
+                    <input id="id" th:field="*{id}" type="text" maxlength="50" required autofocus
+                           th:readonly="${editing}" aria-describedby="id-help id-error">
+                    <p class="helper" id="id-help">Mã không thể đổi sau khi tạo.</p>
+                    <p class="field-error" id="id-error" role="alert" th:errors="*{id}"></p>
+                </div>
+                <div class="field">
+                    <label for="name">Tên phòng <span aria-hidden="true">*</span></label>
+                    <input id="name" th:field="*{name}" type="text" maxlength="150" required aria-describedby="name-error">
+                    <p class="field-error" id="name-error" role="alert" th:errors="*{name}"></p>
+                </div>
+                <div class="field">
+                    <label for="groupId">Nhóm phòng <span aria-hidden="true">*</span></label>
+                    <select id="groupId" th:field="*{groupId}" required aria-describedby="group-error">
+                        <option value="">Chọn nhóm phòng</option>
+                        <option th:each="item : ${groups}" th:value="${item.id}" th:text="${item.name}"></option>
+                    </select>
+                    <p class="field-error" id="group-error" role="alert" th:errors="*{groupId}"></p>
+                </div>
+                <div class="field">
+                    <label for="location">Vị trí <span aria-hidden="true">*</span></label>
+                    <input id="location" th:field="*{location}" type="text" maxlength="255" required aria-describedby="location-error">
+                    <p class="field-error" id="location-error" role="alert" th:errors="*{location}"></p>
+                </div>
+                <div class="field">
+                    <label for="capacity">Sức chứa <span aria-hidden="true">*</span></label>
+                    <input id="capacity" th:field="*{capacity}" type="number" min="1" inputmode="numeric" required
+                           aria-describedby="capacity-help capacity-error">
+                    <p class="helper" id="capacity-help">Nhập số người tối đa, tối thiểu 1.</p>
+                    <p class="field-error" id="capacity-error" role="alert" th:errors="*{capacity}"></p>
+                </div>
+                <div class="field">
+                    <label for="status">Trạng thái <span aria-hidden="true">*</span></label>
+                    <select id="status" th:field="*{status}" required aria-describedby="status-error">
+                        <option th:each="item : ${statuses}" th:value="${item}"
+                                th:text="${item.name() == 'SAN_SANG' ? 'Sẵn sàng' : (item.name() == 'BAO_TRI' ? 'Bảo trì' : 'Ngừng sử dụng')}"></option>
+                    </select>
+                    <p class="field-error" id="status-error" role="alert" th:errors="*{status}"></p>
+                </div>
+            </div>
+            <div class="toolbar">
+                <button type="submit" th:text="${editing ? 'Lưu thay đổi' : 'Tạo phòng'}"></button>
+                <a class="button button-secondary" th:href="@{/catalog/rooms}">Hủy</a>
+            </div>
+        </form>
+    </section>
+</main>
+</body>
+</html>

@@ -52,7 +52,31 @@ public class Phong extends VersionedEntity {
 		return id;
 	}
 
+	public String getName() {
+		return name;
+	}
+
+	public NhomPhong getGroup() {
+		return group;
+	}
+
+	public String getLocation() {
+		return location;
+	}
+
+	public int getCapacity() {
+		return capacity;
+	}
+
 	public PhongTrangThai getStatus() {
 		return status;
+	}
+
+	public void update(String name, NhomPhong group, String location, int capacity, PhongTrangThai status) {
+		this.name = name;
+		this.group = group;
+		this.location = location;
+		this.capacity = capacity;
+		this.status = status;
 	}
 }

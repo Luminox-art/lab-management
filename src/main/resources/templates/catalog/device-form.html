@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${editing ? 'Cập nhật thiết bị' : 'Thêm thiết bị'}">Thiết bị</title>
+    <link rel="stylesheet" th:href="@{/css/catalog.css}">
+</head>
+<body>
+<a class="skip-link" href="#main-content">Bỏ qua điều hướng</a>
+<header class="app-header">
+    <div class="header-inner">
+        <a class="brand" th:href="@{/catalog/rooms}">Quản lý phòng lab</a>
+        <nav class="main-nav" aria-label="Điều hướng danh mục">
+            <a th:href="@{/catalog/rooms}">Phòng</a>
+            <a aria-current="page" th:href="@{/catalog/devices}">Thiết bị</a>
+            <a th:href="@{/catalog/room-groups}">Nhóm phòng</a>
+            <a th:href="@{/catalog/device-types}">Loại thiết bị</a>
+        </nav>
+    </div>
+</header>
+<main class="page-shell" id="main-content" tabindex="-1">
+    <div class="page-heading">
+        <div>
+            <h1 th:text="${editing ? 'Cập nhật thiết bị' : 'Thêm thiết bị'}"></h1>
+            <p class="subtitle">Serial có thể để trống; khi có giá trị phải duy nhất. Danh sách phòng gán không chứa phòng đã ngừng sử dụng.</p>
+        </div>
+    </div>
+    <section class="panel" aria-labelledby="device-form-heading">
+        <h2 id="device-form-heading">Thông tin thiết bị</h2>
+        <form method="post" th:action="${editing ? '/catalog/devices/' + deviceForm.id : '/catalog/devices'}"
+              th:object="${deviceForm}">
+            <input th:name="${_csrf.parameterName}" th:value="${_csrf.token}" type="hidden">
+            <input th:field="*{version}" type="hidden">
+            <div class="message message-error" role="alert" th:if="${#fields.hasGlobalErrors()}">
+                <p th:each="item : ${#fields.globalErrors()}" th:text="${item}"></p>
+            </div>
+            <div class="form-grid">
+                <div class="field">
+                    <label for="id">Mã thiết bị <span aria-hidden="true">*</span></label>
+                    <input id="id" th:field="*{id}" type="text" maxlength="50" required autofocus
+                           th:readonly="${editing}" aria-describedby="id-help id-error">
+                    <p class="helper" id="id-help">Mã không thể đổi sau khi tạo.</p>
+                    <p class="field-error" id="id-error" role="alert" th:errors="*{id}"></p>
+                </div>
+                <div class="field">
+                    <label for="name">Tên thiết bị <span aria-hidden="true">*</span></label>
+                    <input id="name" th:field="*{name}" type="text" maxlength="150" required aria-describedby="name-error">
+                    <p class="field-error" id="name-error" role="alert" th:errors="*{name}"></p>
+                </div>
+                <div class="field">
+                    <label for="typeId">Loại thiết bị <span aria-hidden="true">*</span></label>
+                    <select id="typeId" th:field="*{typeId}" required aria-describedby="type-error">
+                        <option value="">Chọn loại thiết bị</option>
+                        <option th:each="item : ${types}" th:value="${item.id}" th:text="${item.name}"></option>
+                    </select>
+                    <p class="field-error" id="type-error" role="alert" th:errors="*{typeId}"></p>
+                </div>
+                <div class="field">
+                    <label for="serialNumber">Số serial</label>
+                    <input id="serialNumber" th:field="*{serialNumber}" type="text" maxlength="100" aria-describedby="serial-help serial-error">
+                    <p class="helper" id="serial-help">Để trống nếu thiết bị không có serial.</p>
+                    <p class="field-error" id="serial-error" role="alert" th:errors="*{serialNumber}"></p>
+                </div>
+                <div class="field">
+                    <label for="model">Model</label>
+                    <input id="model" th:field="*{model}" type="text" maxlength="100" aria-describedby="model-error">
+                    <p class="field-error" id="model-error" role="alert" th:errors="*{model}"></p>
+                </div>
+                <div class="field">
+                    <label for="roomId">Phòng hiện tại</label>
+                    <select id="roomId" th:field="*{roomId}" aria-describedby="room-help room-error">
+                        <option value="">Chưa gán phòng</option>
+                        <option th:each="item : ${rooms}" th:value="${item.id}" th:text="|${item.id} — ${item.name}|"></option>
+                    </select>
+                    <p class="helper" id="room-help">Phòng ngừng sử dụng không xuất hiện trong danh sách.</p>
+                    <p class="field-error" id="room-error" role="alert" th:errors="*{roomId}"></p>
+                </div>
+                <div class="field">
+                    <label for="status">Trạng thái <span aria-hidden="true">*</span></label>
+                    <select id="status" th:field="*{status}" required aria-describedby="status-error">
+                        <option th:each="item : ${statuses}" th:value="${item}"
+                                th:text="${item.name() == 'SAN_SANG' ? 'Sẵn sàng' : (item.name() == 'DANG_SU_DUNG' ? 'Đang sử dụng' : (item.name() == 'HONG' ? 'Hỏng' : (item.name() == 'BAO_TRI' ? 'Bảo trì' : 'Ngừng sử dụng')))}"></option>
+                    </select>
+                    <p class="field-error" id="status-error" role="alert" th:errors="*{status}"></p>
+                </div>
+            </div>
+            <div class="toolbar">
+                <button type="submit" th:text="${editing ? 'Lưu thay đổi' : 'Tạo thiết bị'}"></button>
+                <a class="button button-secondary" th:href="@{/catalog/devices}">Hủy</a>
+            </div>
+        </form>
+    </section>
+</main>
+</body>
+</html>

@@ -61,4 +61,12 @@ public class TaiNguyen {
 	public LoaiTaiNguyen getResourceType() {
 		return resourceType;
 	}
+
+	public Phong getRoom() {
+		return room;
+	}
+
+	public ThietBi getDevice() {
+		return device;
+	}
 }

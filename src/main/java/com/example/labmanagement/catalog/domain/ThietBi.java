@@ -58,7 +58,37 @@ public class ThietBi extends VersionedEntity {
 		return id;
 	}
 
+	public String getName() {
+		return name;
+	}
+
+	public LoaiThietBi getType() {
+		return type;
+	}
+
 	public String getSerialNumber() {
 		return serialNumber;
+	}
+
+	public String getModel() {
+		return model;
+	}
+
+	public Phong getRoom() {
+		return room;
+	}
+
+	public ThietBiTrangThai getStatus() {
+		return status;
+	}
+
+	public void update(String name, LoaiThietBi type, String serialNumber, String model, Phong room,
+			ThietBiTrangThai status) {
+		this.name = name;
+		this.type = type;
+		this.serialNumber = serialNumber;
+		this.model = model;
+		this.room = room;
+		this.status = status;
 	}
 }

@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Danh mục thiết bị</title>
+    <link rel="stylesheet" th:href="@{/css/catalog.css}">
+</head>
+<body>
+<a class="skip-link" href="#main-content">Bỏ qua điều hướng</a>
+<header class="app-header">
+    <div class="header-inner">
+        <a class="brand" th:href="@{/catalog/rooms}">Quản lý phòng lab</a>
+        <nav class="main-nav" aria-label="Điều hướng danh mục">
+            <a th:href="@{/catalog/rooms}">Phòng</a>
+            <a aria-current="page" th:href="@{/catalog/devices}">Thiết bị</a>
+            <a th:if="${canManage}" th:href="@{/catalog/room-groups}">Nhóm phòng</a>
+            <a th:if="${canManage}" th:href="@{/catalog/device-types}">Loại thiết bị</a>
+            <a th:href="@{/profile}">Hồ sơ</a>
+        </nav>
+    </div>
+</header>
+<main class="page-shell" id="main-content" tabindex="-1">
+    <div class="page-heading">
+        <div>
+            <h1>Danh mục thiết bị</h1>
+            <p class="subtitle">Tra cứu theo mã, tên, loại, phòng hiện tại, serial hoặc trạng thái.</p>
+        </div>
+        <a class="button button-primary" th:if="${canManage}" th:href="@{/catalog/devices/new}">Thêm thiết bị</a>
+    </div>
+
+    <p class="message message-success" role="status" th:if="${success}" th:text="${success}"></p>
+    <p class="message message-error" role="alert" th:if="${error}" th:text="${error}"></p>
+
+    <section class="panel" aria-labelledby="device-filter-heading">
+        <h2 id="device-filter-heading">Bộ lọc</h2>
+        <form method="get" th:action="@{/catalog/devices}">
+            <div class="filter-grid">
+                <div class="field">
+                    <label for="keyword">Mã, tên hoặc serial</label>
+                    <input id="keyword" name="keyword" type="search" maxlength="150" th:value="${keyword}">
+                </div>
+                <div class="field">
+                    <label for="type">Loại thiết bị</label>
+                    <select id="type" name="type">
+                        <option value="">Tất cả loại</option>
+                        <option th:each="item : ${types}" th:value="${item.id}" th:text="${item.name}"
+                                th:selected="${item.id == type}"></option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label for="room">Phòng hiện tại</label>
+                    <select id="room" name="room">
+                        <option value="">Tất cả phòng</option>
+                        <option th:each="item : ${rooms}" th:value="${item.id}" th:text="|${item.id} — ${item.name}|"
+                                th:selected="${item.id == room}"></option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label for="status">Trạng thái</label>
+                    <select id="status" name="status">
+                        <option value="">Tất cả trạng thái</option>
+                        <option th:each="item : ${statuses}" th:value="${item}" th:selected="${item == status}"
+                                th:text="${item.name() == 'SAN_SANG' ? 'Sẵn sàng' : (item.name() == 'DANG_SU_DUNG' ? 'Đang sử dụng' : (item.name() == 'HONG' ? 'Hỏng' : (item.name() == 'BAO_TRI' ? 'Bảo trì' : 'Ngừng sử dụng')))}"></option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label for="sort">Sắp xếp</label>
+                    <select id="sort" name="sort">
+                        <option value="id,asc" th:selected="${sort == 'id,asc'}">Mã tăng dần</option>
+                        <option value="id,desc" th:selected="${sort == 'id,desc'}">Mã giảm dần</option>
+                        <option value="name,asc" th:selected="${sort == 'name,asc'}">Tên A–Z</option>
+                        <option value="type,asc" th:selected="${sort == 'type,asc'}">Loại A–Z</option>
+                        <option value="status,asc" th:selected="${sort == 'status,asc'}">Trạng thái</option>
+                    </select>
+                </div>
+            </div>
+            <div class="toolbar">
+                <button type="submit">Áp dụng bộ lọc</button>
+                <a class="button button-secondary" th:href="@{/catalog/devices}">Xóa bộ lọc</a>
+            </div>
+        </form>
+    </section>
+
+    <p class="result-summary" aria-live="polite" th:text="|Tìm thấy ${result.totalElements} thiết bị|">Tìm thấy 0 thiết bị</p>
+    <div class="table-wrap" role="region" aria-label="Kết quả danh mục thiết bị" tabindex="0">
+        <table>
+            <thead>
+            <tr>
+                <th scope="col" th:attr="aria-sort=${#strings.startsWith(sort, 'id,') ? (#strings.endsWith(sort, 'asc') ? 'ascending' : 'descending') : null}">
+                    <a class="sort-link" th:href="@{/catalog/devices(type=${type},room=${room},status=${status},keyword=${keyword},sort=${sort == 'id,asc' ? 'id,desc' : 'id,asc'})}">Mã</a>
+                </th>
+                <th scope="col">Tên thiết bị</th>
+                <th scope="col">Loại</th>
+                <th scope="col">Serial / Model</th>
+                <th scope="col">Phòng</th>
+                <th scope="col">Trạng thái</th>
+                <th scope="col" th:if="${canManage}">Thao tác</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="device : ${result.content}">
+                <td th:text="${device.id}"></td>
+                <td th:text="${device.name}"></td>
+                <td>
+                    <span th:text="${device.typeName}"></span>
+                    <small class="helper" th:if="${device.instructorRequired}">Cần GVHD</small>
+                    <small class="helper" th:if="${device.mobile}">Di động</small>
+                </td>
+                <td>
+                    <span th:text="${device.serialNumber ?: 'Không có serial'}"></span><br>
+                    <small class="helper" th:text="${device.model ?: 'Không có model'}"></small>
+                </td>
+                <td th:text="${device.roomId == null ? 'Chưa gán' : device.roomId + ' — ' + device.roomName}"></td>
+                <td>
+                    <span class="status-chip" th:classappend="|status-${#strings.toLowerCase(device.status.name())}|"
+                          th:text="${device.status.name() == 'SAN_SANG' ? 'Sẵn sàng' : (device.status.name() == 'DANG_SU_DUNG' ? 'Đang sử dụng' : (device.status.name() == 'HONG' ? 'Hỏng' : (device.status.name() == 'BAO_TRI' ? 'Bảo trì' : 'Ngừng sử dụng')))}"></span>
+                </td>
+                <td th:if="${canManage}">
+                    <div class="actions">
+                        <a class="button button-secondary" th:href="@{/catalog/devices/{id}/edit(id=${device.id})}">Sửa</a>
+                        <form class="inline-form" method="post" th:action="@{/catalog/devices/{id}/delete(id=${device.id})}"
+                              onsubmit="return confirm('Chỉ thiết bị chưa có dữ liệu nghiệp vụ mới được xóa. Tiếp tục?')">
+                            <input th:name="${_csrf.parameterName}" th:value="${_csrf.token}" type="hidden">
+                            <button class="button-danger" type="submit">Xóa</button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            <tr th:if="${result.empty}">
+                <td class="empty-state" th:colspan="${canManage ? 7 : 6}">Không có thiết bị phù hợp. Hãy thay đổi bộ lọc.</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <nav class="pagination" aria-label="Phân trang thiết bị" th:if="${result.totalPages > 1}">
+        <a class="button button-secondary" rel="prev" th:if="${result.hasPrevious()}"
+           th:href="@{/catalog/devices(type=${type},room=${room},status=${status},keyword=${keyword},sort=${sort},page=${result.number - 1},size=${result.size})}">Trang trước</a>
+        <span th:text="|Trang ${result.number + 1} / ${result.totalPages}|">Trang 1 / 1</span>
+        <a class="button button-secondary" rel="next" th:if="${result.hasNext()}"
+           th:href="@{/catalog/devices(type=${type},room=${room},status=${status},keyword=${keyword},sort=${sort},page=${result.number + 1},size=${result.size})}">Trang sau</a>
+    </nav>
+</main>
+</body>
+</html>

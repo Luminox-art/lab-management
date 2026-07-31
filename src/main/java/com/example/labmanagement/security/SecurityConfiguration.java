@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.util.List;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -29,8 +30,12 @@ public class SecurityConfiguration {
 		LoginUrlAuthenticationEntryPoint loginEntryPoint = new LoginUrlAuthenticationEntryPoint("/login");
 		http.authorizeHttpRequests(authorization -> authorization
 				.requestMatchers("/actuator/health/readiness", "/api/v1/auth/register", "/api/v1/auth/login", "/login",
-						"/register", "/registration-pending", "/error")
-				.permitAll().requestMatchers("/api/v1/users/**").hasRole("CBQL").anyRequest().authenticated())
+						"/register", "/registration-pending", "/error", "/css/**")
+				.permitAll().requestMatchers("/api/v1/users/**").hasRole("CBQL")
+				.requestMatchers(HttpMethod.POST, "/api/v1/rooms", "/api/v1/devices").hasRole("CBQL")
+				.requestMatchers(HttpMethod.PUT, "/api/v1/rooms/**", "/api/v1/devices/**").hasRole("CBQL")
+				.requestMatchers(HttpMethod.GET, "/catalog/rooms", "/catalog/devices").authenticated()
+				.requestMatchers("/catalog/**").hasRole("CBQL").anyRequest().authenticated())
 				.formLogin(form -> form.loginPage("/login").usernameParameter("email").failureUrl("/login?error")
 						.defaultSuccessUrl("/profile", true).permitAll())
 				.logout(logout -> logout.logoutUrl("/logout").logoutSuccessUrl("/login?logout")

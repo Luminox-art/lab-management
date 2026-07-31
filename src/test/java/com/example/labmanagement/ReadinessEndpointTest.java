@@ -2,6 +2,7 @@ package com.example.labmanagement;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.example.labmanagement.catalog.application.CatalogService;
 import com.example.labmanagement.identity.persistence.NguoiDungRepository;
 import com.example.labmanagement.identity.persistence.VaiTroRepository;
 import java.net.URI;
@@ -34,6 +35,9 @@ class ReadinessEndpointTest {
 
 	@MockitoBean
 	private VaiTroRepository vaiTroRepository;
+
+	@MockitoBean
+	private CatalogService catalogService;
 
 	@Test
 	void readinessIsPublicAndReturnsHttp200() throws Exception {

@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Nhóm phòng</title>
+    <link rel="stylesheet" th:href="@{/css/catalog.css}">
+</head>
+<body>
+<a class="skip-link" href="#main-content">Bỏ qua điều hướng</a>
+<header class="app-header">
+    <div class="header-inner">
+        <a class="brand" th:href="@{/catalog/rooms}">Quản lý phòng lab</a>
+        <nav class="main-nav" aria-label="Điều hướng danh mục">
+            <a th:href="@{/catalog/rooms}">Phòng</a>
+            <a th:href="@{/catalog/devices}">Thiết bị</a>
+            <a aria-current="page" th:href="@{/catalog/room-groups}">Nhóm phòng</a>
+            <a th:href="@{/catalog/device-types}">Loại thiết bị</a>
+        </nav>
+    </div>
+</header>
+<main class="page-shell" id="main-content" tabindex="-1">
+    <div class="page-heading">
+        <div>
+            <h1>Nhóm phòng</h1>
+            <p class="subtitle">Quản lý phân nhóm dùng trong danh mục và bộ lọc phòng.</p>
+        </div>
+    </div>
+    <p class="message message-success" role="status" th:if="${success}" th:text="${success}"></p>
+    <p class="message message-error" role="alert" th:if="${error}" th:text="${error}"></p>
+    <section class="panel" aria-labelledby="group-form-heading">
+        <h2 id="group-form-heading" th:text="${groupForm.originalId == null ? 'Thêm nhóm phòng' : 'Cập nhật nhóm phòng'}"></h2>
+        <form method="post" th:action="@{/catalog/room-groups}" th:object="${groupForm}">
+            <input th:name="${_csrf.parameterName}" th:value="${_csrf.token}" type="hidden">
+            <input th:field="*{originalId}" type="hidden">
+            <div class="message message-error" role="alert" th:if="${#fields.hasGlobalErrors()}">
+                <p th:each="item : ${#fields.globalErrors()}" th:text="${item}"></p>
+            </div>
+            <div class="form-grid">
+                <div class="field">
+                    <label for="id">Mã nhóm <span aria-hidden="true">*</span></label>
+                    <input id="id" th:field="*{id}" maxlength="50" required th:readonly="${groupForm.originalId != null}"
+                           aria-describedby="group-id-error">
+                    <p class="field-error" id="group-id-error" role="alert" th:errors="*{id}"></p>
+                </div>
+                <div class="field">
+                    <label for="name">Tên nhóm <span aria-hidden="true">*</span></label>
+                    <input id="name" th:field="*{name}" maxlength="150" required aria-describedby="group-name-error">
+                    <p class="field-error" id="group-name-error" role="alert" th:errors="*{name}"></p>
+                </div>
+                <div class="field field-wide">
+                    <label for="description">Mô tả</label>
+                    <textarea id="description" th:field="*{description}" maxlength="5000" aria-describedby="group-description-error"></textarea>
+                    <p class="field-error" id="group-description-error" role="alert" th:errors="*{description}"></p>
+                </div>
+            </div>
+            <div class="toolbar">
+                <button type="submit" th:text="${groupForm.originalId == null ? 'Tạo nhóm phòng' : 'Lưu thay đổi'}"></button>
+                <a class="button button-secondary" th:if="${groupForm.originalId != null}" th:href="@{/catalog/room-groups}">Hủy sửa</a>
+            </div>
+        </form>
+    </section>
+    <div class="table-wrap" role="region" aria-label="Danh sách nhóm phòng" tabindex="0">
+        <table>
+            <thead>
+            <tr><th scope="col">Mã</th><th scope="col">Tên nhóm</th><th scope="col">Mô tả</th><th scope="col">Thao tác</th></tr>
+            </thead>
+            <tbody>
+            <tr th:each="item : ${groups}">
+                <td th:text="${item.id}"></td>
+                <td th:text="${item.name}"></td>
+                <td th:text="${item.description ?: '—'}"></td>
+                <td>
+                    <div class="actions">
+                        <a class="button button-secondary" th:href="@{/catalog/room-groups(edit=${item.id})}">Sửa</a>
+                        <form class="inline-form" method="post" th:action="@{/catalog/room-groups/{id}/delete(id=${item.id})}"
+                              onsubmit="return confirm('Không thể xóa nhóm đang có phòng. Tiếp tục?')">
+                            <input th:name="${_csrf.parameterName}" th:value="${_csrf.token}" type="hidden">
+                            <button class="button-danger" type="submit">Xóa</button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(groups)}"><td class="empty-state" colspan="4">Chưa có nhóm phòng.</td></tr>
+            </tbody>
+        </table>
+    </div>
+</main>
+</body>
+</html>

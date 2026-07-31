@@ -39,4 +39,27 @@ public class LoaiThietBi {
 	public String getId() {
 		return id;
 	}
+
+	public String getName() {
+		return name;
+	}
+
+	public boolean isInstructorRequired() {
+		return instructorRequired;
+	}
+
+	public boolean isMobile() {
+		return mobile;
+	}
+
+	public String getDescription() {
+		return description;
+	}
+
+	public void update(String name, boolean instructorRequired, boolean mobile, String description) {
+		this.name = name;
+		this.instructorRequired = instructorRequired;
+		this.mobile = mobile;
+		this.description = description;
+	}
 }
