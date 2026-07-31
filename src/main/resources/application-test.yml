@@ -1,0 +1,8 @@
+spring:
+  config:
+    activate:
+      on-profile: test
+  datasource:
+    url: ${LAB_TEST_DB_URL:jdbc:mysql://localhost:3306/lab_management_test?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC&useSSL=false&allowPublicKeyRetrieval=true}
+    username: ${LAB_TEST_DB_USER:lab_app}
+    password: ${LAB_TEST_DB_PASSWORD}

@@ -1,0 +1,11 @@
+.agents/
+.review/
+docs/
+AGENTS.md
+target/
+*.log
+.idea/
+.vscode/
+.classpath
+.project
+.settings/

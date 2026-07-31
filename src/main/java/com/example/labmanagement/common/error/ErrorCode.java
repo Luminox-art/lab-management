@@ -1,0 +1,5 @@
+package com.example.labmanagement.common.error;
+
+public enum ErrorCode {
+	VALIDATION_ERROR, UNAUTHENTICATED, ACCESS_DENIED, NOT_FOUND, RESOURCE_CONFLICT, BUSINESS_RULE_VIOLATION, INTERNAL_ERROR
+}
