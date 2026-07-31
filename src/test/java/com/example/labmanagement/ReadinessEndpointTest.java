@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.example.labmanagement.catalog.application.CatalogService;
 import com.example.labmanagement.identity.persistence.NguoiDungRepository;
 import com.example.labmanagement.identity.persistence.VaiTroRepository;
+import com.example.labmanagement.scheduling.application.SchedulingService;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -38,6 +39,9 @@ class ReadinessEndpointTest {
 
 	@MockitoBean
 	private CatalogService catalogService;
+
+	@MockitoBean
+	private SchedulingService schedulingService;
 
 	@Test
 	void readinessIsPublicAndReturnsHttp200() throws Exception {

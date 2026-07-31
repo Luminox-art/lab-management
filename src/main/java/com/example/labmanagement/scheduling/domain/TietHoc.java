@@ -36,4 +36,16 @@ public class TietHoc {
 	public Integer getId() {
 		return id;
 	}
+
+	public String getName() {
+		return name;
+	}
+
+	public LocalTime getStartTime() {
+		return startTime;
+	}
+
+	public LocalTime getEndTime() {
+		return endTime;
+	}
 }

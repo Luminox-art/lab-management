@@ -70,4 +70,32 @@ public class LichChan {
 	public Long getId() {
 		return id;
 	}
+
+	public TaiNguyen getResource() {
+		return resource;
+	}
+
+	public LocalDate getStartDate() {
+		return startDate;
+	}
+
+	public LocalDate getEndDate() {
+		return endDate;
+	}
+
+	public Byte getDayOfWeek() {
+		return dayOfWeek;
+	}
+
+	public TietHoc getPeriod() {
+		return period;
+	}
+
+	public String getReason() {
+		return reason;
+	}
+
+	public LichChanTrangThai getStatus() {
+		return status;
+	}
 }

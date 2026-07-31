@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Kiểm tra khả dụng</title>
+    <link rel="stylesheet" th:href="@{/css/catalog.css}">
+</head>
+<body>
+<a class="skip-link" href="#main-content">Bỏ qua điều hướng</a>
+<header class="app-header">
+    <div class="header-inner">
+        <a class="brand" th:href="@{/catalog/rooms}">Quản lý phòng lab</a>
+        <nav class="main-nav" aria-label="Điều hướng chính">
+            <a th:href="@{/catalog/rooms}">Phòng</a>
+            <a th:href="@{/catalog/devices}">Thiết bị</a>
+            <a aria-current="page" th:href="@{/schedule/availability}">Kiểm tra khả dụng</a>
+            <a th:href="@{/schedule/calendar}">Lịch phòng</a>
+            <a th:href="@{/profile}">Hồ sơ</a>
+        </nav>
+    </div>
+</header>
+<main class="page-shell" id="main-content" tabindex="-1">
+    <div class="page-heading">
+        <div>
+            <h1>Kiểm tra khả dụng</h1>
+            <p class="subtitle">Kiểm tra phòng và thiết bị theo một thứ, tiết học trong khoảng ngày đã chọn.</p>
+        </div>
+        <a class="button button-secondary" th:href="@{/schedule/calendar(roomId=${roomId})}">Xem lịch phòng</a>
+    </div>
+
+    <p class="message message-error" role="alert" th:if="${error}" th:text="${error}"></p>
+
+    <section class="panel" aria-labelledby="availability-filter-heading">
+        <h2 id="availability-filter-heading">Điều kiện cần kiểm tra</h2>
+        <form method="get" th:action="@{/schedule/availability}">
+            <input name="check" type="hidden" value="true">
+            <div class="form-grid">
+                <div class="field">
+                    <label for="roomId">Phòng</label>
+                    <select id="roomId" name="roomId">
+                        <option value="">Không kiểm tra phòng</option>
+                        <option th:each="room : ${rooms}" th:value="${room.id}" th:text="|${room.id} — ${room.name}|"
+                                th:selected="${room.id == roomId}"></option>
+                    </select>
+                </div>
+                <div class="field field-wide">
+                    <label for="deviceIds">Thiết bị</label>
+                    <select id="deviceIds" name="deviceIds" multiple size="5" aria-describedby="device-help">
+                        <option th:each="device : ${devices}" th:value="${device.id}"
+                                th:text="|${device.id} — ${device.name}|"
+                                th:selected="${#lists.contains(deviceIds, device.id)}"></option>
+                    </select>
+                    <p class="helper" id="device-help">Có thể chọn nhiều thiết bị. Giữ Ctrl hoặc Command khi chọn.</p>
+                </div>
+                <div class="field">
+                    <label for="from">Từ ngày</label>
+                    <input id="from" name="from" type="date" required th:value="${from}">
+                </div>
+                <div class="field">
+                    <label for="to">Đến ngày</label>
+                    <input id="to" name="to" type="date" required th:value="${to}">
+                </div>
+                <div class="field">
+                    <label for="dayOfWeek">Thứ</label>
+                    <select id="dayOfWeek" name="dayOfWeek" required>
+                        <option th:each="day : ${dayOptions}" th:value="${day.value}" th:text="${day.label}"
+                                th:selected="${day.value == dayOfWeek}"></option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label for="periodId">Tiết học</label>
+                    <select id="periodId" name="periodId" required>
+                        <option th:each="period : ${periods}" th:value="${period.id}"
+                                th:text="|${period.name} (${period.startTime}–${period.endTime})|"
+                                th:selected="${period.id == periodId}"></option>
+                    </select>
+                </div>
+            </div>
+            <div class="toolbar form-actions">
+                <button type="submit">Kiểm tra khả dụng</button>
+                <a class="button button-secondary" th:href="@{/schedule/availability}">Đặt lại</a>
+            </div>
+        </form>
+    </section>
+
+    <section class="panel availability-result" aria-live="polite" aria-labelledby="availability-result-heading"
+             th:if="${result}" th:classappend="${result.available ? ' result-available' : ' result-unavailable'}">
+        <h2 id="availability-result-heading"
+            th:text="${result.available ? 'Có thể sử dụng' : 'Không khả dụng'}"></h2>
+        <p th:if="${result.available}">Không phát hiện xung đột cho các tài nguyên và thời gian đã chọn.</p>
+        <p th:unless="${result.available}" th:text="|Phát hiện ${#lists.size(result.conflicts)} xung đột.|">Phát hiện xung đột.</p>
+        <dl class="result-details">
+            <div>
+                <dt>Khoảng ngày</dt>
+                <dd th:text="|${#temporals.format(result.from, 'dd/MM/yyyy')} – ${#temporals.format(result.to, 'dd/MM/yyyy')}|"></dd>
+            </div>
+            <div>
+                <dt>Thời điểm</dt>
+                <dd th:text="|${result.dayOfWeekLabel}, ${result.period.name} (${result.period.startTime}–${result.period.endTime})|"></dd>
+            </div>
+            <div>
+                <dt>Ngày thực tế</dt>
+                <dd>
+                    <span th:if="${#lists.isEmpty(result.requestedDates)}">Không có ngày phù hợp trong khoảng đã chọn</span>
+                    <span th:each="date, iteration : ${result.requestedDates}"
+                          th:text="|${#temporals.format(date, 'dd/MM/yyyy')}${iteration.last ? '' : ', '}|"></span>
+                </dd>
+            </div>
+        </dl>
+    </section>
+
+    <section th:if="${result != null and !result.available}" aria-labelledby="conflict-heading">
+        <h2 id="conflict-heading">Chi tiết xung đột</h2>
+        <div class="table-wrap" role="region" aria-label="Chi tiết xung đột khả dụng" tabindex="0">
+            <table>
+                <thead>
+                <tr>
+                    <th scope="col">Loại xung đột</th>
+                    <th scope="col">Tài nguyên</th>
+                    <th scope="col">Ngày</th>
+                    <th scope="col">Tiết</th>
+                    <th scope="col">Chi tiết</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="conflict : ${result.conflicts}">
+                    <td>
+                        <span class="status-chip status-hong"
+                              th:text="${conflict.type.name() == 'ROOM_UNAVAILABLE' ? 'Phòng không sẵn sàng' :
+                              (conflict.type.name() == 'DEVICE_UNAVAILABLE' ? 'Thiết bị không sẵn sàng' :
+                              (conflict.type.name() == 'ROOM_REGISTRATION' ? 'Trùng lịch phòng' :
+                              (conflict.type.name() == 'DEVICE_REGISTRATION' ? 'Trùng lịch thiết bị' : 'Lịch chặn')))}"></span>
+                    </td>
+                    <td th:text="|${conflict.resourceId} — ${conflict.resourceName}|"></td>
+                    <td th:text="${#temporals.format(conflict.date, 'dd/MM/yyyy')}"></td>
+                    <td th:text="${conflict.periodName}"></td>
+                    <td th:text="${conflict.message}"></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+</body>
+</html>

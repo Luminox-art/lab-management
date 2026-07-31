@@ -43,4 +43,16 @@ public class PhieuDangKyThietBi {
 	public PhieuDangKyThietBiId getId() {
 		return id;
 	}
+
+	public PhieuDangKy getRegistration() {
+		return registration;
+	}
+
+	public ThietBi getDevice() {
+		return device;
+	}
+
+	public boolean isAllocated() {
+		return allocated;
+	}
 }

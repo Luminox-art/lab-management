@@ -16,6 +16,8 @@
             <a th:href="@{/catalog/devices}">Thiết bị</a>
             <a th:if="${canManage}" th:href="@{/catalog/room-groups}">Nhóm phòng</a>
             <a th:if="${canManage}" th:href="@{/catalog/device-types}">Loại thiết bị</a>
+            <a th:href="@{/schedule/availability}">Kiểm tra khả dụng</a>
+            <a th:href="@{/schedule/calendar}">Lịch phòng</a>
             <a th:href="@{/profile}">Hồ sơ</a>
         </nav>
     </div>

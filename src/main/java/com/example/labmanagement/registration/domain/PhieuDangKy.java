@@ -74,6 +74,18 @@ public class PhieuDangKy extends AuditedVersionedEntity {
 		return type;
 	}
 
+	public Phong getRoom() {
+		return room;
+	}
+
+	public LocalDate getStartDate() {
+		return startDate;
+	}
+
+	public LocalDate getEndDate() {
+		return endDate;
+	}
+
 	public PhieuDangKyTrangThai getStatus() {
 		return status;
 	}

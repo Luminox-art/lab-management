@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Lịch phòng</title>
+    <link rel="stylesheet" th:href="@{/css/catalog.css}">
+</head>
+<body>
+<a class="skip-link" href="#main-content">Bỏ qua điều hướng</a>
+<header class="app-header">
+    <div class="header-inner">
+        <a class="brand" th:href="@{/catalog/rooms}">Quản lý phòng lab</a>
+        <nav class="main-nav" aria-label="Điều hướng chính">
+            <a th:href="@{/catalog/rooms}">Phòng</a>
+            <a th:href="@{/catalog/devices}">Thiết bị</a>
+            <a th:href="@{/schedule/availability}">Kiểm tra khả dụng</a>
+            <a aria-current="page" th:href="@{/schedule/calendar}">Lịch phòng</a>
+            <a th:href="@{/profile}">Hồ sơ</a>
+        </nav>
+    </div>
+</header>
+<main class="page-shell" id="main-content" tabindex="-1">
+    <div class="page-heading">
+        <div>
+            <h1>Lịch phòng</h1>
+            <p class="subtitle">Xem các lịch đã duyệt, đang sử dụng và lịch chặn theo ngày hoặc tuần.</p>
+        </div>
+        <a class="button button-secondary" th:href="@{/schedule/availability(roomId=${roomId})}">Kiểm tra khả dụng</a>
+    </div>
+
+    <p class="message message-error" role="alert" th:if="${error}" th:text="${error}"></p>
+
+    <section class="panel" aria-labelledby="calendar-filter-heading">
+        <h2 id="calendar-filter-heading">Chọn lịch cần xem</h2>
+        <form method="get" th:action="@{/schedule/calendar}">
+            <div class="filter-grid">
+                <div class="field">
+                    <label for="roomId">Phòng</label>
+                    <select id="roomId" name="roomId" required>
+                        <option value="">Chọn phòng</option>
+                        <option th:each="room : ${rooms}" th:value="${room.id}" th:text="|${room.id} — ${room.name}|"
+                                th:selected="${room.id == roomId}"></option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label for="date">Ngày tham chiếu</label>
+                    <input id="date" name="date" type="date" required th:value="${selectedDate}">
+                </div>
+                <div class="field">
+                    <label for="view">Chế độ xem</label>
+                    <select id="view" name="view">
+                        <option value="day" th:selected="${view == 'day'}">Theo ngày</option>
+                        <option value="week" th:selected="${view == 'week'}">Theo tuần</option>
+                    </select>
+                </div>
+            </div>
+            <div class="toolbar form-actions">
+                <button type="submit">Xem lịch</button>
+            </div>
+        </form>
+    </section>
+
+    <section th:if="${result}" aria-labelledby="calendar-heading">
+        <div class="calendar-heading">
+            <div>
+                <h2 id="calendar-heading" th:text="|${result.roomId} — ${result.roomName}|">Lịch phòng</h2>
+                <p class="subtitle" th:text="|Từ ${#temporals.format(from, 'dd/MM/yyyy')} đến ${#temporals.format(to, 'dd/MM/yyyy')}|"></p>
+            </div>
+            <nav class="calendar-navigation" aria-label="Điều hướng thời gian">
+                <a class="button button-secondary" rel="prev"
+                   th:href="@{/schedule/calendar(roomId=${roomId},date=${previousDate},view=${view})}">Trước</a>
+                <a class="button button-secondary"
+                   th:href="@{/schedule/calendar(roomId=${roomId},date=${today},view=${view})}">Hôm nay</a>
+                <a class="button button-secondary" rel="next"
+                   th:href="@{/schedule/calendar(roomId=${roomId},date=${nextDate},view=${view})}">Sau</a>
+            </nav>
+        </div>
+
+        <ul class="calendar-legend" aria-label="Chú giải trạng thái lịch">
+            <li><span class="legend-marker event-approved_registration" aria-hidden="true"></span>Đã duyệt</li>
+            <li><span class="legend-marker event-in_use_registration" aria-hidden="true"></span>Đang sử dụng</li>
+            <li><span class="legend-marker event-blocked_schedule" aria-hidden="true"></span>Lịch chặn</li>
+        </ul>
+
+        <div class="calendar-grid" th:classappend="| calendar-${view}|">
+            <article class="calendar-day" th:each="day : ${calendarDays}">
+                <h3 th:text="${day.label}">Thứ Hai, 01/01/2026</h3>
+                <p class="empty-state compact" th:if="${#lists.isEmpty(day.events)}">Không có lịch</p>
+                <ol class="calendar-events" th:unless="${#lists.isEmpty(day.events)}">
+                    <li class="calendar-event" th:each="event : ${day.events}"
+                        th:classappend="| event-${#strings.toLowerCase(event.type.name())}|">
+                        <span class="event-status"
+                              th:text="${event.type.name() == 'APPROVED_REGISTRATION' ? 'Đã duyệt' :
+                              (event.type.name() == 'IN_USE_REGISTRATION' ? 'Đang sử dụng' : 'Lịch chặn')}"></span>
+                        <strong th:text="${event.title}"></strong>
+                        <span th:if="${event.allDay}">Cả ngày</span>
+                        <span th:unless="${event.allDay}"
+                              th:text="|${event.periodName} · ${event.startTime}–${event.endTime}|"></span>
+                        <span th:text="${event.detail}"></span>
+                    </li>
+                </ol>
+            </article>
+        </div>
+    </section>
+
+    <section class="panel empty-state" th:if="${result == null and error == null}" aria-live="polite">
+        <h2>Chưa chọn phòng</h2>
+        <p>Chọn một phòng và ngày tham chiếu để xem lịch.</p>
+    </section>
+</main>
+</body>
+</html>

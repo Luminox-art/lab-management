@@ -43,4 +43,16 @@ public class LichDangKy {
 	public Long getId() {
 		return id;
 	}
+
+	public PhieuDangKy getRegistration() {
+		return registration;
+	}
+
+	public byte getDayOfWeek() {
+		return dayOfWeek;
+	}
+
+	public TietHoc getPeriod() {
+		return period;
+	}
 }
