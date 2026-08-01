@@ -25,7 +25,7 @@
     <div class="page-heading">
         <div>
             <h1>Phiếu đăng ký</h1>
-            <p class="subtitle" th:text="${manager ? 'Danh sách phiếu trong phạm vi quản lý.' : 'Theo dõi các phiếu bạn được phép xem.'}"></p>
+            <p class="subtitle" th:text="${manager ? 'Hàng đợi phiếu chờ duyệt, kèm cảnh báo để xử lý an toàn.' : 'Theo dõi các phiếu bạn được phép xem.'}"></p>
         </div>
         <a class="button button-primary" th:if="${canCreate}" th:href="@{/registrations/new}">Tạo phiếu</a>
     </div>
@@ -53,6 +53,23 @@
                                 th:text="${item.name() == 'CHO_DUYET' ? 'Chờ duyệt' : (item.name() == 'DA_DUYET' ? 'Đã duyệt' : (item.name() == 'TU_CHOI' ? 'Từ chối' : (item.name() == 'DA_HUY' ? 'Đã hủy' : (item.name() == 'DANG_SU_DUNG' ? 'Đang sử dụng' : 'Hoàn thành'))))}"></option>
                     </select>
                 </div>
+                <div class="field" th:if="${manager}">
+                    <label for="roomId">Phòng</label>
+                    <select id="roomId" name="roomId">
+                        <option value="">Tất cả phòng</option>
+                        <option th:each="room : ${rooms}" th:value="${room.id}" th:selected="${room.id == roomId}"
+                                th:text="|${room.id} — ${room.name}|"></option>
+                    </select>
+                </div>
+                <div class="field" th:if="${manager}">
+                    <label for="date">Ngày sử dụng</label>
+                    <input id="date" name="date" type="date" th:value="${date}">
+                </div>
+                <div class="field" th:if="${manager}">
+                    <label for="creator">Người tạo</label>
+                    <input id="creator" name="creator" type="search" th:value="${creator}"
+                           placeholder="Mã hoặc họ tên">
+                </div>
             </div>
             <div class="toolbar form-actions">
                 <button type="submit">Áp dụng bộ lọc</button>
@@ -73,6 +90,7 @@
                 <th scope="col">Số người</th>
                 <th scope="col">Trạng thái</th>
                 <th scope="col" th:if="${manager}">Người tạo</th>
+                <th scope="col" th:if="${manager}">Cảnh báo</th>
                 <th scope="col">Thao tác</th>
             </tr>
             </thead>
@@ -88,10 +106,17 @@
                           th:text="${registration.status.name() == 'CHO_DUYET' ? 'Chờ duyệt' : (registration.status.name() == 'DA_DUYET' ? 'Đã duyệt' : (registration.status.name() == 'TU_CHOI' ? 'Từ chối' : (registration.status.name() == 'DA_HUY' ? 'Đã hủy' : (registration.status.name() == 'DANG_SU_DUNG' ? 'Đang sử dụng' : 'Hoàn thành'))))}"></span>
                 </td>
                 <td th:if="${manager}" th:text="|${registration.creatorId} — ${registration.creatorName}|"></td>
+                <td th:if="${manager}">
+                    <span class="status-chip status-da_duyet" th:if="${#lists.isEmpty(registration.warnings)}">Sẵn sàng xem xét</span>
+                    <ul class="warning-list compact" th:unless="${#lists.isEmpty(registration.warnings)}">
+                        <li th:each="warning : ${registration.warnings}"
+                            th:text="${warning.type.name() == 'CAPACITY' ? 'Sức chứa: ' + warning.message : (warning.type.name() == 'SUPERVISOR' ? 'GVHD: ' + warning.message : 'Xung đột: ' + warning.message)}"></li>
+                    </ul>
+                </td>
                 <td><a class="button button-secondary" th:href="@{/registrations/{id}(id=${registration.id})}">Chi tiết</a></td>
             </tr>
             <tr th:if="${result.empty}">
-                <td class="empty-state" th:colspan="${manager ? 8 : 7}">Không có phiếu phù hợp. Hãy thay đổi bộ lọc.</td>
+                <td class="empty-state" th:colspan="${manager ? 9 : 7}">Không có phiếu phù hợp. Hãy thay đổi bộ lọc.</td>
             </tr>
             </tbody>
         </table>
@@ -99,10 +124,10 @@
 
     <nav class="pagination" aria-label="Phân trang phiếu đăng ký" th:if="${result.totalPages > 1}">
         <a class="button button-secondary" rel="prev" th:if="${result.hasPrevious()}"
-           th:href="@{/registrations(type=${type},status=${status},page=${result.number - 1},size=${result.size})}">Trang trước</a>
+           th:href="@{/registrations(type=${type},status=${status},roomId=${roomId},date=${date},creator=${creator},page=${result.number - 1},size=${result.size})}">Trang trước</a>
         <span th:text="|Trang ${result.number + 1} / ${result.totalPages}|">Trang 1 / 1</span>
         <a class="button button-secondary" rel="next" th:if="${result.hasNext()}"
-           th:href="@{/registrations(type=${type},status=${status},page=${result.number + 1},size=${result.size})}">Trang sau</a>
+           th:href="@{/registrations(type=${type},status=${status},roomId=${roomId},date=${date},creator=${creator},page=${result.number + 1},size=${result.size})}">Trang sau</a>
     </nav>
 </main>
 </body>

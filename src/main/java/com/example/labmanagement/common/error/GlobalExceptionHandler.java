@@ -8,6 +8,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.OptimisticLockingFailureException;
+import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -48,6 +49,12 @@ public class GlobalExceptionHandler {
 	ResponseEntity<ApiErrorResponse> handleOptimisticLockingFailure(OptimisticLockingFailureException exception) {
 		return error(HttpStatus.CONFLICT, ErrorCode.RESOURCE_CONFLICT, "Dữ liệu đã được cập nhật bởi yêu cầu khác.",
 				List.of());
+	}
+
+	@ExceptionHandler(PessimisticLockingFailureException.class)
+	ResponseEntity<ApiErrorResponse> handlePessimisticLockingFailure(PessimisticLockingFailureException exception) {
+		return error(HttpStatus.CONFLICT, ErrorCode.RESOURCE_CONFLICT,
+				"Tài nguyên đang được xử lý đồng thời. Vui lòng tải lại dữ liệu và thử lại.", List.of());
 	}
 
 	@ExceptionHandler(ApiException.class)

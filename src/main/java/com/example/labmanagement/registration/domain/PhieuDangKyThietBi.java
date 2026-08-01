@@ -55,4 +55,8 @@ public class PhieuDangKyThietBi {
 	public boolean isAllocated() {
 		return allocated;
 	}
+
+	public void setAllocated(boolean allocated) {
+		this.allocated = allocated;
+	}
 }

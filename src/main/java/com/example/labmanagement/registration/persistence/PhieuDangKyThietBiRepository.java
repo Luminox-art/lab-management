@@ -23,6 +23,13 @@ public interface PhieuDangKyThietBiRepository extends JpaRepository<PhieuDangKyT
 	List<PhieuDangKyThietBi> findAllByRegistrationId(@Param("registrationId") String registrationId);
 
 	@Query("""
+			select allocation.device.id from PhieuDangKyThietBi allocation
+			where allocation.registration.id = :registrationId
+			order by allocation.device.id
+			""")
+	List<String> findRequestedDeviceIds(@Param("registrationId") String registrationId);
+
+	@Query("""
 			select allocation from PhieuDangKyThietBi allocation
 			join fetch allocation.registration registration
 			join fetch allocation.device device
@@ -36,4 +43,7 @@ public interface PhieuDangKyThietBiRepository extends JpaRepository<PhieuDangKyT
 	List<PhieuDangKyThietBi> findAllocatedCandidates(@Param("deviceIds") Collection<String> deviceIds,
 			@Param("statuses") Collection<PhieuDangKyTrangThai> statuses, @Param("from") LocalDate from,
 			@Param("to") LocalDate to);
+
+	boolean existsByDevice_IdAndAllocatedTrueAndRegistration_StatusIn(String deviceId,
+			Collection<PhieuDangKyTrangThai> statuses);
 }

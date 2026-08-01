@@ -84,6 +84,8 @@ class RegistrationServiceTest {
 	@Mock
 	private PhienSuDungRepository sessionRepository;
 	@Mock
+	private ApprovalService approvalService;
+	@Mock
 	private EntityManager entityManager;
 
 	private RegistrationService service;
@@ -100,7 +102,7 @@ class RegistrationServiceTest {
 	void setUp() {
 		service = new RegistrationService(userRepository, roomRepository, deviceRepository, periodRepository,
 				registrationRepository, scheduleRepository, allocationRepository, teachingRepository,
-				supervisionRepository, historyRepository, sessionRepository, entityManager,
+				supervisionRepository, historyRepository, sessionRepository, approvalService, entityManager,
 				Clock.fixed(NOW, ZoneOffset.UTC));
 		instructorRole = new VaiTro("GV", "Giảng viên");
 		studentRole = new VaiTro("SV", "Sinh viên");

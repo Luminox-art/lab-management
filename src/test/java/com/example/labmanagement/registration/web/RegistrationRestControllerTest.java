@@ -14,6 +14,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.example.labmanagement.common.error.GlobalExceptionHandler;
+import com.example.labmanagement.registration.application.ApprovalService;
+import com.example.labmanagement.registration.application.RegistrationDecisionResponse;
 import com.example.labmanagement.registration.application.RegistrationFormRequest;
 import com.example.labmanagement.registration.application.RegistrationResponse;
 import com.example.labmanagement.registration.application.RegistrationService;
@@ -50,6 +52,9 @@ class RegistrationRestControllerTest {
 	@MockitoBean
 	private RegistrationService registrationService;
 
+	@MockitoBean
+	private ApprovalService approvalService;
+
 	@Test
 	void createRequiresAuthenticationCsrfAndCreatorRole() throws Exception {
 		when(registrationService.create(any(), any())).thenReturn(response());
@@ -85,8 +90,8 @@ class RegistrationRestControllerTest {
 				PhieuDangKyTrangThai.CHO_DUYET, 0, "GV001", "Giảng viên 01",
 				OffsetDateTime.of(2026, 8, 1, 8, 0, 0, 0, ZoneOffset.ofHours(7)),
 				OffsetDateTime.of(2026, 8, 1, 8, 0, 0, 0, ZoneOffset.ofHours(7)));
-		when(registrationService.search(INSTRUCTOR_EMAIL, LoaiPhieu.GIANG_DAY, PhieuDangKyTrangThai.CHO_DUYET, 0, 20))
-				.thenReturn(new PageImpl<>(List.of(summary), PageRequest.of(0, 20), 1));
+		when(registrationService.search(INSTRUCTOR_EMAIL, LoaiPhieu.GIANG_DAY, PhieuDangKyTrangThai.CHO_DUYET, null,
+				null, null, 0, 20)).thenReturn(new PageImpl<>(List.of(summary), PageRequest.of(0, 20), 1));
 
 		mockMvc.perform(get("/api/v1/registrations").with(user(INSTRUCTOR_EMAIL).roles("GV")).param("type", "GIANG_DAY")
 				.param("status", "CHO_DUYET")).andExpect(status().isOk())
@@ -117,6 +122,35 @@ class RegistrationRestControllerTest {
 
 		verify(registrationService).update(org.mockito.ArgumentMatchers.eq(INSTRUCTOR_EMAIL),
 				org.mockito.ArgumentMatchers.eq("PDK-STAGE5"), any(RegistrationFormRequest.class));
+	}
+
+	@Test
+	void approveAndRejectRequireManagerAndValidatedPayload() throws Exception {
+		OffsetDateTime processedAt = OffsetDateTime.of(2026, 8, 1, 9, 0, 0, 0, ZoneOffset.ofHours(7));
+		when(approvalService.approve(org.mockito.ArgumentMatchers.eq("cb001@lab.local"),
+				org.mockito.ArgumentMatchers.eq("PDK-STAGE5"), any()))
+				.thenReturn(new RegistrationDecisionResponse("PDK-STAGE5", PhieuDangKyTrangThai.DA_DUYET, 1,
+						List.of("TB0001"), processedAt));
+		when(approvalService.reject(org.mockito.ArgumentMatchers.eq("cb001@lab.local"),
+				org.mockito.ArgumentMatchers.eq("PDK-STAGE5"), any()))
+				.thenReturn(new RegistrationDecisionResponse("PDK-STAGE5", PhieuDangKyTrangThai.TU_CHOI, 1, List.of(),
+						processedAt));
+
+		mockMvc.perform(post("/api/v1/registrations/PDK-STAGE5/approve").with(user(INSTRUCTOR_EMAIL).roles("GV"))
+				.with(csrf()).contentType(MediaType.APPLICATION_JSON).content("{\"deviceIds\":[],\"version\":0}"))
+				.andExpect(status().isForbidden());
+		mockMvc.perform(post("/api/v1/registrations/PDK-STAGE5/approve").with(user("cb001@lab.local").roles("CBQL"))
+				.with(csrf()).contentType(MediaType.APPLICATION_JSON)
+				.content("{\"deviceIds\":[\"TB0001\"],\"version\":0}")).andExpect(status().isOk())
+				.andExpect(jsonPath("$.data.status").value("DA_DUYET"))
+				.andExpect(jsonPath("$.data.allocatedDeviceIds[0]").value("TB0001"));
+		mockMvc.perform(post("/api/v1/registrations/PDK-STAGE5/reject").with(user("cb001@lab.local").roles("CBQL"))
+				.with(csrf()).contentType(MediaType.APPLICATION_JSON).content("{\"reason\":\"   \",\"version\":0}"))
+				.andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+		mockMvc.perform(post("/api/v1/registrations/PDK-STAGE5/reject").with(user("cb001@lab.local").roles("CBQL"))
+				.with(csrf()).contentType(MediaType.APPLICATION_JSON)
+				.content("{\"reason\":\"Không phù hợp\",\"version\":0}")).andExpect(status().isOk())
+				.andExpect(jsonPath("$.data.status").value("TU_CHOI"));
 	}
 
 	private RegistrationResponse response() {

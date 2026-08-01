@@ -80,6 +80,7 @@ public class RegistrationService {
 	private final PhieuHuongDanRepository supervisionRepository;
 	private final XuLyPhieuRepository historyRepository;
 	private final PhienSuDungRepository sessionRepository;
+	private final ApprovalService approvalService;
 	private final EntityManager entityManager;
 	private final Clock clock;
 
@@ -88,7 +89,8 @@ public class RegistrationService {
 			PhieuDangKyRepository registrationRepository, LichDangKyRepository scheduleRepository,
 			PhieuDangKyThietBiRepository allocationRepository, PhieuGiangDayRepository teachingRepository,
 			PhieuHuongDanRepository supervisionRepository, XuLyPhieuRepository historyRepository,
-			PhienSuDungRepository sessionRepository, EntityManager entityManager, Clock clock) {
+			PhienSuDungRepository sessionRepository, ApprovalService approvalService, EntityManager entityManager,
+			Clock clock) {
 		this.userRepository = userRepository;
 		this.roomRepository = roomRepository;
 		this.deviceRepository = deviceRepository;
@@ -100,6 +102,7 @@ public class RegistrationService {
 		this.supervisionRepository = supervisionRepository;
 		this.historyRepository = historyRepository;
 		this.sessionRepository = sessionRepository;
+		this.approvalService = approvalService;
 		this.entityManager = entityManager;
 		this.clock = clock;
 	}
@@ -120,13 +123,20 @@ public class RegistrationService {
 	@Transactional(readOnly = true)
 	public Page<RegistrationSummaryResponse> search(String actorEmail, LoaiPhieu type, PhieuDangKyTrangThai status,
 			int page, int size) {
+		return search(actorEmail, type, status, null, null, null, page, size);
+	}
+
+	@Transactional(readOnly = true)
+	public Page<RegistrationSummaryResponse> search(String actorEmail, LoaiPhieu type, PhieuDangKyTrangThai status,
+			String roomId, LocalDate date, String creator, int page, int size) {
 		NguoiDung actor = findActiveActor(actorEmail);
 		Pageable pageable = PageRequest.of(Math.max(page, 0), Math.min(Math.max(size, 1), 100),
 				Sort.by(Sort.Direction.DESC, "createdAt", "id"));
 		String roleId = actor.getRole().getId();
 		Page<PhieuDangKy> registrations;
 		if (ROLE_MANAGER.equals(roleId)) {
-			registrations = registrationRepository.findQueueByStatus(type, PhieuDangKyTrangThai.CHO_DUYET, pageable);
+			registrations = registrationRepository.findQueue(type, PhieuDangKyTrangThai.CHO_DUYET,
+					normalizeOptional(roomId), date, normalizeOptional(creator), pageable);
 		} else if (ROLE_INSTRUCTOR.equals(roleId)) {
 			registrations = registrationRepository.findAccessibleToInstructor(actor.getId(), type, status, pageable);
 		} else if (ROLE_STUDENT.equals(roleId)) {
@@ -134,7 +144,9 @@ public class RegistrationService {
 		} else {
 			throw accessDenied("Vai trò hiện tại không được truy cập phiếu đăng ký.");
 		}
-		return registrations.map(this::toSummary);
+		return ROLE_MANAGER.equals(roleId)
+				? registrations.map(this::toManagerSummary)
+				: registrations.map(this::toSummary);
 	}
 
 	@Transactional(readOnly = true)
@@ -393,6 +405,14 @@ public class RegistrationService {
 				registration.getStartDate(), registration.getEndDate(), registration.getStatus(),
 				registration.getVersion(), registration.getCreator().getId(), registration.getCreator().getFullName(),
 				toDisplayTime(registration.getCreatedAt()), toDisplayTime(registration.getUpdatedAt()));
+	}
+
+	private RegistrationSummaryResponse toManagerSummary(PhieuDangKy registration) {
+		RegistrationSummaryResponse summary = toSummary(registration);
+		return new RegistrationSummaryResponse(summary.id(), summary.type(), summary.purpose(), summary.roomId(),
+				summary.roomName(), summary.participantCount(), summary.startDate(), summary.endDate(),
+				summary.status(), summary.version(), summary.creatorId(), summary.creatorName(), summary.createdAt(),
+				summary.updatedAt(), approvalService.preview(registration).warnings());
 	}
 
 	private RegistrationScheduleResponse toScheduleResponse(LichDangKy schedule) {

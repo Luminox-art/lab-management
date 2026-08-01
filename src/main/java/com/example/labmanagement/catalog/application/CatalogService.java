@@ -14,8 +14,10 @@ import com.example.labmanagement.catalog.persistence.TaiNguyenRepository;
 import com.example.labmanagement.catalog.persistence.ThietBiRepository;
 import com.example.labmanagement.common.error.ApiException;
 import com.example.labmanagement.common.error.ErrorCode;
+import com.example.labmanagement.registration.domain.PhieuDangKyTrangThai;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
@@ -33,6 +35,10 @@ public class CatalogService {
 			"group.name", "location", "location", "capacity", "capacity", "status", "status");
 	private static final Map<String, String> DEVICE_SORT_FIELDS = Map.of("id", "id", "name", "name", "type",
 			"type.name", "serialNumber", "serialNumber", "model", "model", "room", "room.name", "status", "status");
+	private static final Set<ThietBiTrangThai> ALLOCATION_BLOCKING_DEVICE_STATUSES = Set.of(ThietBiTrangThai.HONG,
+			ThietBiTrangThai.BAO_TRI, ThietBiTrangThai.NGUNG_SU_DUNG);
+	private static final Set<PhieuDangKyTrangThai> ACTIVE_REGISTRATION_STATUSES = Set.of(PhieuDangKyTrangThai.DA_DUYET,
+			PhieuDangKyTrangThai.DANG_SU_DUNG);
 
 	private final NhomPhongRepository roomGroupRepository;
 	private final PhongRepository roomRepository;
@@ -152,9 +158,15 @@ public class CatalogService {
 
 	@Transactional
 	public DeviceResponse updateDevice(String id, DeviceUpdateRequest request) {
-		ThietBi device = findDevice(id);
+		ThietBi device = deviceRepository.findByIdForUpdate(normalizeId(id)).orElseThrow(
+				() -> new ApiException(ErrorCode.NOT_FOUND, HttpStatus.NOT_FOUND, "Không tìm thấy thiết bị."));
+		resourceRepository.lockForApproval("__NO_ROOM__", List.of(device.getId()));
 		if (device.getVersion() != request.version()) {
 			throw conflict("Dữ liệu thiết bị đã được cập nhật bởi yêu cầu khác.");
+		}
+		if (ALLOCATION_BLOCKING_DEVICE_STATUSES.contains(request.status())
+				&& deviceRepository.existsActiveAllocation(device.getId(), ACTIVE_REGISTRATION_STATUSES)) {
+			throw conflict("Không thể chuyển thiết bị đang được phân bổ cho phiếu còn hiệu lực sang trạng thái này.");
 		}
 		String serialNumber = normalizeOptional(request.serialNumber());
 		if (serialNumber != null && deviceRepository.existsBySerialNumberAndIdNot(serialNumber, device.getId())) {

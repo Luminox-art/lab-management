@@ -14,6 +14,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.example.labmanagement.catalog.application.CatalogService;
 import com.example.labmanagement.catalog.application.RoomResponse;
 import com.example.labmanagement.catalog.domain.PhongTrangThai;
+import com.example.labmanagement.registration.application.ApprovalPreviewResponse;
+import com.example.labmanagement.registration.application.ApprovalService;
+import com.example.labmanagement.registration.application.ApprovalWarningResponse;
+import com.example.labmanagement.registration.application.ApprovalWarningType;
 import com.example.labmanagement.registration.application.RegistrationDeviceOptionResponse;
 import com.example.labmanagement.registration.application.RegistrationDeviceResponse;
 import com.example.labmanagement.registration.application.RegistrationHistoryResponse;
@@ -65,6 +69,9 @@ class RegistrationWebControllerTest {
 	@MockitoBean
 	private SchedulingService schedulingService;
 
+	@MockitoBean
+	private ApprovalService approvalService;
+
 	@BeforeEach
 	void setUp() {
 		RoomResponse room = new RoomResponse("P0601", "Phòng 6.1", "NP01", "Nhóm phòng máy", "Tầng 6", 40,
@@ -83,7 +90,7 @@ class RegistrationWebControllerTest {
 		RegistrationSummaryResponse summary = new RegistrationSummaryResponse(REGISTRATION_ID, LoaiPhieu.HOC_TAP,
 				"Thực hành mạng", "P0601", "Phòng 6.1", 10, LocalDate.of(2026, 9, 1), LocalDate.of(2026, 9, 30),
 				PhieuDangKyTrangThai.CHO_DUYET, 0, "SV001", "Sinh viên 01", CREATED_AT, CREATED_AT);
-		when(registrationService.search(USER_EMAIL, null, null, 0, 20))
+		when(registrationService.search(USER_EMAIL, null, null, null, null, null, 0, 20))
 				.thenReturn(new PageImpl<>(List.of(summary), PageRequest.of(0, 20), 1));
 
 		mockMvc.perform(get("/registrations")).andExpect(status().is3xxRedirection())
@@ -110,6 +117,25 @@ class RegistrationWebControllerTest {
 	}
 
 	@Test
+	void managerQueueRendersExtendedFiltersAndTextWarnings() throws Exception {
+		String managerEmail = "cb001@lab.local";
+		LocalDate date = LocalDate.of(2035, 1, 1);
+		RegistrationSummaryResponse summary = new RegistrationSummaryResponse(REGISTRATION_ID, LoaiPhieu.HOC_TAP,
+				"Thực hành mạng", "P0601", "Phòng 6.1", 10, date, date, PhieuDangKyTrangThai.CHO_DUYET, 0, "SV001",
+				"Sinh viên 01", CREATED_AT, CREATED_AT,
+				List.of(new ApprovalWarningResponse(ApprovalWarningType.CONFLICT, "Phòng đã có lịch khác.")));
+		when(registrationService.search(managerEmail, LoaiPhieu.HOC_TAP, null, "P0601", date, "SV001", 0, 20))
+				.thenReturn(new PageImpl<>(List.of(summary), PageRequest.of(0, 20), 1));
+
+		mockMvc.perform(get("/registrations").with(user(managerEmail).roles("CBQL")).param("type", "HOC_TAP")
+				.param("roomId", "P0601").param("date", date.toString()).param("creator", "SV001"))
+				.andExpect(status().isOk()).andExpect(view().name("registration/list"))
+				.andExpect(content().string(Matchers.containsString("Hàng đợi phiếu chờ duyệt")))
+				.andExpect(content().string(Matchers.containsString("type=\"date\"")))
+				.andExpect(content().string(Matchers.containsString("Phòng đã có lịch khác.")));
+	}
+
+	@Test
 	void registrationDetailRendersAggregateAndCancelRequiresCsrf() throws Exception {
 		when(registrationService.get(LECTURER_EMAIL, REGISTRATION_ID)).thenReturn(response());
 
@@ -125,6 +151,27 @@ class RegistrationWebControllerTest {
 				.param("reason", "Không còn nhu cầu").param("version", "0")).andExpect(status().isForbidden());
 		verify(registrationService, never()).cancel(org.mockito.ArgumentMatchers.any(),
 				org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
+	}
+
+	@Test
+	void managerDetailRendersDecisionFormsAndDecisionPostsAreProtected() throws Exception {
+		String managerEmail = "cb001@lab.local";
+		when(registrationService.get(managerEmail, REGISTRATION_ID)).thenReturn(response());
+		when(approvalService.preview(managerEmail, REGISTRATION_ID))
+				.thenReturn(new ApprovalPreviewResponse(true, List.of()));
+
+		mockMvc.perform(get("/registrations/{id}", REGISTRATION_ID).with(user(managerEmail).roles("CBQL")))
+				.andExpect(status().isOk()).andExpect(view().name("registration/detail"))
+				.andExpect(content().string(Matchers.containsString("Phê duyệt phiếu")))
+				.andExpect(content().string(Matchers.containsString("Từ chối phiếu")))
+				.andExpect(content().string(Matchers.containsString("name=\"deviceIds\"")));
+
+		mockMvc.perform(post("/registrations/{id}/approve", REGISTRATION_ID).with(user(LECTURER_EMAIL).roles("GV"))
+				.param("version", "0")).andExpect(status().isForbidden());
+		mockMvc.perform(post("/registrations/{id}/approve", REGISTRATION_ID).with(user(managerEmail).roles("CBQL"))
+				.param("version", "0")).andExpect(status().isForbidden());
+		verify(approvalService, never()).approve(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(),
+				org.mockito.ArgumentMatchers.any());
 	}
 
 	private RegistrationResponse response() {

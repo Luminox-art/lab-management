@@ -142,6 +142,73 @@
         </div>
     </section>
 
+    <section class="panel approval-panel" aria-labelledby="approval-heading" th:if="${canDecide}">
+        <div class="section-heading">
+            <div>
+                <h2 id="approval-heading">Phê duyệt và phân bổ</h2>
+                <p class="helper">Kiểm tra cảnh báo và chỉ chọn các thiết bị thực tế sẽ được phân bổ.</p>
+            </div>
+        </div>
+        <div class="message message-success" role="status" th:if="${#lists.isEmpty(approvalPreview.warnings)}">
+            Không phát hiện cảnh báo với toàn bộ thiết bị đang yêu cầu. Hệ thống vẫn kiểm tra lại khi xác nhận.
+        </div>
+        <div class="message message-warning" role="alert" th:unless="${#lists.isEmpty(approvalPreview.warnings)}">
+            <strong>Cần kiểm tra trước khi phê duyệt</strong>
+            <ul class="warning-list">
+                <li th:each="warning : ${approvalPreview.warnings}" th:text="${warning.message}"></li>
+            </ul>
+        </div>
+        <form method="post" th:action="@{/registrations/{id}/approve(id=${registration.id})}"
+              th:object="${approvalForm}"
+              onsubmit="return confirm('Xác nhận phê duyệt phiếu và phân bổ các thiết bị đã chọn?');">
+            <input th:name="${_csrf.parameterName}" th:value="${_csrf.token}" type="hidden">
+            <input th:field="*{version}" type="hidden">
+            <fieldset class="device-fieldset">
+                <legend>Thiết bị phân bổ thực tế</legend>
+                <p class="helper" id="approval-device-help">Thiết bị cố định phải thuộc phòng của phiếu; thiết bị di động có thể đến từ phòng khác.</p>
+                <div class="device-options" aria-describedby="approval-device-help"
+                     th:unless="${#lists.isEmpty(registration.devices)}">
+                    <label class="device-option" th:each="device : ${registration.devices}">
+                        <input type="checkbox" th:field="*{deviceIds}" th:value="${device.id}">
+                        <span class="device-option-copy">
+                            <strong th:text="|${device.id} — ${device.name}|"></strong>
+                            <small th:text="${device.typeName}"></small>
+                            <small th:if="${device.mobile}">Di động</small>
+                            <small th:if="${device.instructorRequired}">Cần GVHD</small>
+                        </span>
+                    </label>
+                </div>
+                <p class="empty-state compact" th:if="${#lists.isEmpty(registration.devices)}">Phiếu không yêu cầu thiết bị; có thể phê duyệt chỉ với phòng.</p>
+                <p class="field-error" role="alert" th:errors="*{deviceIds}"></p>
+            </fieldset>
+            <div class="toolbar form-actions">
+                <button class="button-primary" type="submit">Phê duyệt phiếu</button>
+            </div>
+        </form>
+    </section>
+
+    <section class="panel danger-panel" aria-labelledby="reject-heading" th:if="${canDecide}">
+        <h2 id="reject-heading">Từ chối phiếu</h2>
+        <p>Phiếu bị từ chối không thể quay lại hàng đợi. Lý do sẽ được lưu trong lịch sử xử lý.</p>
+        <form method="post" th:action="@{/registrations/{id}/reject(id=${registration.id})}"
+              th:object="${rejectionForm}"
+              onsubmit="return confirm('Xác nhận từ chối phiếu này?');">
+            <input th:name="${_csrf.parameterName}" th:value="${_csrf.token}" type="hidden">
+            <input th:field="*{version}" type="hidden">
+            <div class="field">
+                <label for="rejection-reason">Lý do từ chối <span aria-hidden="true">*</span></label>
+                <textarea id="rejection-reason" th:field="*{reason}" maxlength="255" required
+                          aria-describedby="rejection-reason-help rejection-reason-error"
+                          th:attr="aria-invalid=${#fields.hasErrors('reason')}"></textarea>
+                <p class="helper" id="rejection-reason-help">Nêu nguyên nhân và cách người tạo có thể điều chỉnh; tối đa 255 ký tự.</p>
+                <p class="field-error" id="rejection-reason-error" role="alert" th:errors="*{reason}"></p>
+            </div>
+            <div class="toolbar form-actions">
+                <button class="button-danger" type="submit">Từ chối phiếu</button>
+            </div>
+        </form>
+    </section>
+
     <section class="panel" aria-labelledby="registration-history-heading">
         <h2 id="registration-history-heading">Lịch sử xử lý</h2>
         <div class="table-wrap" role="region" aria-label="Lịch sử xử lý phiếu" tabindex="0">

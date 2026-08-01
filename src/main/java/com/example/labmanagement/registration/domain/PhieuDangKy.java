@@ -117,4 +117,14 @@ public class PhieuDangKy extends AuditedVersionedEntity {
 	public void cancel() {
 		this.status = PhieuDangKyTrangThai.DA_HUY;
 	}
+
+	public void approve(Instant updatedAt) {
+		this.status = PhieuDangKyTrangThai.DA_DUYET;
+		markUpdatedAt(updatedAt);
+	}
+
+	public void reject(Instant updatedAt) {
+		this.status = PhieuDangKyTrangThai.TU_CHOI;
+		markUpdatedAt(updatedAt);
+	}
 }

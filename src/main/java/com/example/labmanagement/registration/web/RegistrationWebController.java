@@ -3,6 +3,8 @@ package com.example.labmanagement.registration.web;
 import com.example.labmanagement.catalog.application.CatalogService;
 import com.example.labmanagement.common.error.ApiException;
 import com.example.labmanagement.common.error.ErrorCode;
+import com.example.labmanagement.registration.application.ApprovalPreviewResponse;
+import com.example.labmanagement.registration.application.ApprovalService;
 import com.example.labmanagement.registration.application.RegistrationResponse;
 import com.example.labmanagement.registration.application.RegistrationService;
 import com.example.labmanagement.registration.application.RegistrationSummaryResponse;
@@ -12,6 +14,7 @@ import com.example.labmanagement.scheduling.application.SchedulingService;
 import com.example.labmanagement.scheduling.domain.ScheduleDateCalculator;
 import jakarta.validation.Valid;
 import java.security.Principal;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import org.springframework.data.domain.Page;
@@ -35,20 +38,24 @@ public class RegistrationWebController {
 	private final RegistrationService registrationService;
 	private final CatalogService catalogService;
 	private final SchedulingService schedulingService;
+	private final ApprovalService approvalService;
 
 	public RegistrationWebController(RegistrationService registrationService, CatalogService catalogService,
-			SchedulingService schedulingService) {
+			SchedulingService schedulingService, ApprovalService approvalService) {
 		this.registrationService = registrationService;
 		this.catalogService = catalogService;
 		this.schedulingService = schedulingService;
+		this.approvalService = approvalService;
 	}
 
 	@GetMapping
 	String registrations(@RequestParam(required = false) LoaiPhieu type,
-			@RequestParam(required = false) PhieuDangKyTrangThai status, @RequestParam(defaultValue = "0") int page,
-			@RequestParam(defaultValue = "20") int size, Authentication authentication, Model model) {
+			@RequestParam(required = false) PhieuDangKyTrangThai status, @RequestParam(required = false) String roomId,
+			@RequestParam(required = false) LocalDate date, @RequestParam(required = false) String creator,
+			@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size,
+			Authentication authentication, Model model) {
 		Page<RegistrationSummaryResponse> result = registrationService.search(authentication.getName(), type, status,
-				page, size);
+				roomId, date, creator, page, size);
 		boolean manager = hasRole(authentication, "CBQL");
 		model.addAttribute("result", result);
 		model.addAttribute("types", LoaiPhieu.values());
@@ -58,6 +65,10 @@ public class RegistrationWebController {
 		model.addAttribute("status", manager ? PhieuDangKyTrangThai.CHO_DUYET : status);
 		model.addAttribute("canCreate", hasRole(authentication, "GV") || hasRole(authentication, "SV"));
 		model.addAttribute("manager", manager);
+		model.addAttribute("rooms", manager ? catalogService.selectableRooms() : List.of());
+		model.addAttribute("roomId", roomId);
+		model.addAttribute("date", date);
+		model.addAttribute("creator", creator);
 		return "registration/list";
 	}
 
@@ -85,12 +96,12 @@ public class RegistrationWebController {
 	}
 
 	@GetMapping("/{id}")
-	String detail(@PathVariable String id, Principal principal, Model model) {
-		RegistrationResponse registration = registrationService.get(principal.getName(), id);
+	String detail(@PathVariable String id, Authentication authentication, Model model) {
+		RegistrationResponse registration = registrationService.get(authentication.getName(), id);
 		RegistrationForms.CancellationForm cancellationForm = new RegistrationForms.CancellationForm();
 		cancellationForm.setVersion(registration.version());
-		model.addAttribute("registration", registration);
 		model.addAttribute("cancellationForm", cancellationForm);
+		prepareDecisionModel(model, authentication, registration);
 		return "registration/detail";
 	}
 
@@ -137,6 +148,77 @@ public class RegistrationWebController {
 			redirectAttributes.addFlashAttribute("error", exception.getMessage());
 		}
 		return "redirect:/registrations/" + id;
+	}
+
+	@PostMapping("/{id}/approve")
+	String approve(@PathVariable String id, @Valid @ModelAttribute("approvalForm") RegistrationForms.ApprovalForm form,
+			BindingResult bindingResult, Authentication authentication, Model model,
+			RedirectAttributes redirectAttributes) {
+		if (bindingResult.hasErrors()) {
+			RegistrationResponse registration = registrationService.get(authentication.getName(), id);
+			RegistrationForms.RejectionForm rejectionForm = new RegistrationForms.RejectionForm();
+			rejectionForm.setVersion(registration.version());
+			model.addAttribute("rejectionForm", rejectionForm);
+			model.addAttribute("cancellationForm", new RegistrationForms.CancellationForm());
+			prepareDecisionModel(model, authentication, registration);
+			return "registration/detail";
+		}
+		try {
+			approvalService.approve(authentication.getName(), id, form.toRequest());
+			redirectAttributes.addFlashAttribute("success", "Đã phê duyệt và phân bổ tài nguyên cho phiếu.");
+		} catch (ApiException exception) {
+			redirectAttributes.addFlashAttribute("error", exception.getMessage());
+		}
+		return "redirect:/registrations/" + id;
+	}
+
+	@PostMapping("/{id}/reject")
+	String reject(@PathVariable String id, @Valid @ModelAttribute("rejectionForm") RegistrationForms.RejectionForm form,
+			BindingResult bindingResult, Authentication authentication, Model model,
+			RedirectAttributes redirectAttributes) {
+		if (bindingResult.hasErrors()) {
+			RegistrationResponse registration = registrationService.get(authentication.getName(), id);
+			RegistrationForms.ApprovalForm approvalForm = approvalForm(registration);
+			model.addAttribute("approvalForm", approvalForm);
+			model.addAttribute("cancellationForm", new RegistrationForms.CancellationForm());
+			prepareDecisionModel(model, authentication, registration);
+			return "registration/detail";
+		}
+		try {
+			approvalService.reject(authentication.getName(), id, form.toRequest());
+			redirectAttributes.addFlashAttribute("success", "Đã từ chối phiếu đăng ký.");
+		} catch (ApiException exception) {
+			redirectAttributes.addFlashAttribute("error", exception.getMessage());
+		}
+		return "redirect:/registrations/" + id;
+	}
+
+	private void prepareDecisionModel(Model model, Authentication authentication, RegistrationResponse registration) {
+		boolean manager = hasRole(authentication, "CBQL");
+		boolean pending = registration.status() == PhieuDangKyTrangThai.CHO_DUYET;
+		model.addAttribute("registration", registration);
+		model.addAttribute("manager", manager);
+		model.addAttribute("canDecide", manager && pending);
+		if (!manager) {
+			return;
+		}
+		ApprovalPreviewResponse preview = approvalService.preview(authentication.getName(), registration.id());
+		model.addAttribute("approvalPreview", preview);
+		if (!model.containsAttribute("approvalForm")) {
+			model.addAttribute("approvalForm", approvalForm(registration));
+		}
+		if (!model.containsAttribute("rejectionForm")) {
+			RegistrationForms.RejectionForm rejectionForm = new RegistrationForms.RejectionForm();
+			rejectionForm.setVersion(registration.version());
+			model.addAttribute("rejectionForm", rejectionForm);
+		}
+	}
+
+	private RegistrationForms.ApprovalForm approvalForm(RegistrationResponse registration) {
+		RegistrationForms.ApprovalForm form = new RegistrationForms.ApprovalForm();
+		form.setVersion(registration.version());
+		form.setDeviceIds(registration.devices().stream().map(device -> device.id()).toList());
+		return form;
 	}
 
 	private String form(Model model, Authentication authentication, boolean editing, String registrationId) {

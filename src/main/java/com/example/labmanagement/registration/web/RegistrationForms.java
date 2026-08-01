@@ -1,9 +1,11 @@
 package com.example.labmanagement.registration.web;
 
+import com.example.labmanagement.registration.application.ApprovalRequest;
 import com.example.labmanagement.registration.application.RegistrationCancelRequest;
 import com.example.labmanagement.registration.application.RegistrationFormRequest;
 import com.example.labmanagement.registration.application.RegistrationResponse;
 import com.example.labmanagement.registration.application.RegistrationScheduleRequest;
+import com.example.labmanagement.registration.application.RejectionRequest;
 import com.example.labmanagement.registration.domain.LoaiPhieu;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
@@ -237,6 +239,67 @@ final class RegistrationForms {
 
 		RegistrationCancelRequest toRequest() {
 			return new RegistrationCancelRequest(reason, version);
+		}
+
+		public String getReason() {
+			return reason;
+		}
+
+		public void setReason(String reason) {
+			this.reason = reason;
+		}
+
+		public Long getVersion() {
+			return version;
+		}
+
+		public void setVersion(Long version) {
+			this.version = version;
+		}
+	}
+
+	static final class ApprovalForm {
+
+		@Size(max = 500)
+		private List<String> deviceIds = new ArrayList<>();
+
+		@NotNull
+		@PositiveOrZero
+		private Long version;
+
+		ApprovalRequest toRequest() {
+			return new ApprovalRequest(deviceIds, version);
+		}
+
+		public List<String> getDeviceIds() {
+			return deviceIds;
+		}
+
+		public void setDeviceIds(List<String> deviceIds) {
+			this.deviceIds = deviceIds;
+		}
+
+		public Long getVersion() {
+			return version;
+		}
+
+		public void setVersion(Long version) {
+			this.version = version;
+		}
+	}
+
+	static final class RejectionForm {
+
+		@NotBlank
+		@Size(max = 255)
+		private String reason;
+
+		@NotNull
+		@PositiveOrZero
+		private Long version;
+
+		RejectionRequest toRequest() {
+			return new RejectionRequest(reason, version);
 		}
 
 		public String getReason() {
