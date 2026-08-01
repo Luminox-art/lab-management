@@ -8,7 +8,7 @@
 </head>
 <body>
 <a class="skip-link" href="#main-content">Bỏ qua điều hướng</a>
-<header class="app-header">
+<header class="app-header" th:replace="~{fragments/navigation :: header}">
     <div class="header-inner">
         <a class="brand" th:href="@{/catalog/rooms}">Quản lý phòng lab</a>
         <nav class="main-nav" aria-label="Điều hướng danh mục">
@@ -91,7 +91,7 @@
                     <div class="actions">
                         <a class="button button-secondary" th:href="@{/catalog/device-types(edit=${item.id})}">Sửa</a>
                         <form class="inline-form" method="post" th:action="@{/catalog/device-types/{id}/delete(id=${item.id})}"
-                              onsubmit="return confirm('Không thể xóa loại đang có thiết bị. Tiếp tục?')">
+                              data-confirm="Xác nhận xóa loại thiết bị này? Loại đang có thiết bị sẽ không thể xóa.">
                             <input th:name="${_csrf.parameterName}" th:value="${_csrf.token}" type="hidden">
                             <button class="button-danger" type="submit">Xóa</button>
                         </form>

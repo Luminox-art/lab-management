@@ -4,52 +4,74 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Đăng ký tài khoản</title>
+    <link rel="stylesheet" th:href="@{/css/catalog.css}">
+    <script defer th:src="@{/js/app-ui.js}"></script>
 </head>
-<body>
-<main>
-    <h1>Đăng ký tài khoản</h1>
-    <form method="post" th:action="@{/register}" th:object="${registration}">
-        <input th:name="${_csrf.parameterName}" th:value="${_csrf.token}" type="hidden">
-        <div role="alert" th:if="${#fields.hasGlobalErrors()}">
-            <p th:each="error : ${#fields.globalErrors()}" th:text="${error}"></p>
+<body class="auth-page">
+<a class="skip-link" href="#main-content">Bỏ qua điều hướng</a>
+<main class="auth-shell auth-shell-wide" id="main-content" tabindex="-1">
+    <section class="auth-card" aria-labelledby="registration-heading">
+        <div class="auth-heading">
+            <p class="eyebrow">Tài khoản GV/SV</p>
+            <h1 id="registration-heading">Đăng ký tài khoản</h1>
+            <p class="subtitle">Tài khoản cần được cán bộ quản lý kích hoạt trước lần đăng nhập đầu tiên.</p>
         </div>
-        <div>
-            <label for="identifier">Mã định danh</label>
-            <input id="identifier" type="text" th:field="*{identifier}" maxlength="50" required autofocus>
-            <p role="alert" th:errors="*{identifier}"></p>
-        </div>
-        <div>
-            <label for="fullName">Họ và tên</label>
-            <input id="fullName" type="text" th:field="*{fullName}" maxlength="150" required>
-            <p role="alert" th:errors="*{fullName}"></p>
-        </div>
-        <div>
-            <label for="email">Email</label>
-            <input id="email" type="email" th:field="*{email}" maxlength="254" autocomplete="email" required>
-            <p role="alert" th:errors="*{email}"></p>
-        </div>
-        <div>
-            <label for="password">Mật khẩu</label>
-            <input id="password" name="password" type="password" minlength="8" maxlength="72"
-                   autocomplete="new-password" required>
-            <p role="alert" th:errors="*{password}"></p>
-        </div>
-        <div>
-            <label for="organization">Lớp/đơn vị</label>
-            <input id="organization" type="text" th:field="*{organization}" maxlength="150">
-            <p role="alert" th:errors="*{organization}"></p>
-        </div>
-        <div>
-            <label for="role">Vai trò đăng ký</label>
-            <select id="role" th:field="*{role}" required>
-                <option th:each="roleOption : ${roles}" th:value="${roleOption}"
-                        th:text="${roleOption == T(com.example.labmanagement.identity.application.RegistrationRole).GV ? 'Giảng viên' : 'Sinh viên'}"></option>
-            </select>
-            <p role="alert" th:errors="*{role}"></p>
-        </div>
-        <button type="submit">Gửi đăng ký</button>
-    </form>
-    <p><a th:href="@{/login}">Quay lại đăng nhập</a></p>
+        <form method="post" th:action="@{/register}" th:object="${registration}">
+            <input th:name="${_csrf.parameterName}" th:value="${_csrf.token}" type="hidden">
+            <div class="message message-error" role="alert" th:if="${#fields.hasGlobalErrors()}">
+                <p th:each="error : ${#fields.globalErrors()}" th:text="${error}"></p>
+            </div>
+            <div class="form-grid">
+                <div class="field">
+                    <label for="identifier">Mã định danh <span aria-hidden="true">*</span></label>
+                    <input id="identifier" type="text" th:field="*{identifier}" maxlength="50" required autofocus
+                           th:attr="aria-invalid=${#fields.hasErrors('identifier')}">
+                    <p class="field-error" id="identifier-error" role="alert" th:errors="*{identifier}"></p>
+                </div>
+                <div class="field">
+                    <label for="fullName">Họ và tên <span aria-hidden="true">*</span></label>
+                    <input id="fullName" type="text" th:field="*{fullName}" maxlength="150" required
+                           autocomplete="name" th:attr="aria-invalid=${#fields.hasErrors('fullName')}">
+                    <p class="field-error" id="full-name-error" role="alert" th:errors="*{fullName}"></p>
+                </div>
+                <div class="field">
+                    <label for="email">Email <span aria-hidden="true">*</span></label>
+                    <input id="email" type="email" th:field="*{email}" maxlength="254" autocomplete="email" required
+                           th:attr="aria-invalid=${#fields.hasErrors('email')}">
+                    <p class="field-error" id="email-error" role="alert" th:errors="*{email}"></p>
+                </div>
+                <div class="field">
+                    <label for="password">Mật khẩu <span aria-hidden="true">*</span></label>
+                    <div class="password-control">
+                        <input id="password" name="password" type="password" minlength="8" maxlength="72"
+                               autocomplete="new-password" required th:attr="aria-invalid=${#fields.hasErrors('password')}">
+                        <button class="button button-secondary password-toggle" type="button" data-password-toggle
+                                aria-controls="password" aria-pressed="false">Hiện</button>
+                    </div>
+                    <p class="helper">Từ 8 đến 72 ký tự.</p>
+                    <p class="field-error" id="password-error" role="alert" th:errors="*{password}"></p>
+                </div>
+                <div class="field">
+                    <label for="organization">Lớp/đơn vị</label>
+                    <input id="organization" type="text" th:field="*{organization}" maxlength="150"
+                           autocomplete="organization" th:attr="aria-invalid=${#fields.hasErrors('organization')}">
+                    <p class="field-error" id="organization-error" role="alert" th:errors="*{organization}"></p>
+                </div>
+                <div class="field">
+                    <label for="role">Vai trò đăng ký <span aria-hidden="true">*</span></label>
+                    <select id="role" th:field="*{role}" required th:attr="aria-invalid=${#fields.hasErrors('role')}">
+                        <option th:each="roleOption : ${roles}" th:value="${roleOption}"
+                                th:text="${roleOption == T(com.example.labmanagement.identity.application.RegistrationRole).GV ? 'Giảng viên' : 'Sinh viên'}"></option>
+                    </select>
+                    <p class="field-error" id="role-error" role="alert" th:errors="*{role}"></p>
+                </div>
+            </div>
+            <div class="toolbar form-actions">
+                <button class="button-primary" type="submit">Gửi đăng ký</button>
+                <a class="button button-secondary" th:href="@{/login}">Quay lại đăng nhập</a>
+            </div>
+        </form>
+    </section>
 </main>
 </body>
 </html>

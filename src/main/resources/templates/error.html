@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Không thể mở trang</title>
+    <link rel="stylesheet" th:href="@{/css/catalog.css}">
+</head>
+<body class="auth-page">
+<main class="auth-shell" id="main-content" tabindex="-1">
+    <section class="auth-card status-card" aria-labelledby="error-heading">
+        <p class="error-code" th:text="${status ?: 500}">500</p>
+        <h1 id="error-heading" th:text="${status == 403 ? 'Bạn không có quyền truy cập' : (status == 404 ? 'Không tìm thấy trang' : 'Không thể xử lý yêu cầu')}"></h1>
+        <p th:text="${status == 403 ? 'Tài khoản hiện tại không được phép mở trang hoặc thực hiện thao tác này.' : (status == 404 ? 'Địa chỉ có thể đã thay đổi hoặc nội dung không còn tồn tại.' : 'Đã có lỗi ngoài dự kiến. Hãy quay lại và thử lại sau.')}"></p>
+        <div class="toolbar status-actions">
+            <a class="button button-primary" th:if="${navAuthenticated}" th:href="@{/home}">Về trang chủ</a>
+            <a class="button button-primary" th:unless="${navAuthenticated}" th:href="@{/login}">Đăng nhập</a>
+            <button class="button button-secondary" type="button" onclick="history.back()">Quay lại</button>
+        </div>
+    </section>
+</main>
+</body>
+</html>

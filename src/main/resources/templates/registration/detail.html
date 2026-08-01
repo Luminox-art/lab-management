@@ -8,7 +8,7 @@
 </head>
 <body>
 <a class="skip-link" href="#main-content">Bỏ qua điều hướng</a>
-<header class="app-header">
+<header class="app-header" th:replace="~{fragments/navigation :: header}">
     <div class="header-inner">
         <a class="brand" th:href="@{/catalog/rooms}">Quản lý phòng lab</a>
         <nav class="main-nav" aria-label="Điều hướng chính">
@@ -162,7 +162,7 @@
         </div>
         <form method="post" th:action="@{/registrations/{id}/approve(id=${registration.id})}"
               th:object="${approvalForm}"
-              onsubmit="return confirm('Xác nhận phê duyệt phiếu và phân bổ các thiết bị đã chọn?');">
+              data-confirm="Xác nhận phê duyệt phiếu và phân bổ các thiết bị đã chọn?">
             <input th:name="${_csrf.parameterName}" th:value="${_csrf.token}" type="hidden">
             <input th:field="*{version}" type="hidden">
             <fieldset class="device-fieldset">
@@ -194,7 +194,7 @@
         <p>Phiếu bị từ chối không thể quay lại hàng đợi. Lý do sẽ được lưu trong lịch sử xử lý.</p>
         <form method="post" th:action="@{/registrations/{id}/reject(id=${registration.id})}"
               th:object="${rejectionForm}"
-              onsubmit="return confirm('Xác nhận từ chối phiếu này?');">
+              data-confirm="Xác nhận từ chối phiếu này? Phiếu sẽ rời hàng đợi duyệt.">
             <input th:name="${_csrf.parameterName}" th:value="${_csrf.token}" type="hidden">
             <input th:field="*{version}" type="hidden">
             <div class="field">
@@ -243,7 +243,7 @@
         <p>Hủy phiếu là thao tác không thể hoàn tác. Vui lòng nêu rõ lý do.</p>
         <form method="post" th:action="@{/registrations/{id}/cancel(id=${registration.id})}"
               th:object="${cancellationForm}"
-              onsubmit="return confirm('Bạn có chắc muốn hủy phiếu này? Thao tác không thể hoàn tác.');">
+              data-confirm="Xác nhận hủy phiếu này? Thao tác không thể hoàn tác.">
             <input th:name="${_csrf.parameterName}" th:value="${_csrf.token}" type="hidden">
             <input th:field="*{version}" type="hidden">
             <div class="field">

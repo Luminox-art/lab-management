@@ -5,7 +5,7 @@
     <title>Bảo trì</title><link rel="stylesheet" th:href="@{/css/catalog.css}">
 </head>
 <body><a class="skip-link" href="#main-content">Bỏ qua điều hướng</a>
-<header class="app-header"><div class="header-inner"><a class="brand" th:href="@{/catalog/rooms}">Quản lý phòng lab</a><nav class="main-nav" aria-label="Điều hướng chính"><a th:href="@{/registrations}">Phiếu đăng ký</a><a th:href="@{/sessions}">Phiên sử dụng</a><a th:href="@{/incidents}">Sự cố</a><a aria-current="page" th:href="@{/maintenances}">Bảo trì</a><a th:href="@{/profile}">Hồ sơ</a></nav></div></header>
+<header class="app-header" th:replace="~{fragments/navigation :: header}"></header>
 <main class="page-shell" id="main-content" tabindex="-1">
     <div class="page-heading"><div><h1>Bảo trì</h1><p class="subtitle">Theo dõi tài nguyên đang bảo trì, người phụ trách và toàn bộ tiến độ xử lý.</p></div><a class="button button-primary" th:href="@{/maintenances/new}">Tạo phiếu bảo trì</a></div>
     <p class="message message-success" role="status" th:if="${success}" th:text="${success}"></p><p class="message message-error" role="alert" th:if="${error}" th:text="${error}"></p>

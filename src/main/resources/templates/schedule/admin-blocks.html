@@ -8,7 +8,7 @@
 </head>
 <body>
 <a class="skip-link" href="#main-content">Bỏ qua điều hướng</a>
-<header class="app-header">
+<header class="app-header" th:replace="~{fragments/navigation :: header}">
     <div class="header-inner">
         <a class="brand" th:href="@{/catalog/rooms}">Quản lý phòng lab</a>
         <nav class="main-nav" aria-label="Điều hướng chính">
@@ -135,7 +135,7 @@
                     <td>
                         <form method="post" th:if="${block.status.name() == 'HIEU_LUC'}"
                               th:action="@{/admin-blocks/{id}/cancel(id=${block.id})}"
-                              onsubmit="return confirm('Xác nhận hủy lịch chặn này? Lịch sẽ được giữ lại ở trạng thái Đã hủy.');">
+                              data-confirm="Xác nhận hủy lịch chặn này? Lịch sẽ được giữ lại ở trạng thái Đã hủy.">
                             <button class="button-danger" type="submit">Hủy lịch chặn</button>
                         </form>
                         <span class="helper" th:unless="${block.status.name() == 'HIEU_LUC'}">Không còn hiệu lực</span>

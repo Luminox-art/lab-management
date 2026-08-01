@@ -4,35 +4,35 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Hồ sơ cá nhân</title>
+    <link rel="stylesheet" th:href="@{/css/catalog.css}">
 </head>
 <body>
-<main>
-    <h1>Hồ sơ cá nhân</h1>
-    <nav aria-label="Điều hướng chính">
-        <a th:href="@{/registrations}">Phiếu đăng ký</a>
-        <a th:href="@{/sessions}">Phiên sử dụng</a>
-        <a th:href="@{/incidents}">Sự cố</a>
-        <a th:href="@{/notifications}">Thông báo</a>
-        <a th:if="${profile.roleId == 'CBQL'}" th:href="@{/dashboard}">Dashboard</a>
-    </nav>
-    <dl>
-        <dt>Mã định danh</dt>
-        <dd th:text="${profile.id}"></dd>
-        <dt>Họ và tên</dt>
-        <dd th:text="${profile.fullName}"></dd>
-        <dt>Email</dt>
-        <dd th:text="${profile.email}"></dd>
-        <dt>Lớp/đơn vị</dt>
-        <dd th:text="${profile.classOrUnit ?: '—'}"></dd>
-        <dt>Vai trò</dt>
-        <dd th:text="${profile.roleId}"></dd>
-        <dt>Trạng thái</dt>
-        <dd th:text="${profile.status}"></dd>
-    </dl>
-    <form method="post" th:action="@{/logout}">
-        <input th:name="${_csrf.parameterName}" th:value="${_csrf.token}" type="hidden">
-        <button type="submit">Đăng xuất</button>
-    </form>
+<a class="skip-link" href="#main-content">Bỏ qua điều hướng</a>
+<header class="app-header" th:replace="~{fragments/navigation :: header}"></header>
+<main class="page-shell" id="main-content" tabindex="-1">
+    <div class="page-heading">
+        <div><h1>Hồ sơ cá nhân</h1><p class="subtitle">Thông tin tài khoản đang dùng trong hệ thống.</p></div>
+        <a class="button button-secondary" th:href="@{/home}">Về trang chủ</a>
+    </div>
+    <section class="panel" aria-labelledby="profile-information-heading">
+        <h2 id="profile-information-heading">Thông tin tài khoản</h2>
+        <dl class="result-details">
+            <div><dt>Mã định danh</dt><dd th:text="${profile.id}"></dd></div>
+            <div><dt>Họ và tên</dt><dd th:text="${profile.fullName}"></dd></div>
+            <div><dt>Email</dt><dd th:text="${profile.email}"></dd></div>
+            <div><dt>Lớp/đơn vị</dt><dd th:text="${profile.classOrUnit ?: '—'}"></dd></div>
+            <div><dt>Vai trò</dt><dd th:text="${profile.roleId == 'CBQL' ? 'Cán bộ quản lý' : (profile.roleId == 'GV' ? 'Giảng viên' : 'Sinh viên')}"></dd></div>
+            <div><dt>Trạng thái</dt><dd><span class="status-chip status-san_sang" th:text="${profile.status.name() == 'HOAT_DONG' ? 'Hoạt động' : profile.status}"></span></dd></div>
+        </dl>
+    </section>
+    <section class="panel danger-panel" aria-labelledby="logout-heading">
+        <h2 id="logout-heading">Kết thúc phiên đăng nhập</h2>
+        <p>Đăng xuất khi bạn dùng xong thiết bị dùng chung.</p>
+        <form method="post" th:action="@{/logout}" data-confirm="Xác nhận đăng xuất khỏi hệ thống?">
+            <input th:name="${_csrf.parameterName}" th:value="${_csrf.token}" type="hidden">
+            <button class="button-danger" type="submit">Đăng xuất</button>
+        </form>
+    </section>
 </main>
 </body>
 </html>

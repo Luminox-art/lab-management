@@ -30,7 +30,7 @@ public class SecurityConfiguration {
 		LoginUrlAuthenticationEntryPoint loginEntryPoint = new LoginUrlAuthenticationEntryPoint("/login");
 		http.authorizeHttpRequests(authorization -> authorization
 				.requestMatchers("/actuator/health/readiness", "/api/v1/auth/register", "/api/v1/auth/login", "/login",
-						"/register", "/registration-pending", "/error", "/css/**")
+						"/register", "/registration-pending", "/error", "/css/**", "/js/**")
 				.permitAll().requestMatchers("/api/v1/users/**").hasRole("CBQL")
 				.requestMatchers(HttpMethod.POST, "/api/v1/rooms", "/api/v1/devices").hasRole("CBQL")
 				.requestMatchers(HttpMethod.PUT, "/api/v1/rooms/**", "/api/v1/devices/**").hasRole("CBQL")
@@ -50,7 +50,7 @@ public class SecurityConfiguration {
 				.requestMatchers(HttpMethod.GET, "/catalog/rooms", "/catalog/devices").authenticated()
 				.requestMatchers("/catalog/**").hasRole("CBQL").anyRequest().authenticated())
 				.formLogin(form -> form.loginPage("/login").usernameParameter("email").failureUrl("/login?error")
-						.defaultSuccessUrl("/profile", true).permitAll())
+						.defaultSuccessUrl("/home", true).permitAll())
 				.logout(logout -> logout.logoutUrl("/logout").logoutSuccessUrl("/login?logout")
 						.invalidateHttpSession(true).clearAuthentication(true))
 				.sessionManagement(session -> session.sessionFixation(fixation -> fixation.changeSessionId()))

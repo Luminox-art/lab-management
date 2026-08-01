@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:fragment="header">
+    <header class="app-header">
+        <div class="header-inner">
+            <a class="brand" th:href="@{/home}">Quản lý phòng lab</a>
+            <nav class="main-nav" aria-label="Điều hướng chính">
+                <a th:attr="aria-current=${currentPath == '/' or currentPath == '/home' ? 'page' : null}"
+                   th:href="@{/home}">Trang chủ</a>
+                <a th:attr="aria-current=${#strings.startsWith(currentPath ?: '', '/catalog/rooms') ? 'page' : null}"
+                   th:href="@{/catalog/rooms}">Phòng</a>
+                <a th:attr="aria-current=${#strings.startsWith(currentPath ?: '', '/catalog/devices') ? 'page' : null}"
+                   th:href="@{/catalog/devices}">Thiết bị</a>
+                <a th:attr="aria-current=${#strings.startsWith(currentPath ?: '', '/registrations') ? 'page' : null}"
+                   th:href="@{/registrations}">Phiếu</a>
+                <a th:attr="aria-current=${#strings.startsWith(currentPath ?: '', '/sessions') ? 'page' : null}"
+                   th:href="@{/sessions}">Phiên</a>
+                <a th:attr="aria-current=${#strings.startsWith(currentPath ?: '', '/incidents') ? 'page' : null}"
+                   th:href="@{/incidents}">Sự cố</a>
+                <a th:attr="aria-current=${#strings.startsWith(currentPath ?: '', '/schedule/') ? 'page' : null}"
+                   th:href="@{/schedule/calendar}">Lịch</a>
+                <a th:attr="aria-current=${#strings.startsWith(currentPath ?: '', '/notifications') ? 'page' : null}"
+                   th:href="@{/notifications}">Thông báo</a>
+                <a th:if="${navManager}"
+                   th:attr="aria-current=${#strings.startsWith(currentPath ?: '', '/dashboard') ? 'page' : null}"
+                   th:href="@{/dashboard}">Dashboard</a>
+                <details class="nav-menu" th:if="${navManager}"
+                         th:classappend="${#strings.startsWith(currentPath ?: '', '/maintenances') or #strings.startsWith(currentPath ?: '', '/admin-blocks') or #strings.startsWith(currentPath ?: '', '/catalog/room-groups') or #strings.startsWith(currentPath ?: '', '/catalog/device-types')} ? ' nav-menu-active'">
+                    <summary>Quản trị</summary>
+                    <div class="nav-menu-panel">
+                        <a th:href="@{/maintenances}">Bảo trì</a>
+                        <a th:href="@{/admin-blocks}">Lịch chặn</a>
+                        <a th:href="@{/catalog/room-groups}">Nhóm phòng</a>
+                        <a th:href="@{/catalog/device-types}">Loại thiết bị</a>
+                    </div>
+                </details>
+                <a th:attr="aria-current=${#strings.startsWith(currentPath ?: '', '/profile') ? 'page' : null}"
+                   th:href="@{/profile}">Hồ sơ</a>
+            </nav>
+        </div>
+    </header>
+    <script defer th:src="@{/js/app-ui.js}"></script>
+</th:block>
+</body>
+</html>

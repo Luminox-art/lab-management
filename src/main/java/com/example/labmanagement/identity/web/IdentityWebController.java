@@ -27,6 +27,12 @@ public class IdentityWebController {
 		return "login";
 	}
 
+	@GetMapping({"/", "/home"})
+	String home(Authentication authentication, Model model) {
+		model.addAttribute("profile", identityService.getProfile(authentication.getName()));
+		return "home";
+	}
+
 	@GetMapping("/register")
 	String registrationForm(Model model) {
 		model.addAttribute("registration", new RegistrationRequest("", "", "", "", "", RegistrationRole.SV));

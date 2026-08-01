@@ -8,7 +8,7 @@
 </head>
 <body>
 <a class="skip-link" href="#main-content">Bỏ qua điều hướng</a>
-<header class="app-header">
+<header class="app-header" th:replace="~{fragments/navigation :: header}">
     <div class="header-inner">
         <a class="brand" th:href="@{/catalog/rooms}">Quản lý phòng lab</a>
         <nav class="main-nav" aria-label="Điều hướng danh mục">
@@ -110,7 +110,7 @@
                     <div class="actions">
                         <a class="button button-secondary" th:href="@{/catalog/rooms/{id}/edit(id=${room.id})}">Sửa</a>
                         <form class="inline-form" method="post" th:action="@{/catalog/rooms/{id}/delete(id=${room.id})}"
-                              onsubmit="return confirm('Chỉ phòng chưa có dữ liệu nghiệp vụ mới được xóa. Tiếp tục?')">
+                              data-confirm="Xác nhận xóa phòng này? Chỉ phòng chưa có dữ liệu nghiệp vụ mới có thể xóa.">
                             <input th:name="${_csrf.parameterName}" th:value="${_csrf.token}" type="hidden">
                             <button class="button-danger" type="submit">Xóa</button>
                         </form>

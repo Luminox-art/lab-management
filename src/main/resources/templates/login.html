@@ -4,26 +4,39 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Đăng nhập</title>
+    <link rel="stylesheet" th:href="@{/css/catalog.css}">
+    <script defer th:src="@{/js/app-ui.js}"></script>
 </head>
-<body>
-<main>
-    <h1>Đăng nhập</h1>
-    <p role="alert" th:if="${param.error}">Thông tin đăng nhập không hợp lệ.</p>
-    <p role="status" th:if="${param.logout}">Bạn đã đăng xuất.</p>
-    <p role="alert" th:if="${param.expired}">Phiên đăng nhập đã hết hạn.</p>
-    <form method="post" th:action="@{/login}">
-        <input th:name="${_csrf.parameterName}" th:value="${_csrf.token}" type="hidden">
-        <div>
-            <label for="email">Email</label>
-            <input id="email" name="email" type="email" autocomplete="username" required autofocus>
+<body class="auth-page">
+<a class="skip-link" href="#main-content">Bỏ qua điều hướng</a>
+<main class="auth-shell" id="main-content" tabindex="-1">
+    <section class="auth-card" aria-labelledby="login-heading">
+        <div class="auth-heading">
+            <p class="eyebrow">Quản lý phòng lab</p>
+            <h1 id="login-heading">Đăng nhập</h1>
+            <p class="subtitle">Dùng tài khoản đã được kích hoạt để tiếp tục.</p>
         </div>
-        <div>
-            <label for="password">Mật khẩu</label>
-            <input id="password" name="password" type="password" autocomplete="current-password" required>
-        </div>
-        <button type="submit">Đăng nhập</button>
-    </form>
-    <p>Chưa có tài khoản? <a th:href="@{/register}">Đăng ký GV/SV</a></p>
+        <p class="message message-error" role="alert" th:if="${param.error}">Thông tin đăng nhập không hợp lệ. Hãy kiểm tra email, mật khẩu và thử lại.</p>
+        <p class="message message-success" role="status" th:if="${param.logout}">Bạn đã đăng xuất an toàn.</p>
+        <p class="message message-warning" role="alert" th:if="${param.expired}">Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.</p>
+        <form method="post" th:action="@{/login}">
+            <input th:name="${_csrf.parameterName}" th:value="${_csrf.token}" type="hidden">
+            <div class="field">
+                <label for="email">Email <span aria-hidden="true">*</span></label>
+                <input id="email" name="email" type="email" autocomplete="username" maxlength="254" required autofocus>
+            </div>
+            <div class="field">
+                <label for="password">Mật khẩu <span aria-hidden="true">*</span></label>
+                <div class="password-control">
+                    <input id="password" name="password" type="password" autocomplete="current-password" required>
+                    <button class="button button-secondary password-toggle" type="button" data-password-toggle
+                            aria-controls="password" aria-pressed="false">Hiện</button>
+                </div>
+            </div>
+            <button class="button-primary auth-submit" type="submit">Đăng nhập</button>
+        </form>
+        <p class="auth-alternative">Chưa có tài khoản? <a th:href="@{/register}">Đăng ký GV/SV</a></p>
+    </section>
 </main>
 </body>
 </html>

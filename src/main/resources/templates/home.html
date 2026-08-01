@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Trang chủ</title>
+    <link rel="stylesheet" th:href="@{/css/catalog.css}">
+</head>
+<body>
+<a class="skip-link" href="#main-content">Bỏ qua điều hướng</a>
+<header class="app-header" th:replace="~{fragments/navigation :: header}"></header>
+<main class="page-shell" id="main-content" tabindex="-1">
+    <section class="home-hero" aria-labelledby="home-heading">
+        <div>
+            <p class="eyebrow" th:text="${profile.roleId == 'CBQL' ? 'Không gian quản lý' : (profile.roleId == 'GV' ? 'Không gian giảng viên' : 'Không gian sinh viên')}"></p>
+            <h1 id="home-heading" th:text="|Xin chào, ${profile.fullName}|"></h1>
+            <p class="subtitle">Truy cập nhanh các công việc và dữ liệu phù hợp với vai trò của bạn.</p>
+        </div>
+        <a class="button button-primary" th:if="${navCanCreateRegistration}" th:href="@{/registrations/new}">Tạo phiếu mới</a>
+        <a class="button button-primary" th:if="${navManager}" th:href="@{/registrations(status='CHO_DUYET')}">Mở hàng đợi duyệt</a>
+    </section>
+
+    <section aria-labelledby="primary-work-heading">
+        <div class="section-heading"><h2 id="primary-work-heading">Công việc chính</h2></div>
+        <div class="home-grid">
+            <a class="home-card" th:href="@{/registrations}"><strong>Phiếu đăng ký</strong><span th:text="${navManager ? 'Duyệt, từ chối và theo dõi phân bổ.' : 'Tạo và theo dõi các phiếu của bạn.'}"></span></a>
+            <a class="home-card" th:href="@{/sessions}"><strong>Phiên sử dụng</strong><span>Theo dõi phiên, check-in và check-out.</span></a>
+            <a class="home-card" th:href="@{/schedule/availability}"><strong>Kiểm tra khả dụng</strong><span>Đối chiếu phòng, thiết bị theo ngày và tiết.</span></a>
+            <a class="home-card" th:href="@{/schedule/calendar}"><strong>Lịch phòng</strong><span>Xem lịch được duyệt, đang sử dụng và lịch chặn.</span></a>
+            <a class="home-card" th:href="@{/incidents}"><strong>Sự cố</strong><span>Báo cáo và theo dõi sự cố liên quan.</span></a>
+            <a class="home-card" th:href="@{/notifications}"><strong>Thông báo</strong><span>Xem quyết định phiếu, phiên sắp tới và tiến độ xử lý.</span></a>
+        </div>
+    </section>
+
+    <section aria-labelledby="manager-work-heading" th:if="${navManager}">
+        <div class="section-heading"><h2 id="manager-work-heading">Quản trị vận hành</h2></div>
+        <div class="home-grid">
+            <a class="home-card" th:href="@{/dashboard}"><strong>Dashboard</strong><span>Đối chiếu tần suất sử dụng, sự cố và bảo trì.</span></a>
+            <a class="home-card" th:href="@{/catalog/rooms}"><strong>Phòng và thiết bị</strong><span>Quản lý danh mục và trạng thái tài nguyên.</span></a>
+            <a class="home-card" th:href="@{/admin-blocks}"><strong>Lịch chặn</strong><span>Chặn tài nguyên theo ngày và tiết học.</span></a>
+            <a class="home-card" th:href="@{/maintenances}"><strong>Bảo trì</strong><span>Theo dõi công việc và tiến độ bảo trì.</span></a>
+        </div>
+    </section>
+</main>
+</body>
+</html>

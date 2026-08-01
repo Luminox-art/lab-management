@@ -4,12 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Chờ kích hoạt</title>
+    <link rel="stylesheet" th:href="@{/css/catalog.css}">
 </head>
-<body>
-<main>
-    <h1>Đăng ký đã được ghi nhận</h1>
-    <p>Tài khoản đang chờ cán bộ quản lý kích hoạt. Bạn chỉ có thể đăng nhập sau khi tài khoản chuyển sang trạng thái hoạt động.</p>
-    <p><a th:href="@{/login}">Về trang đăng nhập</a></p>
+<body class="auth-page">
+<main class="auth-shell" id="main-content" tabindex="-1">
+    <section class="auth-card status-card" aria-labelledby="pending-heading">
+        <p class="status-label">Đã tiếp nhận</p>
+        <h1 id="pending-heading">Đăng ký đã được ghi nhận</h1>
+        <p>Tài khoản đang chờ cán bộ quản lý kích hoạt. Bạn chỉ có thể đăng nhập sau khi tài khoản chuyển sang trạng thái hoạt động.</p>
+        <a class="button button-primary" th:href="@{/login}">Về trang đăng nhập</a>
+    </section>
 </main>
 </body>
 </html>

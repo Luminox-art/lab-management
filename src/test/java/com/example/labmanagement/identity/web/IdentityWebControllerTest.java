@@ -64,8 +64,26 @@ class IdentityWebControllerTest {
 		verify(identityService).getProfile("student@example.edu");
 	}
 
+	@Test
+	void homeShowsActionsForCurrentRole() throws Exception {
+		when(identityService.getProfile("student@example.edu")).thenReturn(profile("student@example.edu", "SV"));
+		when(identityService.getProfile("manager@example.edu")).thenReturn(profile("manager@example.edu", "CBQL"));
+
+		mockMvc.perform(get("/home").with(user("student@example.edu").roles("SV"))).andExpect(status().isOk())
+				.andExpect(view().name("home"))
+				.andExpect(content().string(org.hamcrest.Matchers.containsString("Tạo phiếu mới"))).andExpect(content()
+						.string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("Quản trị vận hành"))));
+		mockMvc.perform(get("/home").with(user("manager@example.edu").roles("CBQL"))).andExpect(status().isOk())
+				.andExpect(content().string(org.hamcrest.Matchers.containsString("Mở hàng đợi duyệt")))
+				.andExpect(content().string(org.hamcrest.Matchers.containsString("Quản trị vận hành")));
+	}
+
 	private UserProfileResponse profile(String email) {
-		return new UserProfileResponse("SV900", "Sinh viên", email, "CNTT01", "SV", NguoiDungTrangThai.CHO_DUYET, 0,
+		return profile(email, "SV");
+	}
+
+	private UserProfileResponse profile(String email, String role) {
+		return new UserProfileResponse("SV900", "Người dùng", email, "CNTT01", role, NguoiDungTrangThai.HOAT_DONG, 0,
 				Instant.EPOCH, Instant.EPOCH);
 	}
 }

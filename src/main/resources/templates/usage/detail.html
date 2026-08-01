@@ -8,7 +8,7 @@
 </head>
 <body>
 <a class="skip-link" href="#main-content">Bỏ qua điều hướng</a>
-<header class="app-header">
+<header class="app-header" th:replace="~{fragments/navigation :: header}">
     <div class="header-inner">
         <a class="brand" th:href="@{/catalog/rooms}">Quản lý phòng lab</a>
         <nav class="main-nav" aria-label="Điều hướng chính">
@@ -44,13 +44,13 @@
     <section class="panel" aria-labelledby="check-in-heading" th:if="${usageSession.canCheckIn}">
         <h2 id="check-in-heading">Bàn giao và check-in</h2>
         <p class="helper">Xác nhận tình trạng nhận của từng thiết bị trước khi bắt đầu phiên.</p>
-        <form method="post" th:action="@{/sessions/{id}/check-in(id=${usageSession.id})}" th:object="${checkInForm}" onsubmit="return confirm('Xác nhận bàn giao thiết bị và check-in phiên này?');">
+        <form method="post" th:action="@{/sessions/{id}/check-in(id=${usageSession.id})}" th:object="${checkInForm}" data-confirm="Xác nhận bàn giao thiết bị và check-in phiên này?">
             <input th:name="${_csrf.parameterName}" th:value="${_csrf.token}" type="hidden"><input th:field="*{version}" type="hidden">
             <div class="session-device-grid">
                 <fieldset class="session-device-card" th:each="device, stat : *{devices}">
                     <legend th:text="|${device.deviceId} — ${device.deviceName}|"></legend>
                     <input th:field="*{devices[__${stat.index}__].deviceId}" type="hidden">
-                    <div class="field"><label th:for="|check-in-condition-${stat.index}|">Tình trạng nhận</label><input th:id="|check-in-condition-${stat.index}|" th:field="*{devices[__${stat.index}__].condition}" maxlength="255" required><p class="field-error" role="alert" th:errors="*{devices[__${stat.index}__].condition}"></p></div>
+                    <div class="field"><label th:for="|check-in-condition-${stat.index}|">Tình trạng nhận</label><input th:id="|check-in-condition-${stat.index}|" th:field="*{devices[__${stat.index}__].condition}" maxlength="255" required th:attr="aria-invalid=${#fields.hasErrors('devices[' + stat.index + '].condition')}"><p class="field-error" role="alert" th:errors="*{devices[__${stat.index}__].condition}"></p></div>
                     <div class="field"><label th:for="|check-in-note-${stat.index}|">Ghi chú</label><textarea th:id="|check-in-note-${stat.index}|" th:field="*{devices[__${stat.index}__].note}" maxlength="2000"></textarea></div>
                 </fieldset>
             </div>
@@ -61,18 +61,18 @@
     <section class="panel" aria-labelledby="check-out-heading" th:if="${usageSession.canCheckOut}">
         <h2 id="check-out-heading">Thu hồi và check-out</h2>
         <p class="helper">Ghi nhận tình trạng trả. Nếu có hỏng hóc, đánh dấu tạo sự cố để lưu cùng giao dịch check-out.</p>
-        <form method="post" th:action="@{/sessions/{id}/check-out(id=${usageSession.id})}" th:object="${checkOutForm}" onsubmit="return confirm('Xác nhận thu hồi thiết bị và check-out phiên này?');">
+        <form method="post" th:action="@{/sessions/{id}/check-out(id=${usageSession.id})}" th:object="${checkOutForm}" data-confirm="Xác nhận thu hồi thiết bị và check-out phiên này?">
             <input th:name="${_csrf.parameterName}" th:value="${_csrf.token}" type="hidden"><input th:field="*{version}" type="hidden">
             <div class="session-device-grid">
                 <fieldset class="session-device-card" th:each="device, stat : *{devices}">
                     <legend th:text="|${device.deviceId} — ${device.deviceName}|"></legend>
                     <input th:field="*{devices[__${stat.index}__].deviceId}" type="hidden">
-                    <div class="field"><label th:for="|check-out-condition-${stat.index}|">Tình trạng trả</label><input th:id="|check-out-condition-${stat.index}|" th:field="*{devices[__${stat.index}__].condition}" maxlength="255" required></div>
-                    <div class="field"><label th:for="|check-out-note-${stat.index}|">Ghi chú thu hồi</label><textarea th:id="|check-out-note-${stat.index}|" th:field="*{devices[__${stat.index}__].note}" maxlength="2000"></textarea></div>
+                    <div class="field"><label th:for="|check-out-condition-${stat.index}|">Tình trạng trả</label><input th:id="|check-out-condition-${stat.index}|" th:field="*{devices[__${stat.index}__].condition}" maxlength="255" required th:attr="aria-invalid=${#fields.hasErrors('devices[' + stat.index + '].condition')}"><p class="field-error" role="alert" th:errors="*{devices[__${stat.index}__].condition}"></p></div>
+                    <div class="field"><label th:for="|check-out-note-${stat.index}|">Ghi chú thu hồi</label><textarea th:id="|check-out-note-${stat.index}|" th:field="*{devices[__${stat.index}__].note}" maxlength="2000" th:attr="aria-invalid=${#fields.hasErrors('devices[' + stat.index + '].note')}"></textarea><p class="field-error" role="alert" th:errors="*{devices[__${stat.index}__].note}"></p></div>
                     <label class="checkbox-field"><input th:field="*{devices[__${stat.index}__].reportIncident}" type="checkbox"><span>Tạo sự cố cho thiết bị này</span></label>
                     <div class="form-grid incident-fields">
                         <div class="field"><label th:for="|incident-severity-${stat.index}|">Mức độ</label><select th:id="|incident-severity-${stat.index}|" th:field="*{devices[__${stat.index}__].severity}"><option th:each="severity : ${severities}" th:value="${severity}" th:text="${severity.name() == 'THAP' ? 'Thấp' : (severity.name() == 'TRUNG_BINH' ? 'Trung bình' : (severity.name() == 'CAO' ? 'Cao' : 'Nghiêm trọng'))}"></option></select></div>
-                        <div class="field field-wide"><label th:for="|incident-description-${stat.index}|">Mô tả sự cố</label><textarea th:id="|incident-description-${stat.index}|" th:field="*{devices[__${stat.index}__].incidentDescription}" maxlength="2000" placeholder="Bắt buộc khi chọn tạo sự cố"></textarea></div>
+                        <div class="field field-wide"><label th:for="|incident-description-${stat.index}|">Mô tả sự cố</label><textarea th:id="|incident-description-${stat.index}|" th:field="*{devices[__${stat.index}__].incidentDescription}" maxlength="2000" placeholder="Bắt buộc khi chọn tạo sự cố" th:attr="aria-invalid=${#fields.hasErrors('devices[' + stat.index + '].incidentDescription')}"></textarea><p class="field-error" role="alert" th:errors="*{devices[__${stat.index}__].incidentDescription}"></p></div>
                     </div>
                 </fieldset>
             </div>

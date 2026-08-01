@@ -8,7 +8,7 @@
 </head>
 <body>
 <a class="skip-link" href="#main-content">Bỏ qua điều hướng</a>
-<header class="app-header"><div class="header-inner">
+<header class="app-header" th:replace="~{fragments/navigation :: header}"><div class="header-inner">
     <a class="brand" th:href="@{/catalog/rooms}">Quản lý phòng lab</a>
     <nav class="main-nav" aria-label="Điều hướng chính">
         <a th:href="@{/registrations}">Phiếu đăng ký</a><a th:href="@{/sessions}">Phiên sử dụng</a>
