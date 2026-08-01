@@ -7,6 +7,7 @@ import com.example.labmanagement.identity.persistence.NguoiDungRepository;
 import com.example.labmanagement.identity.persistence.VaiTroRepository;
 import com.example.labmanagement.registration.application.ApprovalService;
 import com.example.labmanagement.registration.application.RegistrationService;
+import com.example.labmanagement.scheduling.application.AdminBlockService;
 import com.example.labmanagement.scheduling.application.SchedulingService;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -50,6 +51,9 @@ class ReadinessEndpointTest {
 
 	@MockitoBean
 	private ApprovalService approvalService;
+
+	@MockitoBean
+	private AdminBlockService adminBlockService;
 
 	@Test
 	void readinessIsPublicAndReturnsHttp200() throws Exception {

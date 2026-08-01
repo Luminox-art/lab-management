@@ -120,7 +120,7 @@ public class ApprovalService {
 			throw notFound("Không tìm thấy một hoặc nhiều thiết bị.");
 		}
 		List<String> resourceDeviceIds = selectedIds.isEmpty() ? List.of(EMPTY_DEVICE_LOCK_KEY) : selectedIds;
-		int lockedResourceCount = resourceRepository.lockForApproval(room.getId(), resourceDeviceIds).size();
+		int lockedResourceCount = resourceRepository.lockForScheduling(room.getId(), resourceDeviceIds).size();
 		if (lockedResourceCount != selectedDevices.size() + 1) {
 			throw conflict("Tài nguyên phòng hoặc thiết bị chưa được cấu hình đầy đủ.");
 		}

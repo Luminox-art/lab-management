@@ -5,10 +5,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.example.labmanagement.catalog.application.CatalogService;
 import com.example.labmanagement.catalog.application.DeviceUpdateRequest;
 import com.example.labmanagement.catalog.domain.ThietBiTrangThai;
-import com.example.labmanagement.catalog.persistence.TaiNguyenRepository;
 import com.example.labmanagement.common.error.ApiException;
 import com.example.labmanagement.registration.application.ApprovalRequest;
 import com.example.labmanagement.registration.application.ApprovalService;
+import com.example.labmanagement.scheduling.application.AdminBlockRequest;
+import com.example.labmanagement.scheduling.application.AdminBlockService;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -25,9 +26,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.TransactionDefinition;
-import org.springframework.transaction.support.TransactionTemplate;
 
 /** CON-01..06 repeated on independent MySQL connections. */
 @SpringBootTest
@@ -46,10 +44,7 @@ class ApprovalConcurrencyMySqlIntegrationTest {
 	private CatalogService catalogService;
 
 	@Autowired
-	private TaiNguyenRepository resourceRepository;
-
-	@Autowired
-	private PlatformTransactionManager transactionManager;
+	private AdminBlockService adminBlockService;
 
 	@Autowired
 	private JdbcTemplate jdbcTemplate;
@@ -197,25 +192,16 @@ class ApprovalConcurrencyMySqlIntegrationTest {
 	}
 
 	private Callable<Boolean> createRoomBlock(LocalDate date, int iteration) {
-		return () -> readCommittedTemplate().execute(status -> {
-			resourceRepository.lockForApproval("P0603", List.of("__NO_SELECTED_DEVICE__"));
-			int approved = count("""
-					SELECT COUNT(*) FROM PhieuDangKy registration
-					JOIN LichDangKy schedule ON schedule.MaPhieu = registration.MaPhieu
-					WHERE registration.MaPhong = 'P0603' AND registration.TrangThai IN ('DA_DUYET','DANG_SU_DUNG')
-					  AND registration.NgayBatDau <= ? AND registration.NgayKetThuc >= ?
-					  AND schedule.Thu = 2 AND schedule.MaTiet = 1
-					""", date, date);
-			if (approved > 0) {
+		return () -> {
+			try {
+				adminBlockService.create(MANAGER_EMAIL,
+						new AdminBlockRequest("P0603", null, date, date, 2, List.of(1), "S6C-BLOCK-" + iteration));
+				return true;
+			} catch (ApiException exception) {
+				assertThat(exception.getStatus().value()).isEqualTo(409);
 				return false;
 			}
-			jdbcTemplate.update("""
-					INSERT INTO LichChan
-					  (MaTaiNguyen, NgayBatDau, NgayKetThuc, Thu, MaTiet, LyDo, TrangThai, MaNguoiTao)
-					VALUES ('TN-P0603', ?, ?, 2, 1, ?, 'HIEU_LUC', 'CB001')
-					""", date, date, "S6C-BLOCK-" + iteration);
-			return true;
-		});
+		};
 	}
 
 	private Callable<Boolean> maintainDevice(long version) {
@@ -253,12 +239,6 @@ class ApprovalConcurrencyMySqlIntegrationTest {
 			assertThat(start.await(5, TimeUnit.SECONDS)).isTrue();
 			return operation.call();
 		};
-	}
-
-	private TransactionTemplate readCommittedTemplate() {
-		TransactionTemplate template = new TransactionTemplate(transactionManager);
-		template.setIsolationLevel(TransactionDefinition.ISOLATION_READ_COMMITTED);
-		return template;
 	}
 
 	private void assertOneApproved(String firstId, String secondId) {

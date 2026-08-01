@@ -26,5 +26,5 @@ public interface TaiNguyenRepository extends JpaRepository<TaiNguyen, String> {
 			order by resource.MaTaiNguyen
 			for update
 			""", nativeQuery = true)
-	List<TaiNguyen> lockForApproval(@Param("roomId") String roomId, @Param("deviceIds") Collection<String> deviceIds);
+	List<TaiNguyen> lockForScheduling(@Param("roomId") String roomId, @Param("deviceIds") Collection<String> deviceIds);
 }

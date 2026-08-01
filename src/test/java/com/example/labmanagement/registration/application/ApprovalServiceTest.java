@@ -217,7 +217,7 @@ class ApprovalServiceTest {
 		List<TaiNguyen> resources = new java.util.ArrayList<>();
 		resources.add(TaiNguyen.forRoom("TN-" + target.getRoom().getId(), target.getRoom()));
 		selectedDevices.forEach(item -> resources.add(TaiNguyen.forDevice("TN-" + item.getId(), item)));
-		when(resourceRepository.lockForApproval(any(), any())).thenReturn(resources);
+		when(resourceRepository.lockForScheduling(any(), any())).thenReturn(resources);
 		TietHoc period = new TietHoc(1, "Tiết 1", LocalTime.of(7, 0), LocalTime.of(7, 50));
 		when(scheduleRepository.findAllByRegistrationId(target.getId()))
 				.thenReturn(List.of(new LichDangKy(target, 2, period)));

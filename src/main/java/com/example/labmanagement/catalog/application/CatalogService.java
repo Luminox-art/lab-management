@@ -160,7 +160,7 @@ public class CatalogService {
 	public DeviceResponse updateDevice(String id, DeviceUpdateRequest request) {
 		ThietBi device = deviceRepository.findByIdForUpdate(normalizeId(id)).orElseThrow(
 				() -> new ApiException(ErrorCode.NOT_FOUND, HttpStatus.NOT_FOUND, "Không tìm thấy thiết bị."));
-		resourceRepository.lockForApproval("__NO_ROOM__", List.of(device.getId()));
+		resourceRepository.lockForScheduling("__NO_ROOM__", List.of(device.getId()));
 		if (device.getVersion() != request.version()) {
 			throw conflict("Dữ liệu thiết bị đã được cập nhật bởi yêu cầu khác.");
 		}

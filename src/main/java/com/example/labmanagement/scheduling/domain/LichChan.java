@@ -98,4 +98,12 @@ public class LichChan {
 	public LichChanTrangThai getStatus() {
 		return status;
 	}
+
+	public NguoiDung getCreator() {
+		return creator;
+	}
+
+	public void cancel() {
+		this.status = LichChanTrangThai.DA_HUY;
+	}
 }

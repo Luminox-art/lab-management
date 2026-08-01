@@ -15,6 +15,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -74,7 +75,7 @@ public class SchedulingWebController {
 
 	@GetMapping("/calendar")
 	String calendar(@RequestParam(required = false) String roomId, @RequestParam(required = false) LocalDate date,
-			@RequestParam(defaultValue = "week") String view, Model model) {
+			@RequestParam(defaultValue = "week") String view, Authentication authentication, Model model) {
 		LocalDate selectedDate = date == null ? LocalDate.now() : date;
 		String normalizedView = "day".equalsIgnoreCase(view) ? "day" : "week";
 		LocalDate from = "day".equals(normalizedView) ? selectedDate : selectedDate.with(DayOfWeek.MONDAY);
@@ -100,6 +101,8 @@ public class SchedulingWebController {
 		model.addAttribute("previousDate", selectedDate.minusDays(step));
 		model.addAttribute("nextDate", selectedDate.plusDays(step));
 		model.addAttribute("today", LocalDate.now());
+		model.addAttribute("manager", authentication != null && authentication.getAuthorities().stream()
+				.anyMatch(authority -> "ROLE_CBQL".equals(authority.getAuthority())));
 		return "schedule/calendar";
 	}
 

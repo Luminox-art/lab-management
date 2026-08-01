@@ -22,6 +22,15 @@ public interface LichDangKyRepository extends JpaRepository<LichDangKy, Long> {
 	@Query("""
 			select schedule from LichDangKy schedule
 			join fetch schedule.registration registration
+			join fetch schedule.period period
+			where registration.id in :registrationIds
+			order by registration.id, schedule.dayOfWeek, period.id
+			""")
+	List<LichDangKy> findAllByRegistrationIdIn(@Param("registrationIds") Collection<String> registrationIds);
+
+	@Query("""
+			select schedule from LichDangKy schedule
+			join fetch schedule.registration registration
 			join fetch registration.room room
 			join fetch schedule.period period
 			where room.id = :roomId

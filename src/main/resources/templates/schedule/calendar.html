@@ -27,7 +27,10 @@
             <h1>Lịch phòng</h1>
             <p class="subtitle">Xem các lịch đã duyệt, đang sử dụng và lịch chặn theo ngày hoặc tuần.</p>
         </div>
-        <a class="button button-secondary" th:href="@{/schedule/availability(roomId=${roomId})}">Kiểm tra khả dụng</a>
+        <div class="actions">
+            <a class="button button-secondary" th:if="${manager}" th:href="@{/admin-blocks}">Quản lý lịch chặn</a>
+            <a class="button button-secondary" th:href="@{/schedule/availability(roomId=${roomId})}">Kiểm tra khả dụng</a>
+        </div>
     </div>
 
     <p class="message message-error" role="alert" th:if="${error}" th:text="${error}"></p>

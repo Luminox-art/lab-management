@@ -424,6 +424,11 @@ tbody tr:last-child td {
     background: var(--color-success-surface);
 }
 
+.status-hieu_luc {
+    color: var(--color-success);
+    background: var(--color-success-surface);
+}
+
 .status-hoan_thanh {
     color: var(--registration-neutral-color);
     background: var(--registration-neutral-surface);

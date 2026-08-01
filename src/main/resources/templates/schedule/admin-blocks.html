@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Quản lý lịch chặn</title>
+    <link rel="stylesheet" th:href="@{/css/catalog.css}">
+</head>
+<body>
+<a class="skip-link" href="#main-content">Bỏ qua điều hướng</a>
+<header class="app-header">
+    <div class="header-inner">
+        <a class="brand" th:href="@{/catalog/rooms}">Quản lý phòng lab</a>
+        <nav class="main-nav" aria-label="Điều hướng chính">
+            <a th:href="@{/catalog/rooms}">Phòng</a>
+            <a th:href="@{/catalog/devices}">Thiết bị</a>
+            <a th:href="@{/registrations}">Phiếu đăng ký</a>
+            <a th:href="@{/schedule/availability}">Kiểm tra khả dụng</a>
+            <a th:href="@{/schedule/calendar}">Lịch phòng</a>
+            <a aria-current="page" th:href="@{/admin-blocks}">Lịch chặn</a>
+            <a th:href="@{/profile}">Hồ sơ</a>
+        </nav>
+    </div>
+</header>
+<main class="page-shell" id="main-content" tabindex="-1">
+    <div class="page-heading">
+        <div>
+            <h1>Quản lý lịch chặn</h1>
+            <p class="subtitle">Chặn phòng hoặc thiết bị theo khoảng ngày, thứ và một hay nhiều tiết.</p>
+        </div>
+        <a class="button button-secondary" th:href="@{/schedule/calendar}">Xem lịch phòng</a>
+    </div>
+
+    <p class="message message-success" role="status" th:if="${success}" th:text="${success}"></p>
+    <p class="message message-error" role="alert" th:if="${error}" th:text="${error}"></p>
+
+    <section class="panel" aria-labelledby="create-block-heading">
+        <h2 id="create-block-heading">Tạo lịch chặn</h2>
+        <form method="post" th:action="@{/admin-blocks}" th:object="${adminBlockForm}">
+            <p class="message message-error" role="alert" th:if="${#fields.hasGlobalErrors()}"
+               th:each="item : ${#fields.globalErrors()}" th:text="${item}"></p>
+            <div class="form-grid">
+                <div class="field field-wide">
+                    <label for="resourceSelection">Tài nguyên</label>
+                    <select id="resourceSelection" required th:field="*{resourceSelection}"
+                            th:attr="aria-invalid=${#fields.hasErrors('resourceSelection')}">
+                        <option value="">Chọn một phòng hoặc thiết bị</option>
+                        <optgroup label="Phòng">
+                            <option th:each="room : ${rooms}" th:value="|ROOM:${room.id}|"
+                                    th:text="|${room.id} — ${room.name} (${room.status})|"></option>
+                        </optgroup>
+                        <optgroup label="Thiết bị">
+                            <option th:each="device : ${devices}" th:value="|DEVICE:${device.id}|"
+                                    th:text="|${device.id} — ${device.name} (${device.status})|"></option>
+                        </optgroup>
+                    </select>
+                    <p class="field-error" role="alert" th:if="${#fields.hasErrors('resourceSelection')}"
+                       th:errors="*{resourceSelection}"></p>
+                </div>
+                <div class="field">
+                    <label for="startDate">Từ ngày</label>
+                    <input id="startDate" type="date" required th:field="*{startDate}"
+                           th:attr="aria-invalid=${#fields.hasErrors('startDate')}">
+                    <p class="field-error" role="alert" th:if="${#fields.hasErrors('startDate')}"
+                       th:errors="*{startDate}"></p>
+                </div>
+                <div class="field">
+                    <label for="endDate">Đến ngày</label>
+                    <input id="endDate" type="date" required th:field="*{endDate}"
+                           th:attr="aria-invalid=${#fields.hasErrors('endDate')}">
+                    <p class="field-error" role="alert" th:if="${#fields.hasErrors('endDate')}"
+                       th:errors="*{endDate}"></p>
+                </div>
+                <div class="field">
+                    <label for="dayOfWeek">Thứ áp dụng</label>
+                    <select id="dayOfWeek" th:field="*{dayOfWeek}"
+                            th:attr="aria-invalid=${#fields.hasErrors('dayOfWeek')}">
+                        <option value="">Mỗi ngày trong khoảng</option>
+                        <option th:each="day : ${dayOptions}" th:value="${day.value}" th:text="${day.label}"></option>
+                    </select>
+                    <p class="field-error" role="alert" th:if="${#fields.hasErrors('dayOfWeek')}"
+                       th:errors="*{dayOfWeek}"></p>
+                </div>
+                <div class="field">
+                    <label for="periodIds">Tiết áp dụng</label>
+                    <select id="periodIds" multiple th:field="*{periodIds}" aria-describedby="period-help">
+                        <option th:each="period : ${periods}" th:value="${period.id}"
+                                th:text="|${period.name} · ${period.startTime}–${period.endTime}|"></option>
+                    </select>
+                    <p class="helper" id="period-help">Không chọn tiết để chặn cả ngày; có thể chọn nhiều tiết.</p>
+                </div>
+                <div class="field field-wide">
+                    <label for="reason">Lý do</label>
+                    <textarea id="reason" required th:field="*{reason}"
+                              th:attr="aria-invalid=${#fields.hasErrors('reason')}"></textarea>
+                    <p class="field-error" role="alert" th:if="${#fields.hasErrors('reason')}"
+                       th:errors="*{reason}"></p>
+                </div>
+            </div>
+            <div class="toolbar form-actions">
+                <button type="submit">Tạo lịch chặn</button>
+            </div>
+        </form>
+    </section>
+
+    <section aria-labelledby="block-list-heading">
+        <div class="section-heading">
+            <div>
+                <h2 id="block-list-heading">Lịch chặn đã tạo</h2>
+                <p class="subtitle" th:text="|${#lists.size(blocks)} lịch chặn|">0 lịch chặn</p>
+            </div>
+        </div>
+        <div class="table-wrap" th:unless="${#lists.isEmpty(blocks)}">
+            <table>
+                <thead>
+                <tr>
+                    <th scope="col">Tài nguyên</th>
+                    <th scope="col">Khoảng ngày</th>
+                    <th scope="col">Thứ / tiết</th>
+                    <th scope="col">Lý do</th>
+                    <th scope="col">Trạng thái</th>
+                    <th scope="col">Thao tác</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="block : ${blocks}">
+                    <td><strong th:text="|${block.resourceId} — ${block.resourceName}|"></strong><br>
+                        <span class="helper" th:text="${block.resourceType.name() == 'PHONG' ? 'Phòng' : 'Thiết bị'}"></span>
+                    </td>
+                    <td th:text="|${#temporals.format(block.startDate, 'dd/MM/yyyy')}–${#temporals.format(block.endDate, 'dd/MM/yyyy')}|"></td>
+                    <td th:text="|${block.dayLabel} · ${block.periodName}|"></td>
+                    <td th:text="${block.reason}"></td>
+                    <td><span class="status-chip" th:classappend="| status-${#strings.toLowerCase(block.status.name())}|"
+                              th:text="${block.status.name() == 'HIEU_LUC' ? 'Hiệu lực' : 'Đã hủy'}"></span></td>
+                    <td>
+                        <form method="post" th:if="${block.status.name() == 'HIEU_LUC'}"
+                              th:action="@{/admin-blocks/{id}/cancel(id=${block.id})}"
+                              onsubmit="return confirm('Xác nhận hủy lịch chặn này? Lịch sẽ được giữ lại ở trạng thái Đã hủy.');">
+                            <button class="button-danger" type="submit">Hủy lịch chặn</button>
+                        </form>
+                        <span class="helper" th:unless="${block.status.name() == 'HIEU_LUC'}">Không còn hiệu lực</span>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="panel empty-state" th:if="${#lists.isEmpty(blocks)}">
+            <p>Chưa có lịch chặn nào.</p>
+        </div>
+    </section>
+</main>
+</body>
+</html>
