@@ -6,6 +6,7 @@ import com.example.labmanagement.catalog.application.CatalogService;
 import com.example.labmanagement.identity.persistence.NguoiDungRepository;
 import com.example.labmanagement.identity.persistence.VaiTroRepository;
 import com.example.labmanagement.incident.application.IncidentService;
+import com.example.labmanagement.maintenance.application.MaintenanceService;
 import com.example.labmanagement.registration.application.ApprovalService;
 import com.example.labmanagement.registration.application.RegistrationService;
 import com.example.labmanagement.scheduling.application.AdminBlockService;
@@ -66,6 +67,9 @@ class ReadinessEndpointTest {
 
 	@MockitoBean
 	private IncidentService incidentService;
+
+	@MockitoBean
+	private MaintenanceService maintenanceService;
 
 	@Test
 	void readinessIsPublicAndReturnsHttp200() throws Exception {

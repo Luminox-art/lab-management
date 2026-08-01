@@ -25,6 +25,10 @@ public interface LichChanRepository extends JpaRepository<LichChan, Long> {
 	@Query("select blocked from LichChan blocked where blocked.id = :id")
 	Optional<LichChan> findByIdForUpdate(@Param("id") Long id);
 
+	@Lock(LockModeType.PESSIMISTIC_WRITE)
+	@Query("select blocked from LichChan blocked where blocked.maintenanceId = :maintenanceId")
+	Optional<LichChan> findByMaintenanceIdForUpdate(@Param("maintenanceId") String maintenanceId);
+
 	@Query("""
 			select blocked from LichChan blocked
 			join fetch blocked.resource resource

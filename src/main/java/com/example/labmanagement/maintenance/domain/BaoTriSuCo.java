@@ -38,4 +38,12 @@ public class BaoTriSuCo {
 	public BaoTriSuCoId getId() {
 		return id;
 	}
+
+	public BaoTri getMaintenance() {
+		return maintenance;
+	}
+
+	public SuCo getIncident() {
+		return incident;
+	}
 }

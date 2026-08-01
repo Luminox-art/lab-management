@@ -129,10 +129,10 @@ class MySqlPersistenceTest {
 	void flywayIsValidAndSecondMigrationRunDoesNotRepeat() {
 		flyway.validate();
 
-		assertThat(flyway.info().applied()).hasSize(5);
+		assertThat(flyway.info().applied()).hasSize(6);
 		assertThat(flyway.migrate().migrationsExecuted).isZero();
 		assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM flyway_schema_history WHERE success = 1",
-				Integer.class)).isEqualTo(5);
+				Integer.class)).isEqualTo(6);
 	}
 
 	@Test

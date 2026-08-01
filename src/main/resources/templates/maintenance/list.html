@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Bảo trì</title><link rel="stylesheet" th:href="@{/css/catalog.css}">
+</head>
+<body><a class="skip-link" href="#main-content">Bỏ qua điều hướng</a>
+<header class="app-header"><div class="header-inner"><a class="brand" th:href="@{/catalog/rooms}">Quản lý phòng lab</a><nav class="main-nav" aria-label="Điều hướng chính"><a th:href="@{/registrations}">Phiếu đăng ký</a><a th:href="@{/sessions}">Phiên sử dụng</a><a th:href="@{/incidents}">Sự cố</a><a aria-current="page" th:href="@{/maintenances}">Bảo trì</a><a th:href="@{/profile}">Hồ sơ</a></nav></div></header>
+<main class="page-shell" id="main-content" tabindex="-1">
+    <div class="page-heading"><div><h1>Bảo trì</h1><p class="subtitle">Theo dõi tài nguyên đang bảo trì, người phụ trách và toàn bộ tiến độ xử lý.</p></div><a class="button button-primary" th:href="@{/maintenances/new}">Tạo phiếu bảo trì</a></div>
+    <p class="message message-success" role="status" th:if="${success}" th:text="${success}"></p><p class="message message-error" role="alert" th:if="${error}" th:text="${error}"></p>
+    <section class="panel" aria-labelledby="maintenance-filter-heading"><h2 id="maintenance-filter-heading">Bộ lọc</h2>
+        <form method="get" th:action="@{/maintenances}"><div class="filter-grid">
+            <div class="field"><label for="status">Trạng thái</label><select id="status" name="status"><option value="">Tất cả trạng thái</option><option th:each="item : ${statuses}" th:value="${item}" th:selected="${item == status}" th:text="${item.name() == 'CHO_XU_LY' ? 'Chờ xử lý' : (item.name() == 'DANG_BAO_TRI' ? 'Đang bảo trì' : (item.name() == 'HOAN_THANH' ? 'Hoàn thành' : 'Đã hủy'))}"></option></select></div>
+            <div class="field"><label for="resourceId">Tài nguyên</label><select id="resourceId" name="resourceId"><option value="">Tất cả tài nguyên</option><option th:each="item : ${resources}" th:value="${item.id}" th:selected="${item.id == resourceId}" th:text="|${item.referenceId} — ${item.name}|"></option></select></div>
+            <div class="field"><label for="assigneeId">Người phụ trách</label><select id="assigneeId" name="assigneeId"><option value="">Tất cả cán bộ</option><option th:each="item : ${assignees}" th:value="${item.id}" th:selected="${item.id == assigneeId}" th:text="${item.fullName}"></option></select></div>
+            <div class="field"><label for="keyword">Tìm kiếm</label><input id="keyword" name="keyword" th:value="${keyword}" placeholder="Mã hoặc nội dung bảo trì"></div>
+        </div><div class="toolbar form-actions"><button type="submit">Áp dụng</button><a class="button button-secondary" th:href="@{/maintenances}">Xóa lọc</a></div></form>
+    </section>
+    <div class="table-wrap"><table><thead><tr><th>Mã</th><th>Tài nguyên</th><th>Nội dung</th><th>Phụ trách</th><th>Trạng thái</th><th>Bắt đầu</th><th></th></tr></thead><tbody>
+        <tr th:each="item : ${result.content}"><td><strong th:text="${item.id}"></strong></td><td th:text="|${item.resourceReferenceId} — ${item.resourceName}|"></td><td th:text="${item.content}"></td><td th:text="${item.assigneeName}"></td><td><span class="status-chip" th:classappend="| status-${#strings.toLowerCase(item.status.name())}|" th:text="${item.status.name() == 'CHO_XU_LY' ? 'Chờ xử lý' : (item.status.name() == 'DANG_BAO_TRI' ? 'Đang bảo trì' : (item.status.name() == 'HOAN_THANH' ? 'Hoàn thành' : 'Đã hủy'))}"></span></td><td th:text="${#temporals.format(item.startAt, 'dd/MM/yyyy HH:mm')}"></td><td><a class="button button-secondary" th:href="@{/maintenances/{id}(id=${item.id})}">Chi tiết</a></td></tr>
+        <tr th:if="${result.empty}"><td class="empty-state" colspan="7">Không có phiếu bảo trì phù hợp.</td></tr>
+    </tbody></table></div>
+    <nav class="pagination" aria-label="Phân trang bảo trì" th:if="${result.totalPages > 1}"><a class="button button-secondary" rel="prev" th:if="${result.hasPrevious()}" th:href="@{/maintenances(status=${status},resourceId=${resourceId},assigneeId=${assigneeId},keyword=${keyword},page=${result.number - 1},size=${result.size})}">Trang trước</a><span th:text="|Trang ${result.number + 1} / ${result.totalPages}|"></span><a class="button button-secondary" rel="next" th:if="${result.hasNext()}" th:href="@{/maintenances(status=${status},resourceId=${resourceId},assigneeId=${assigneeId},keyword=${keyword},page=${result.number + 1},size=${result.size})}">Trang sau</a></nav>
+</main></body></html>

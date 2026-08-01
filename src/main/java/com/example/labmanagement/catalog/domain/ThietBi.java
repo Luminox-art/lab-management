@@ -99,4 +99,16 @@ public class ThietBi extends VersionedEntity {
 	public void finishUsing(boolean damaged) {
 		this.status = damaged ? ThietBiTrangThai.HONG : ThietBiTrangThai.SAN_SANG;
 	}
+
+	public void startMaintenance() {
+		this.status = ThietBiTrangThai.BAO_TRI;
+	}
+
+	public void finishMaintenance() {
+		this.status = ThietBiTrangThai.SAN_SANG;
+	}
+
+	public void cancelMaintenance() {
+		this.status = ThietBiTrangThai.HONG;
+	}
 }

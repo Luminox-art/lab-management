@@ -924,6 +924,73 @@ select[multiple] {
     border-left: 5px solid var(--color-success);
 }
 
+.maintenance-timeline {
+    margin: var(--space-4) 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.maintenance-timeline li {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1rem minmax(0, 1fr);
+    gap: var(--space-3);
+    padding-bottom: var(--space-5);
+}
+
+.maintenance-timeline li:not(:last-child)::before {
+    position: absolute;
+    top: 1rem;
+    bottom: 0;
+    left: 0.4375rem;
+    width: 2px;
+    content: "";
+    background: var(--color-border);
+}
+
+.timeline-marker {
+    z-index: 1;
+    width: 1rem;
+    height: 1rem;
+    margin-top: var(--space-1);
+    background: var(--color-primary);
+    border: 3px solid var(--color-surface);
+    border-radius: 50%;
+    box-shadow: 0 0 0 1px var(--color-primary);
+}
+
+.timeline-content {
+    min-width: 0;
+    padding: var(--space-3);
+    background: var(--color-surface-muted);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+}
+
+.timeline-heading {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--space-2);
+}
+
+.timeline-content p {
+    margin-block: var(--space-2);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.timeline-content small,
+.timeline-heading time {
+    color: var(--color-muted);
+}
+
+.status-cho_xu_ly,
+.status-dang_bao_tri {
+    color: var(--color-warning);
+    background: var(--color-warning-surface);
+}
+
 @media (max-width: 48rem) {
     .header-inner,
     .page-shell {

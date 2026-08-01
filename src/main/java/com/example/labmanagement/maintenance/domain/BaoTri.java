@@ -68,4 +68,56 @@ public class BaoTri extends VersionedEntity {
 	public BaoTriTrangThai getStatus() {
 		return status;
 	}
+
+	public TaiNguyen getResource() {
+		return resource;
+	}
+
+	public NguoiDung getAssignee() {
+		return assignee;
+	}
+
+	public Instant getStartAt() {
+		return startAt;
+	}
+
+	public Instant getEndAt() {
+		return endAt;
+	}
+
+	public String getContent() {
+		return content;
+	}
+
+	public String getResult() {
+		return result;
+	}
+
+	public void updateProgress(BaoTriTrangThai nextStatus, Instant requestedEndAt, String requestedResult) {
+		if (status == BaoTriTrangThai.HOAN_THANH || status == BaoTriTrangThai.DA_HUY) {
+			throw new IllegalStateException("Bảo trì đã kết thúc và không thể cập nhật.");
+		}
+		boolean allowed = status == BaoTriTrangThai.CHO_XU_LY
+				? nextStatus == BaoTriTrangThai.CHO_XU_LY || nextStatus == BaoTriTrangThai.DANG_BAO_TRI
+						|| nextStatus == BaoTriTrangThai.DA_HUY
+				: nextStatus == BaoTriTrangThai.DANG_BAO_TRI || nextStatus == BaoTriTrangThai.HOAN_THANH
+						|| nextStatus == BaoTriTrangThai.DA_HUY;
+		if (!allowed) {
+			throw new IllegalStateException("Chuyển trạng thái bảo trì không hợp lệ.");
+		}
+		if (nextStatus == BaoTriTrangThai.HOAN_THANH) {
+			if (requestedEndAt == null) {
+				throw new IllegalStateException("Hoàn thành bảo trì bắt buộc phải có ngày kết thúc.");
+			}
+			if (requestedEndAt.isBefore(startAt)) {
+				throw new IllegalStateException("Ngày kết thúc không được trước ngày bắt đầu bảo trì.");
+			}
+			if (requestedResult == null || requestedResult.isBlank()) {
+				throw new IllegalStateException("Hoàn thành bảo trì bắt buộc phải có kết quả.");
+			}
+		}
+		this.status = nextStatus;
+		this.endAt = nextStatus == BaoTriTrangThai.HOAN_THANH ? requestedEndAt : null;
+		this.result = requestedResult;
+	}
 }

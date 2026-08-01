@@ -56,4 +56,20 @@ public class TienDoBaoTri {
 	public Long getId() {
 		return id;
 	}
+
+	public Instant getOccurredAt() {
+		return occurredAt;
+	}
+
+	public BaoTriTrangThai getStatus() {
+		return status;
+	}
+
+	public String getContent() {
+		return content;
+	}
+
+	public NguoiDung getUpdatedBy() {
+		return updatedBy;
+	}
 }

@@ -52,11 +52,19 @@ public class LichChan {
 	@JoinColumn(name = "MaNguoiTao", nullable = false)
 	private NguoiDung creator;
 
+	@Column(name = "MaBaoTri", unique = true, length = 50)
+	private String maintenanceId;
+
 	protected LichChan() {
 	}
 
 	public LichChan(TaiNguyen resource, LocalDate startDate, LocalDate endDate, Byte dayOfWeek, TietHoc period,
 			String reason, LichChanTrangThai status, NguoiDung creator) {
+		this(resource, startDate, endDate, dayOfWeek, period, reason, status, creator, null);
+	}
+
+	public LichChan(TaiNguyen resource, LocalDate startDate, LocalDate endDate, Byte dayOfWeek, TietHoc period,
+			String reason, LichChanTrangThai status, NguoiDung creator, String maintenanceId) {
 		this.resource = resource;
 		this.startDate = startDate;
 		this.endDate = endDate;
@@ -65,6 +73,7 @@ public class LichChan {
 		this.reason = reason;
 		this.status = status;
 		this.creator = creator;
+		this.maintenanceId = maintenanceId;
 	}
 
 	public Long getId() {
@@ -101,6 +110,10 @@ public class LichChan {
 
 	public NguoiDung getCreator() {
 		return creator;
+	}
+
+	public String getMaintenanceId() {
+		return maintenanceId;
 	}
 
 	public void cancel() {

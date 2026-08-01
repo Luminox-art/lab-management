@@ -79,4 +79,16 @@ public class Phong extends VersionedEntity {
 		this.capacity = capacity;
 		this.status = status;
 	}
+
+	public void startMaintenance() {
+		this.status = PhongTrangThai.BAO_TRI;
+	}
+
+	public void finishMaintenance() {
+		this.status = PhongTrangThai.SAN_SANG;
+	}
+
+	public void cancelMaintenance() {
+		this.status = PhongTrangThai.SAN_SANG;
+	}
 }
