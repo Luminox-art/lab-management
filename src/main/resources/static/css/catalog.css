@@ -69,6 +69,9 @@
     --registration-neutral-color: var(--primitive-gray-700);
     --registration-neutral-surface: var(--primitive-gray-200);
     --registration-option-hover: var(--table-row-hover);
+	--dashboard-bar-bg: var(--primitive-slate-200);
+	--dashboard-bar-value: var(--primitive-blue-600);
+	--notification-unread-border: var(--primitive-blue-600);
 	--incident-severity-low-color: var(--registration-neutral-color);
 	--incident-severity-low-surface: var(--registration-neutral-surface);
 	--incident-severity-medium-color: var(--color-warning);
@@ -985,6 +988,134 @@ select[multiple] {
     color: var(--color-muted);
 }
 
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.checkbox-field {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: var(--control-height);
+    cursor: pointer;
+}
+
+.checkbox-field input {
+    width: 1.25rem;
+    min-height: 1.25rem;
+}
+
+.notification-list,
+.bar-list,
+.severity-summary {
+    padding: 0;
+    list-style: none;
+}
+
+.notification-list {
+    display: grid;
+    gap: var(--space-3);
+}
+
+.notification-card {
+    padding: var(--space-4);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-left: 4px solid var(--notification-unread-border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+}
+
+.notification-card h3,
+.notification-card p {
+    margin-block: var(--space-2);
+}
+
+.notification-heading,
+.bar-label {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--space-2);
+}
+
+.notification-heading time,
+.notification-type {
+    color: var(--color-muted);
+    font-size: 0.875rem;
+    font-weight: 700;
+}
+
+.metric-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+    gap: var(--space-3);
+}
+
+.metric-card {
+    display: grid;
+    gap: var(--space-1);
+    padding: var(--space-4);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+}
+
+.metric-card strong {
+    color: var(--color-primary);
+    font-size: clamp(1.75rem, 4vw, 2.5rem);
+    line-height: 1.1;
+}
+
+.metric-card small,
+.metric-card span {
+    color: var(--color-muted);
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(16rem, 1fr);
+    gap: var(--space-4);
+}
+
+.bar-list,
+.severity-summary {
+    display: grid;
+    gap: var(--space-3);
+}
+
+.bar-track {
+    height: 0.75rem;
+    margin-top: var(--space-1);
+    overflow: hidden;
+    background: var(--dashboard-bar-bg);
+    border-radius: 999px;
+}
+
+.bar-value {
+    display: block;
+    min-width: 0.25rem;
+    height: 100%;
+    background: var(--dashboard-bar-value);
+    border-radius: inherit;
+}
+
+.severity-summary li {
+    display: grid;
+    grid-template-columns: minmax(8rem, 1fr) auto auto;
+    align-items: center;
+    gap: var(--space-2);
+}
+
 .status-cho_xu_ly,
 .status-dang_bao_tri {
     color: var(--color-warning);
@@ -1029,6 +1160,10 @@ select[multiple] {
     }
 
     .device-options {
+        grid-template-columns: 1fr;
+    }
+
+    .dashboard-grid {
         grid-template-columns: 1fr;
     }
 }

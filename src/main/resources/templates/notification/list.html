@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Thông báo</title><link rel="stylesheet" th:href="@{/css/catalog.css}">
+</head>
+<body><a class="skip-link" href="#main-content">Bỏ qua điều hướng</a>
+<header class="app-header"><div class="header-inner"><a class="brand" th:href="@{/catalog/rooms}">Quản lý phòng lab</a><nav class="main-nav" aria-label="Điều hướng chính"><a th:href="@{/registrations}">Phiếu đăng ký</a><a th:href="@{/sessions}">Phiên sử dụng</a><a th:href="@{/incidents}">Sự cố</a><a aria-current="page" th:href="@{/notifications}">Thông báo</a><a th:href="@{/profile}">Hồ sơ</a></nav></div></header>
+<main class="page-shell" id="main-content" tabindex="-1">
+    <div class="page-heading"><div><h1>Thông báo</h1><p class="subtitle">Tổng hợp động các quyết định phiếu, phiên sắp tới, sự cố và tiến độ bảo trì thuộc phạm vi của bạn.</p></div></div>
+    <section class="panel" aria-labelledby="notification-filter-heading"><h2 id="notification-filter-heading">Bộ lọc</h2><form method="get" th:action="@{/notifications}"><label class="checkbox-field" for="unreadOnly"><input id="unreadOnly" name="unreadOnly" type="checkbox" value="true" th:checked="${unreadOnly}"><span>Chỉ hiển thị thông báo động chưa đọc</span></label><div class="toolbar form-actions"><button type="submit">Áp dụng</button><a class="button button-secondary" th:href="@{/notifications}">Xóa lọc</a></div></form></section>
+    <section aria-labelledby="notification-list-heading"><h2 class="sr-only" id="notification-list-heading">Danh sách thông báo</h2><ol class="notification-list">
+        <li class="notification-card" th:each="item : ${result.content}"><div class="notification-heading"><span class="notification-type" th:text="${item.type.name() == 'PHIEU_DANG_KY' ? 'Phiếu đăng ký' : (item.type.name() == 'PHIEN_SAP_DIEN_RA' ? 'Phiên sử dụng' : (item.type.name() == 'SU_CO' ? 'Sự cố' : 'Bảo trì'))}"></span><time th:text="${#temporals.format(item.occurredAt, 'dd/MM/yyyy HH:mm')}"></time></div><h3 th:text="${item.title}"></h3><p th:text="${item.content}"></p><a class="button button-secondary" th:href="${item.targetUrl}">Xem chi tiết</a></li>
+        <li class="panel empty-state" th:if="${result.empty}">Không có thông báo phù hợp trong phạm vi của bạn.</li>
+    </ol></section>
+    <nav class="pagination" aria-label="Phân trang thông báo" th:if="${result.totalPages > 1}"><a class="button button-secondary" rel="prev" th:if="${result.hasPrevious()}" th:href="@{/notifications(unreadOnly=${unreadOnly},page=${result.number - 1},size=${result.size})}">Trang trước</a><span th:text="|Trang ${result.number + 1} / ${result.totalPages}|"></span><a class="button button-secondary" rel="next" th:if="${result.hasNext()}" th:href="@{/notifications(unreadOnly=${unreadOnly},page=${result.number + 1},size=${result.size})}">Trang sau</a></nav>
+</main></body></html>

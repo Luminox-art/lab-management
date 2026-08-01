@@ -12,6 +12,8 @@
         <a th:href="@{/registrations}">Phiếu đăng ký</a>
         <a th:href="@{/sessions}">Phiên sử dụng</a>
         <a th:href="@{/incidents}">Sự cố</a>
+        <a th:href="@{/notifications}">Thông báo</a>
+        <a th:if="${profile.roleId == 'CBQL'}" th:href="@{/dashboard}">Dashboard</a>
     </nav>
     <dl>
         <dt>Mã định danh</dt>

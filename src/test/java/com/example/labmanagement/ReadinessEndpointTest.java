@@ -7,8 +7,12 @@ import com.example.labmanagement.identity.persistence.NguoiDungRepository;
 import com.example.labmanagement.identity.persistence.VaiTroRepository;
 import com.example.labmanagement.incident.application.IncidentService;
 import com.example.labmanagement.maintenance.application.MaintenanceService;
+import com.example.labmanagement.notification.application.NotificationService;
+import com.example.labmanagement.notification.persistence.NotificationProjectionRepository;
 import com.example.labmanagement.registration.application.ApprovalService;
 import com.example.labmanagement.registration.application.RegistrationService;
+import com.example.labmanagement.reporting.application.DashboardService;
+import com.example.labmanagement.reporting.persistence.DashboardQueryRepository;
 import com.example.labmanagement.scheduling.application.AdminBlockService;
 import com.example.labmanagement.scheduling.application.SchedulingService;
 import com.example.labmanagement.usage.application.SessionGenerationService;
@@ -70,6 +74,18 @@ class ReadinessEndpointTest {
 
 	@MockitoBean
 	private MaintenanceService maintenanceService;
+
+	@MockitoBean
+	private NotificationService notificationService;
+
+	@MockitoBean
+	private DashboardService dashboardService;
+
+	@MockitoBean
+	private NotificationProjectionRepository notificationProjectionRepository;
+
+	@MockitoBean
+	private DashboardQueryRepository dashboardQueryRepository;
 
 	@Test
 	void readinessIsPublicAndReturnsHttp200() throws Exception {
