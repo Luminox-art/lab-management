@@ -57,4 +57,6 @@ public interface PhieuDangKyThietBiRepository extends JpaRepository<PhieuDangKyT
 
 	boolean existsByDevice_IdAndAllocatedTrueAndRegistration_StatusIn(String deviceId,
 			Collection<PhieuDangKyTrangThai> statuses);
+
+	boolean existsByRegistration_IdAndDevice_IdAndAllocatedTrue(String registrationId, String deviceId);
 }

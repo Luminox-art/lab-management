@@ -69,6 +69,12 @@
     --registration-neutral-color: var(--primitive-gray-700);
     --registration-neutral-surface: var(--primitive-gray-200);
     --registration-option-hover: var(--table-row-hover);
+	--incident-severity-low-color: var(--registration-neutral-color);
+	--incident-severity-low-surface: var(--registration-neutral-surface);
+	--incident-severity-medium-color: var(--color-warning);
+	--incident-severity-medium-surface: var(--color-warning-surface);
+	--incident-severity-high-color: var(--color-danger);
+	--incident-severity-high-surface: var(--color-danger-surface);
 }
 
 * {
@@ -442,6 +448,81 @@ tbody tr:last-child td {
 .status-vang_mat {
     color: var(--color-danger);
     background: var(--color-danger-surface);
+}
+
+.status-moi {
+	color: var(--registration-neutral-color);
+	background: var(--registration-neutral-surface);
+}
+
+.status-dang_xu_ly {
+	color: var(--color-warning);
+	background: var(--color-warning-surface);
+}
+
+.status-da_xu_ly {
+	color: var(--color-success);
+	background: var(--color-success-surface);
+}
+
+.severity-chip {
+	display: inline-flex;
+	align-items: center;
+	min-height: 1.75rem;
+	padding: 0 var(--space-2);
+	border: 1px solid currentColor;
+	border-radius: 999px;
+	font-size: 0.8125rem;
+	font-weight: 750;
+	white-space: nowrap;
+}
+
+.severity-thap {
+	color: var(--incident-severity-low-color);
+	background: var(--incident-severity-low-surface);
+}
+
+.severity-trung_binh {
+	color: var(--incident-severity-medium-color);
+	background: var(--incident-severity-medium-surface);
+}
+
+.severity-cao,
+.severity-nghiem_trong {
+	color: var(--incident-severity-high-color);
+	background: var(--incident-severity-high-surface);
+}
+
+.severity-nghiem_trong {
+	border-width: 2px;
+	text-transform: uppercase;
+}
+
+.incident-detail-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+	gap: var(--space-4);
+	margin-bottom: 0;
+}
+
+.incident-detail-grid div {
+	padding: var(--space-3);
+	background: var(--color-surface-muted);
+	border-radius: var(--radius-sm);
+}
+
+.incident-detail-grid dt {
+	color: var(--color-muted);
+	font-size: 0.875rem;
+	font-weight: 700;
+}
+
+.incident-detail-grid dd {
+	margin: var(--space-1) 0 0;
+}
+
+.incident-detail-grid .detail-wide {
+	grid-column: 1 / -1;
 }
 
 .session-device-grid {

@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Sự cố</title>
+    <link rel="stylesheet" th:href="@{/css/catalog.css}">
+</head>
+<body>
+<a class="skip-link" href="#main-content">Bỏ qua điều hướng</a>
+<header class="app-header"><div class="header-inner">
+    <a class="brand" th:href="@{/catalog/rooms}">Quản lý phòng lab</a>
+    <nav class="main-nav" aria-label="Điều hướng chính">
+        <a th:href="@{/registrations}">Phiếu đăng ký</a><a th:href="@{/sessions}">Phiên sử dụng</a>
+        <a aria-current="page" th:href="@{/incidents}">Sự cố</a><a th:href="@{/schedule/calendar}">Lịch phòng</a>
+        <a th:href="@{/profile}">Hồ sơ</a>
+    </nav>
+</div></header>
+<main class="page-shell" id="main-content" tabindex="-1">
+    <div class="page-heading"><div><h1>Sự cố</h1><p class="subtitle">Theo dõi các sự cố bạn đã báo hoặc có liên quan đến phiên sử dụng của bạn.</p></div>
+        <a class="button button-primary" th:href="@{/incidents/new}">Báo sự cố</a></div>
+    <p class="message message-success" role="status" th:if="${success}" th:text="${success}"></p>
+    <p class="message message-error" role="alert" th:if="${error}" th:text="${error}"></p>
+    <section class="panel" aria-labelledby="incident-filter-heading">
+        <h2 id="incident-filter-heading">Bộ lọc</h2>
+        <form method="get" th:action="@{/incidents}"><div class="filter-grid">
+            <div class="field"><label for="status">Trạng thái</label><select id="status" name="status"><option value="">Tất cả trạng thái</option>
+                <option th:each="item : ${statuses}" th:value="${item}" th:selected="${item == status}" th:text="${item.name() == 'MOI' ? 'Mới' : (item.name() == 'DANG_XU_LY' ? 'Đang xử lý' : (item.name() == 'DA_XU_LY' ? 'Đã xử lý' : 'Đã hủy'))}"></option></select></div>
+            <div class="field"><label for="severity">Mức độ</label><select id="severity" name="severity"><option value="">Tất cả mức độ</option>
+                <option th:each="item : ${severities}" th:value="${item}" th:selected="${item == severity}" th:text="${item.name() == 'THAP' ? 'Thấp' : (item.name() == 'TRUNG_BINH' ? 'Trung bình' : (item.name() == 'CAO' ? 'Cao' : 'Nghiêm trọng'))}"></option></select></div>
+            <div class="field"><label for="resourceId">Mã tài nguyên</label><input id="resourceId" name="resourceId" type="search" maxlength="50" th:value="${resourceId}"></div>
+            <div class="field"><label for="sessionId">Mã phiên</label><input id="sessionId" name="sessionId" type="number" min="1" th:value="${sessionId}"></div>
+            <div class="field"><label for="keyword">Từ khóa</label><input id="keyword" name="keyword" type="search" th:value="${keyword}" placeholder="Mã hoặc mô tả"></div>
+        </div><div class="toolbar form-actions"><button type="submit">Áp dụng bộ lọc</button><a class="button button-secondary" th:href="@{/incidents}">Xóa bộ lọc</a></div></form>
+    </section>
+    <p class="result-summary" aria-live="polite" th:text="|Tìm thấy ${result.totalElements} sự cố|"></p>
+    <div class="table-wrap" role="region" aria-label="Danh sách sự cố" tabindex="0"><table>
+        <thead><tr><th scope="col">Mã</th><th scope="col">Tài nguyên</th><th scope="col">Phiên</th><th scope="col">Mức độ</th><th scope="col">Trạng thái</th><th scope="col">Người báo</th><th scope="col">Thời điểm</th><th scope="col">Thao tác</th></tr></thead>
+        <tbody><tr th:each="item : ${result.content}">
+            <td><a th:href="@{/incidents/{id}(id=${item.id})}" th:text="${item.id}"></a></td>
+            <td th:text="|${item.resourceReferenceId} — ${item.resourceName}|"></td><td th:text="${item.sessionId == null ? '—' : '#' + item.sessionId}"></td>
+            <td><span class="severity-chip" th:classappend="| severity-${#strings.toLowerCase(item.severity.name())}|" th:text="${item.severity.name() == 'THAP' ? 'Thấp' : (item.severity.name() == 'TRUNG_BINH' ? 'Trung bình' : (item.severity.name() == 'CAO' ? 'Cao' : 'Nghiêm trọng'))}"></span></td>
+            <td><span class="status-chip" th:classappend="| status-${#strings.toLowerCase(item.status.name())}|" th:text="${item.status.name() == 'MOI' ? 'Mới' : (item.status.name() == 'DANG_XU_LY' ? 'Đang xử lý' : (item.status.name() == 'DA_XU_LY' ? 'Đã xử lý' : 'Đã hủy'))}"></span></td>
+            <td th:text="|${item.reporterId} — ${item.reporterName}|"></td><td th:text="${#temporals.format(item.reportedAt, 'dd/MM/yyyy HH:mm')}"></td>
+            <td><a class="button button-secondary" th:href="@{/incidents/{id}(id=${item.id})}">Chi tiết</a></td>
+        </tr><tr th:if="${result.empty}"><td class="empty-state" colspan="8">Không có sự cố phù hợp. Hãy thay đổi bộ lọc hoặc tạo báo cáo mới.</td></tr></tbody>
+    </table></div>
+    <nav class="pagination" aria-label="Phân trang sự cố" th:if="${result.totalPages > 1}">
+        <a class="button button-secondary" rel="prev" th:if="${result.hasPrevious()}" th:href="@{/incidents(status=${status},severity=${severity},resourceId=${resourceId},sessionId=${sessionId},keyword=${keyword},page=${result.number - 1},size=${result.size})}">Trang trước</a>
+        <span th:text="|Trang ${result.number + 1} / ${result.totalPages}|"></span>
+        <a class="button button-secondary" rel="next" th:if="${result.hasNext()}" th:href="@{/incidents(status=${status},severity=${severity},resourceId=${resourceId},sessionId=${sessionId},keyword=${keyword},page=${result.number + 1},size=${result.size})}">Trang sau</a>
+    </nav>
+</main></body></html>

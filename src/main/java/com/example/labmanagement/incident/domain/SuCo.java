@@ -85,4 +85,65 @@ public class SuCo extends VersionedEntity {
 	public MucDoSuCo getSeverity() {
 		return severity;
 	}
+
+	public TaiNguyen getResource() {
+		return resource;
+	}
+
+	public PhienSuDung getSession() {
+		return session;
+	}
+
+	public NguoiDung getReporter() {
+		return reporter;
+	}
+
+	public NguoiDung getHandler() {
+		return handler;
+	}
+
+	public String getDescription() {
+		return description;
+	}
+
+	public SuCoTrangThai getStatus() {
+		return status;
+	}
+
+	public Instant getReportedAt() {
+		return reportedAt;
+	}
+
+	public Instant getCompletedAt() {
+		return completedAt;
+	}
+
+	public String getResult() {
+		return result;
+	}
+
+	public void updateHandling(NguoiDung assignedHandler, SuCoTrangThai nextStatus, String handlingResult,
+			Instant now) {
+		if (status == SuCoTrangThai.DA_XU_LY || status == SuCoTrangThai.DA_HUY) {
+			throw new IllegalStateException("Sự cố đã kết thúc và không thể cập nhật.");
+		}
+		boolean allowed = status == SuCoTrangThai.MOI
+				? nextStatus == SuCoTrangThai.DANG_XU_LY || nextStatus == SuCoTrangThai.DA_HUY
+				: nextStatus == SuCoTrangThai.DANG_XU_LY || nextStatus == SuCoTrangThai.DA_XU_LY
+						|| nextStatus == SuCoTrangThai.DA_HUY;
+		if (!allowed) {
+			throw new IllegalStateException("Chuyển trạng thái sự cố không hợp lệ.");
+		}
+		if ((nextStatus == SuCoTrangThai.DANG_XU_LY || nextStatus == SuCoTrangThai.DA_XU_LY)
+				&& assignedHandler == null) {
+			throw new IllegalStateException("Sự cố đang xử lý hoặc đã xử lý phải có người xử lý.");
+		}
+		if (nextStatus == SuCoTrangThai.DA_XU_LY && (handlingResult == null || handlingResult.isBlank())) {
+			throw new IllegalStateException("Hoàn thành sự cố bắt buộc phải có kết quả xử lý.");
+		}
+		this.handler = assignedHandler;
+		this.status = nextStatus;
+		this.result = handlingResult;
+		this.completedAt = nextStatus == SuCoTrangThai.DA_XU_LY ? now : null;
+	}
 }

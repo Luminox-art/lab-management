@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Báo sự cố</title><link rel="stylesheet" th:href="@{/css/catalog.css}"></head>
+<body><a class="skip-link" href="#main-content">Bỏ qua điều hướng</a>
+<header class="app-header"><div class="header-inner"><a class="brand" th:href="@{/catalog/rooms}">Quản lý phòng lab</a><nav class="main-nav" aria-label="Điều hướng chính"><a th:href="@{/sessions}">Phiên sử dụng</a><a aria-current="page" th:href="@{/incidents}">Sự cố</a><a th:href="@{/profile}">Hồ sơ</a></nav></div></header>
+<main class="page-shell" id="main-content" tabindex="-1">
+    <div class="page-heading"><div><h1>Báo sự cố</h1><p class="subtitle">Chọn đúng một tài nguyên. Nếu sự cố xảy ra trong phiên, hệ thống sẽ kiểm tra tài nguyên có thuộc phạm vi phiên hay không.</p></div><a class="button button-secondary" th:href="@{/incidents}">Về danh sách</a></div>
+    <section class="panel" aria-labelledby="report-heading"><h2 id="report-heading">Thông tin sự cố</h2>
+        <form method="post" th:action="@{/incidents}" th:object="${incidentForm}">
+            <input th:name="${_csrf.parameterName}" th:value="${_csrf.token}" type="hidden">
+            <p class="message message-error" role="alert" th:if="${#fields.hasGlobalErrors()}" th:each="error : ${#fields.globalErrors()}" th:text="${error}"></p>
+            <div class="form-grid">
+                <div class="field field-wide"><label for="resourceId">Tài nguyên</label><select id="resourceId" th:field="*{resourceId}" required th:attr="aria-invalid=${#fields.hasErrors('resourceId')}"><option value="">Chọn một tài nguyên</option><option th:each="item : ${resources}" th:value="${item.id}" th:text="|${item.type.name() == 'PHONG' ? 'Phòng' : 'Thiết bị'} · ${item.referenceId} — ${item.name}|"></option></select><p class="helper">Mỗi báo cáo chỉ gắn với một tài nguyên.</p><p class="field-error" role="alert" th:errors="*{resourceId}"></p></div>
+                <div class="field"><label for="sessionId">Mã phiên sử dụng (tùy chọn)</label><input id="sessionId" th:field="*{sessionId}" type="number" min="1" th:attr="aria-invalid=${#fields.hasErrors('sessionId')}"><p class="helper">Có thể lấy mã tại trang chi tiết phiên.</p><p class="field-error" role="alert" th:errors="*{sessionId}"></p></div>
+                <div class="field"><label for="severity">Mức độ</label><select id="severity" th:field="*{severity}" required th:attr="aria-invalid=${#fields.hasErrors('severity')}"><option th:each="item : ${severities}" th:value="${item}" th:text="${item.name() == 'THAP' ? 'Thấp' : (item.name() == 'TRUNG_BINH' ? 'Trung bình' : (item.name() == 'CAO' ? 'Cao' : 'Nghiêm trọng'))}"></option></select><p class="field-error" role="alert" th:errors="*{severity}"></p></div>
+                <div class="field field-wide"><label for="description">Mô tả</label><textarea id="description" th:field="*{description}" maxlength="2000" required th:attr="aria-invalid=${#fields.hasErrors('description')}" placeholder="Hiện tượng, thời điểm và ảnh hưởng quan sát được"></textarea><p class="helper">Tối đa 2.000 ký tự; không nhập thông tin nhạy cảm.</p><p class="field-error" role="alert" th:errors="*{description}"></p></div>
+            </div><div class="toolbar form-actions"><button type="submit">Gửi báo cáo</button><a class="button button-secondary" th:href="@{/incidents}">Hủy</a></div>
+        </form>
+    </section>
+</main></body></html>

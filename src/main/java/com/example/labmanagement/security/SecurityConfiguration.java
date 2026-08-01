@@ -36,6 +36,8 @@ public class SecurityConfiguration {
 				.requestMatchers(HttpMethod.PUT, "/api/v1/rooms/**", "/api/v1/devices/**").hasRole("CBQL")
 				.requestMatchers(HttpMethod.POST, "/api/v1/registrations/*/approve", "/api/v1/registrations/*/reject")
 				.hasRole("CBQL").requestMatchers("/api/v1/admin-blocks/**", "/admin-blocks/**").hasRole("CBQL")
+				.requestMatchers(HttpMethod.PATCH, "/api/v1/incidents/**").hasRole("CBQL")
+				.requestMatchers(HttpMethod.POST, "/incidents/*/update").hasRole("CBQL")
 				.requestMatchers(HttpMethod.POST, "/api/v1/registrations").hasAnyRole("GV", "SV")
 				.requestMatchers(HttpMethod.POST, "/api/v1/registrations/*/cancel").hasAnyRole("GV", "SV")
 				.requestMatchers(HttpMethod.PUT, "/api/v1/registrations/**").hasAnyRole("GV", "SV")
