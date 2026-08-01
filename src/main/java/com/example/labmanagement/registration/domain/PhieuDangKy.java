@@ -127,4 +127,19 @@ public class PhieuDangKy extends AuditedVersionedEntity {
 		this.status = PhieuDangKyTrangThai.TU_CHOI;
 		markUpdatedAt(updatedAt);
 	}
+
+	public void startUsing(Instant updatedAt) {
+		this.status = PhieuDangKyTrangThai.DANG_SU_DUNG;
+		markUpdatedAt(updatedAt);
+	}
+
+	public void returnToApproved(Instant updatedAt) {
+		this.status = PhieuDangKyTrangThai.DA_DUYET;
+		markUpdatedAt(updatedAt);
+	}
+
+	public void complete(Instant updatedAt) {
+		this.status = PhieuDangKyTrangThai.HOAN_THANH;
+		markUpdatedAt(updatedAt);
+	}
 }

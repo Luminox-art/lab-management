@@ -24,6 +24,7 @@ import com.example.labmanagement.registration.persistence.PhieuHuongDanRepositor
 import com.example.labmanagement.registration.persistence.XuLyPhieuRepository;
 import com.example.labmanagement.scheduling.application.AvailabilityConflictResponse;
 import com.example.labmanagement.scheduling.application.SchedulingService;
+import com.example.labmanagement.usage.application.SessionGenerationService;
 import jakarta.persistence.EntityManager;
 import java.time.Clock;
 import java.time.Instant;
@@ -57,6 +58,7 @@ public class ApprovalService {
 	private final PhieuHuongDanRepository supervisionRepository;
 	private final XuLyPhieuRepository historyRepository;
 	private final SchedulingService schedulingService;
+	private final SessionGenerationService sessionGenerationService;
 	private final EntityManager entityManager;
 	private final Clock clock;
 
@@ -64,7 +66,8 @@ public class ApprovalService {
 			PhongRepository roomRepository, ThietBiRepository deviceRepository, TaiNguyenRepository resourceRepository,
 			LichDangKyRepository scheduleRepository, PhieuDangKyThietBiRepository allocationRepository,
 			PhieuHuongDanRepository supervisionRepository, XuLyPhieuRepository historyRepository,
-			SchedulingService schedulingService, EntityManager entityManager, Clock clock) {
+			SchedulingService schedulingService, SessionGenerationService sessionGenerationService,
+			EntityManager entityManager, Clock clock) {
 		this.userRepository = userRepository;
 		this.registrationRepository = registrationRepository;
 		this.roomRepository = roomRepository;
@@ -75,6 +78,7 @@ public class ApprovalService {
 		this.supervisionRepository = supervisionRepository;
 		this.historyRepository = historyRepository;
 		this.schedulingService = schedulingService;
+		this.sessionGenerationService = sessionGenerationService;
 		this.entityManager = entityManager;
 		this.clock = clock;
 	}
@@ -140,6 +144,7 @@ public class ApprovalService {
 		historyRepository.save(new XuLyPhieu(registration, manager, HanhDongXuLyPhieu.PHE_DUYET, null, processedAt));
 		registrationRepository.flush();
 		entityManager.refresh(registration);
+		sessionGenerationService.generateForRegistration(registration.getId());
 		return decision(registration, selectedIds, processedAt);
 	}
 

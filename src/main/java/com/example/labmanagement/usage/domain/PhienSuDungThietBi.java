@@ -52,4 +52,29 @@ public class PhienSuDungThietBi {
 	public PhienSuDungThietBiId getId() {
 		return id;
 	}
+
+	public PhienSuDung getSession() {
+		return session;
+	}
+
+	public ThietBi getDevice() {
+		return device;
+	}
+
+	public String getReceivedCondition() {
+		return receivedCondition;
+	}
+
+	public String getReturnedCondition() {
+		return returnedCondition;
+	}
+
+	public String getNote() {
+		return note;
+	}
+
+	public void recordReturn(String returnedCondition, String note) {
+		this.returnedCondition = returnedCondition;
+		this.note = note;
+	}
 }

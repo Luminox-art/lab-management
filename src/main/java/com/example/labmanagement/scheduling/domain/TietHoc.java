@@ -1,6 +1,7 @@
 package com.example.labmanagement.scheduling.domain;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -17,10 +18,12 @@ public class TietHoc {
 	@Column(name = "TenTiet", nullable = false, unique = true, length = 50)
 	private String name;
 
-	@Column(name = "GioBatDau", nullable = false)
+	@Convert(converter = LocalTimeAttributeConverter.class)
+	@Column(name = "GioBatDau", nullable = false, columnDefinition = "TIME")
 	private LocalTime startTime;
 
-	@Column(name = "GioKetThuc", nullable = false)
+	@Convert(converter = LocalTimeAttributeConverter.class)
+	@Column(name = "GioKetThuc", nullable = false, columnDefinition = "TIME")
 	private LocalTime endTime;
 
 	protected TietHoc() {

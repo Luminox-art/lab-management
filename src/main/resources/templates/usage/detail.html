@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="|Phiên #${usageSession.id}|"></title>
+    <link rel="stylesheet" th:href="@{/css/catalog.css}">
+</head>
+<body>
+<a class="skip-link" href="#main-content">Bỏ qua điều hướng</a>
+<header class="app-header">
+    <div class="header-inner">
+        <a class="brand" th:href="@{/catalog/rooms}">Quản lý phòng lab</a>
+        <nav class="main-nav" aria-label="Điều hướng chính">
+            <a th:href="@{/registrations}">Phiếu đăng ký</a>
+            <a aria-current="page" th:href="@{/sessions}">Phiên sử dụng</a>
+            <a th:href="@{/schedule/calendar}">Lịch phòng</a>
+            <a th:href="@{/profile}">Hồ sơ</a>
+        </nav>
+    </div>
+</header>
+<main class="page-shell" id="main-content" tabindex="-1">
+    <div class="page-heading">
+        <div><h1 th:text="|Phiên #${usageSession.id}|"></h1><p class="subtitle" th:text="|${usageSession.registrationId} / ${usageSession.roomId} / ${usageSession.periodName} · ${#temporals.format(usageSession.usageDate, 'dd/MM/yyyy')}|"></p></div>
+        <a class="button button-secondary" th:href="@{/sessions}">Về danh sách</a>
+    </div>
+    <p class="message message-success" role="status" th:if="${success}" th:text="${success}"></p>
+    <p class="message message-error" role="alert" th:if="${error}" th:text="${error}"></p>
+    <section class="panel" aria-labelledby="session-summary-heading">
+        <div class="section-heading">
+            <div><h2 id="session-summary-heading">Thông tin phiên</h2><p class="helper">Mỗi thao tác được kiểm tra lại trạng thái và phiên bản ngay trước khi ghi dữ liệu.</p></div>
+            <span class="status-chip" th:classappend="| status-${#strings.toLowerCase(usageSession.status.name())}|" th:text="${usageSession.status.name() == 'CHUA_BAT_DAU' ? 'Chưa bắt đầu' : (usageSession.status.name() == 'DANG_SU_DUNG' ? 'Đang sử dụng' : (usageSession.status.name() == 'HOAN_THANH' ? 'Hoàn thành' : 'Vắng mặt'))}"></span>
+        </div>
+        <dl class="detail-grid session-summary">
+            <div><dt>Phòng</dt><dd th:text="|${usageSession.roomId} — ${usageSession.roomName}|"></dd></div>
+            <div><dt>Thời gian</dt><dd th:text="|${usageSession.startTime}–${usageSession.endTime}|"></dd></div>
+            <div><dt>Người sử dụng</dt><dd th:text="|${usageSession.creatorId} — ${usageSession.creatorName}|"></dd></div>
+            <div><dt>Check-in</dt><dd th:text="${usageSession.checkedInAt == null ? '—' : #temporals.format(usageSession.checkedInAt, 'dd/MM/yyyy HH:mm')}"></dd></div>
+            <div><dt>Người check-in</dt><dd th:text="${usageSession.checkedInBy ?: '—'}"></dd></div>
+            <div><dt>Check-out</dt><dd th:text="${usageSession.checkedOutAt == null ? '—' : #temporals.format(usageSession.checkedOutAt, 'dd/MM/yyyy HH:mm')}"></dd></div>
+        </dl>
+    </section>
+    <section class="panel" aria-labelledby="check-in-heading" th:if="${usageSession.canCheckIn}">
+        <h2 id="check-in-heading">Bàn giao và check-in</h2>
+        <p class="helper">Xác nhận tình trạng nhận của từng thiết bị trước khi bắt đầu phiên.</p>
+        <form method="post" th:action="@{/sessions/{id}/check-in(id=${usageSession.id})}" th:object="${checkInForm}" onsubmit="return confirm('Xác nhận bàn giao thiết bị và check-in phiên này?');">
+            <input th:name="${_csrf.parameterName}" th:value="${_csrf.token}" type="hidden"><input th:field="*{version}" type="hidden">
+            <div class="session-device-grid">
+                <fieldset class="session-device-card" th:each="device, stat : *{devices}">
+                    <legend th:text="|${device.deviceId} — ${device.deviceName}|"></legend>
+                    <input th:field="*{devices[__${stat.index}__].deviceId}" type="hidden">
+                    <div class="field"><label th:for="|check-in-condition-${stat.index}|">Tình trạng nhận</label><input th:id="|check-in-condition-${stat.index}|" th:field="*{devices[__${stat.index}__].condition}" maxlength="255" required><p class="field-error" role="alert" th:errors="*{devices[__${stat.index}__].condition}"></p></div>
+                    <div class="field"><label th:for="|check-in-note-${stat.index}|">Ghi chú</label><textarea th:id="|check-in-note-${stat.index}|" th:field="*{devices[__${stat.index}__].note}" maxlength="2000"></textarea></div>
+                </fieldset>
+            </div>
+            <p class="empty-state compact" th:if="*{#lists.isEmpty(devices)}">Phiếu không được phân bổ thiết bị; có thể check-in phòng trực tiếp.</p>
+            <div class="toolbar form-actions"><button type="submit">Check-in</button></div>
+        </form>
+    </section>
+    <section class="panel" aria-labelledby="check-out-heading" th:if="${usageSession.canCheckOut}">
+        <h2 id="check-out-heading">Thu hồi và check-out</h2>
+        <p class="helper">Ghi nhận tình trạng trả. Nếu có hỏng hóc, đánh dấu tạo sự cố để lưu cùng giao dịch check-out.</p>
+        <form method="post" th:action="@{/sessions/{id}/check-out(id=${usageSession.id})}" th:object="${checkOutForm}" onsubmit="return confirm('Xác nhận thu hồi thiết bị và check-out phiên này?');">
+            <input th:name="${_csrf.parameterName}" th:value="${_csrf.token}" type="hidden"><input th:field="*{version}" type="hidden">
+            <div class="session-device-grid">
+                <fieldset class="session-device-card" th:each="device, stat : *{devices}">
+                    <legend th:text="|${device.deviceId} — ${device.deviceName}|"></legend>
+                    <input th:field="*{devices[__${stat.index}__].deviceId}" type="hidden">
+                    <div class="field"><label th:for="|check-out-condition-${stat.index}|">Tình trạng trả</label><input th:id="|check-out-condition-${stat.index}|" th:field="*{devices[__${stat.index}__].condition}" maxlength="255" required></div>
+                    <div class="field"><label th:for="|check-out-note-${stat.index}|">Ghi chú thu hồi</label><textarea th:id="|check-out-note-${stat.index}|" th:field="*{devices[__${stat.index}__].note}" maxlength="2000"></textarea></div>
+                    <label class="checkbox-field"><input th:field="*{devices[__${stat.index}__].reportIncident}" type="checkbox"><span>Tạo sự cố cho thiết bị này</span></label>
+                    <div class="form-grid incident-fields">
+                        <div class="field"><label th:for="|incident-severity-${stat.index}|">Mức độ</label><select th:id="|incident-severity-${stat.index}|" th:field="*{devices[__${stat.index}__].severity}"><option th:each="severity : ${severities}" th:value="${severity}" th:text="${severity.name() == 'THAP' ? 'Thấp' : (severity.name() == 'TRUNG_BINH' ? 'Trung bình' : (severity.name() == 'CAO' ? 'Cao' : 'Nghiêm trọng'))}"></option></select></div>
+                        <div class="field field-wide"><label th:for="|incident-description-${stat.index}|">Mô tả sự cố</label><textarea th:id="|incident-description-${stat.index}|" th:field="*{devices[__${stat.index}__].incidentDescription}" maxlength="2000" placeholder="Bắt buộc khi chọn tạo sự cố"></textarea></div>
+                    </div>
+                </fieldset>
+            </div>
+            <p class="empty-state compact" th:if="*{#lists.isEmpty(devices)}">Phiếu không có thiết bị cần thu hồi.</p>
+            <div class="toolbar form-actions"><button type="submit">Check-out và xác nhận thu hồi</button></div>
+        </form>
+    </section>
+    <section class="panel" th:if="${!usageSession.canCheckIn and !usageSession.canCheckOut}" aria-labelledby="session-device-heading">
+        <h2 id="session-device-heading">Tình trạng thiết bị</h2>
+        <div class="table-wrap" role="region" aria-label="Tình trạng thiết bị của phiên" tabindex="0"><table><thead><tr><th scope="col">Thiết bị</th><th scope="col">Khi nhận</th><th scope="col">Khi trả</th><th scope="col">Ghi chú</th></tr></thead><tbody>
+        <tr th:each="device : ${usageSession.devices}"><td th:text="|${device.id} — ${device.name}|"></td><td th:text="${device.receivedCondition ?: '—'}"></td><td th:text="${device.returnedCondition ?: '—'}"></td><td th:text="${device.note ?: '—'}"></td></tr>
+        <tr th:if="${#lists.isEmpty(usageSession.devices)}"><td class="empty-state" colspan="4">Phiên không có thiết bị được phân bổ.</td></tr>
+        </tbody></table></div>
+    </section>
+</main>
+</body>
+</html>

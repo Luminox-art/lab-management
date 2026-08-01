@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Phiên sử dụng</title>
+    <link rel="stylesheet" th:href="@{/css/catalog.css}">
+</head>
+<body>
+<a class="skip-link" href="#main-content">Bỏ qua điều hướng</a>
+<header class="app-header">
+    <div class="header-inner">
+        <a class="brand" th:href="@{/catalog/rooms}">Quản lý phòng lab</a>
+        <nav class="main-nav" aria-label="Điều hướng chính">
+            <a th:href="@{/catalog/rooms}">Phòng</a>
+            <a th:href="@{/catalog/devices}">Thiết bị</a>
+            <a th:href="@{/registrations}">Phiếu đăng ký</a>
+            <a aria-current="page" th:href="@{/sessions}">Phiên sử dụng</a>
+            <a th:href="@{/schedule/calendar}">Lịch phòng</a>
+            <a th:href="@{/profile}">Hồ sơ</a>
+        </nav>
+    </div>
+</header>
+<main class="page-shell" id="main-content" tabindex="-1">
+    <div class="page-heading">
+        <div>
+            <h1>Phiên sử dụng</h1>
+            <p class="subtitle">Theo dõi các phiên đã sinh từ lịch được duyệt và thực hiện bàn giao, thu hồi thiết bị.</p>
+        </div>
+    </div>
+    <p class="message message-success" role="status" th:if="${success}" th:text="${success}"></p>
+    <p class="message message-error" role="alert" th:if="${error}" th:text="${error}"></p>
+    <section class="panel" aria-labelledby="session-filter-heading">
+        <h2 id="session-filter-heading">Khoảng thời gian</h2>
+        <form method="get" th:action="@{/sessions}">
+            <div class="filter-grid">
+                <div class="field"><label for="from">Từ ngày</label><input id="from" name="from" type="date" th:value="${from}"></div>
+                <div class="field"><label for="to">Đến ngày</label><input id="to" name="to" type="date" th:value="${to}"></div>
+            </div>
+            <div class="toolbar form-actions"><button type="submit">Áp dụng</button><a class="button button-secondary" th:href="@{/sessions}">Mặc định</a></div>
+        </form>
+    </section>
+    <section class="panel" aria-labelledby="session-list-heading">
+        <div class="section-heading"><div><h2 id="session-list-heading">Danh sách phiên</h2><p class="helper">Phiên quá giờ chưa check-in được tự động đánh dấu vắng mặt khi danh sách được tải.</p></div></div>
+        <div class="table-wrap" role="region" aria-label="Danh sách phiên sử dụng" tabindex="0">
+            <table>
+                <thead><tr><th scope="col">Ngày</th><th scope="col">Phiếu</th><th scope="col">Phòng</th><th scope="col">Tiết</th><th scope="col">Người sử dụng</th><th scope="col">Trạng thái</th><th scope="col">Thao tác</th></tr></thead>
+                <tbody>
+                <tr th:each="item : ${sessions}">
+                    <td th:text="${#temporals.format(item.usageDate, 'dd/MM/yyyy')}"></td>
+                    <td th:text="${item.registrationId}"></td>
+                    <td th:text="|${item.roomId} — ${item.roomName}|"></td>
+                    <td th:text="|${item.periodName} (${item.startTime}–${item.endTime})|"></td>
+                    <td th:text="|${item.creatorId} — ${item.creatorName}|"></td>
+                    <td><span class="status-chip" th:classappend="| status-${#strings.toLowerCase(item.status.name())}|" th:text="${item.status.name() == 'CHUA_BAT_DAU' ? 'Chưa bắt đầu' : (item.status.name() == 'DANG_SU_DUNG' ? 'Đang sử dụng' : (item.status.name() == 'HOAN_THANH' ? 'Hoàn thành' : 'Vắng mặt'))}"></span></td>
+                    <td><a th:href="@{/sessions/{id}(id=${item.id})}">Mở phiên</a></td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(sessions)}"><td class="empty-state" colspan="7">Không có phiên sử dụng trong khoảng đã chọn.</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+</body>
+</html>

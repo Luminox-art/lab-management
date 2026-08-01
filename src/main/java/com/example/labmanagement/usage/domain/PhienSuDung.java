@@ -1,5 +1,6 @@
 package com.example.labmanagement.usage.domain;
 
+import com.example.labmanagement.common.metadata.VersionedEntity;
 import com.example.labmanagement.identity.domain.NguoiDung;
 import com.example.labmanagement.registration.domain.LichDangKy;
 import jakarta.persistence.Column;
@@ -18,7 +19,7 @@ import java.time.LocalDate;
 
 @Entity
 @Table(name = "PhienSuDung")
-public class PhienSuDung {
+public class PhienSuDung extends VersionedEntity {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -70,5 +71,45 @@ public class PhienSuDung {
 
 	public PhienSuDungTrangThai getStatus() {
 		return status;
+	}
+
+	public LichDangKy getSchedule() {
+		return schedule;
+	}
+
+	public LocalDate getUsageDate() {
+		return usageDate;
+	}
+
+	public Instant getCheckedInAt() {
+		return checkedInAt;
+	}
+
+	public Instant getCheckedOutAt() {
+		return checkedOutAt;
+	}
+
+	public NguoiDung getCheckedInBy() {
+		return checkedInBy;
+	}
+
+	public NguoiDung getCheckedOutBy() {
+		return checkedOutBy;
+	}
+
+	public void checkIn(NguoiDung actor, Instant checkedInAt) {
+		this.status = PhienSuDungTrangThai.DANG_SU_DUNG;
+		this.checkedInBy = actor;
+		this.checkedInAt = checkedInAt;
+	}
+
+	public void checkOut(NguoiDung actor, Instant checkedOutAt) {
+		this.status = PhienSuDungTrangThai.HOAN_THANH;
+		this.checkedOutBy = actor;
+		this.checkedOutAt = checkedOutAt;
+	}
+
+	public void markAbsent() {
+		this.status = PhienSuDungTrangThai.VANG_MAT;
 	}
 }

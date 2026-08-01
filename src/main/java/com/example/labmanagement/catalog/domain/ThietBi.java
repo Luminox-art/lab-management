@@ -91,4 +91,12 @@ public class ThietBi extends VersionedEntity {
 		this.room = room;
 		this.status = status;
 	}
+
+	public void startUsing() {
+		this.status = ThietBiTrangThai.DANG_SU_DUNG;
+	}
+
+	public void finishUsing(boolean damaged) {
+		this.status = damaged ? ThietBiTrangThai.HONG : ThietBiTrangThai.SAN_SANG;
+	}
 }

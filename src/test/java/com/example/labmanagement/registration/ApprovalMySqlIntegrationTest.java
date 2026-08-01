@@ -45,6 +45,11 @@ class ApprovalMySqlIntegrationTest {
 	void cleanStageSixRows() {
 		jdbcTemplate.update("DELETE FROM LichChan WHERE LyDo LIKE 'S6-%'");
 		jdbcTemplate.update("DELETE FROM XuLyPhieu WHERE MaPhieu LIKE 'S6-%'");
+		jdbcTemplate.update("""
+				DELETE session FROM PhienSuDung session
+				JOIN LichDangKy schedule ON schedule.MaLich = session.MaLich
+				WHERE schedule.MaPhieu LIKE 'S6-%'
+				""");
 		jdbcTemplate.update("DELETE FROM PhieuHuongDan WHERE MaPhieu LIKE 'S6-%'");
 		jdbcTemplate.update("DELETE FROM PhieuDangKyThietBi WHERE MaPhieu LIKE 'S6-%'");
 		jdbcTemplate.update("DELETE FROM LichDangKy WHERE MaPhieu LIKE 'S6-%'");

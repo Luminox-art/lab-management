@@ -39,6 +39,7 @@ import com.example.labmanagement.scheduling.application.AvailabilityResponse;
 import com.example.labmanagement.scheduling.application.PeriodResponse;
 import com.example.labmanagement.scheduling.application.SchedulingService;
 import com.example.labmanagement.scheduling.domain.TietHoc;
+import com.example.labmanagement.usage.application.SessionGenerationService;
 import jakarta.persistence.EntityManager;
 import java.time.Clock;
 import java.time.Instant;
@@ -83,6 +84,8 @@ class ApprovalServiceTest {
 	@Mock
 	private SchedulingService schedulingService;
 	@Mock
+	private SessionGenerationService sessionGenerationService;
+	@Mock
 	private EntityManager entityManager;
 
 	private ApprovalService service;
@@ -96,7 +99,7 @@ class ApprovalServiceTest {
 	void setUp() {
 		service = new ApprovalService(userRepository, registrationRepository, roomRepository, deviceRepository,
 				resourceRepository, scheduleRepository, allocationRepository, supervisionRepository, historyRepository,
-				schedulingService, entityManager, Clock.fixed(NOW, ZoneOffset.UTC));
+				schedulingService, sessionGenerationService, entityManager, Clock.fixed(NOW, ZoneOffset.UTC));
 		manager = user("CB-TEST", MANAGER_EMAIL, "CBQL");
 		creator = user("GV-TEST", "teacher@lab.local", "GV");
 		room = room(30);

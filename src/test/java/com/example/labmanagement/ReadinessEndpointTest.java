@@ -9,6 +9,8 @@ import com.example.labmanagement.registration.application.ApprovalService;
 import com.example.labmanagement.registration.application.RegistrationService;
 import com.example.labmanagement.scheduling.application.AdminBlockService;
 import com.example.labmanagement.scheduling.application.SchedulingService;
+import com.example.labmanagement.usage.application.SessionGenerationService;
+import com.example.labmanagement.usage.application.UsageSessionService;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -54,6 +56,12 @@ class ReadinessEndpointTest {
 
 	@MockitoBean
 	private AdminBlockService adminBlockService;
+
+	@MockitoBean
+	private SessionGenerationService sessionGenerationService;
+
+	@MockitoBean
+	private UsageSessionService usageSessionService;
 
 	@Test
 	void readinessIsPublicAndReturnsHttp200() throws Exception {

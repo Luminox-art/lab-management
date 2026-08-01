@@ -54,6 +54,11 @@ class ApprovalConcurrencyMySqlIntegrationTest {
 	void cleanConcurrencyRows() {
 		jdbcTemplate.update("DELETE FROM LichChan WHERE LyDo LIKE 'S6C-%'");
 		jdbcTemplate.update("DELETE FROM XuLyPhieu WHERE MaPhieu LIKE 'S6C-%'");
+		jdbcTemplate.update("""
+				DELETE session FROM PhienSuDung session
+				JOIN LichDangKy schedule ON schedule.MaLich = session.MaLich
+				WHERE schedule.MaPhieu LIKE 'S6C-%'
+				""");
 		jdbcTemplate.update("DELETE FROM PhieuDangKyThietBi WHERE MaPhieu LIKE 'S6C-%'");
 		jdbcTemplate.update("DELETE FROM LichDangKy WHERE MaPhieu LIKE 'S6C-%'");
 		jdbcTemplate.update("DELETE FROM PhieuDangKy WHERE MaPhieu LIKE 'S6C-%'");
@@ -267,6 +272,11 @@ class ApprovalConcurrencyMySqlIntegrationTest {
 
 	private void deleteRegistration(String id) {
 		jdbcTemplate.update("DELETE FROM XuLyPhieu WHERE MaPhieu = ?", id);
+		jdbcTemplate.update("""
+				DELETE session FROM PhienSuDung session
+				JOIN LichDangKy schedule ON schedule.MaLich = session.MaLich
+				WHERE schedule.MaPhieu = ?
+				""", id);
 		jdbcTemplate.update("DELETE FROM PhieuDangKyThietBi WHERE MaPhieu = ?", id);
 		jdbcTemplate.update("DELETE FROM LichDangKy WHERE MaPhieu = ?", id);
 		jdbcTemplate.update("DELETE FROM PhieuDangKy WHERE MaPhieu = ?", id);

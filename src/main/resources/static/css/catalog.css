@@ -434,6 +434,48 @@ tbody tr:last-child td {
     background: var(--registration-neutral-surface);
 }
 
+.status-chua_bat_dau {
+    color: var(--registration-neutral-color);
+    background: var(--registration-neutral-surface);
+}
+
+.status-vang_mat {
+    color: var(--color-danger);
+    background: var(--color-danger-surface);
+}
+
+.session-device-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr));
+    gap: var(--space-4);
+}
+
+.session-device-card {
+    min-width: 0;
+    padding: var(--space-4);
+    background: var(--color-surface-muted);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+}
+
+.session-device-card legend {
+    max-width: 100%;
+    padding-inline: var(--space-2);
+}
+
+.session-device-card textarea {
+    min-height: 5rem;
+}
+
+.session-device-card > * + * {
+    margin-top: var(--space-3);
+}
+
+.incident-fields {
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--color-border);
+}
+
 .message {
     margin: 0 0 var(--space-4);
     padding: var(--space-3) var(--space-4);
