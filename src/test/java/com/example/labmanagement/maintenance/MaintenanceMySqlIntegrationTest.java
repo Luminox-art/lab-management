@@ -4,11 +4,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.example.labmanagement.common.error.ApiException;
-import com.example.labmanagement.maintenance.application.MaintenanceCreateRequest;
-import com.example.labmanagement.maintenance.application.MaintenanceResponse;
-import com.example.labmanagement.maintenance.application.MaintenanceService;
-import com.example.labmanagement.maintenance.application.MaintenanceUpdateRequest;
 import com.example.labmanagement.maintenance.domain.BaoTriTrangThai;
+import com.example.labmanagement.maintenance.dto.MaintenanceCreateRequest;
+import com.example.labmanagement.maintenance.dto.MaintenanceResponse;
+import com.example.labmanagement.maintenance.dto.MaintenanceUpdateRequest;
+import com.example.labmanagement.maintenance.service.MaintenanceService;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;

@@ -15,8 +15,8 @@ class StageTwelveUiTest {
 			"catalog/rooms.html", "incident/detail.html", "incident/form.html", "incident/list.html",
 			"maintenance/detail.html", "maintenance/form.html", "maintenance/list.html", "notification/list.html",
 			"registration/detail.html", "registration/form.html", "registration/list.html", "reporting/dashboard.html",
-			"schedule/admin-blocks.html", "schedule/availability.html", "schedule/calendar.html", "usage/detail.html",
-			"usage/list.html", "home.html", "profile.html");
+			"scheduling/admin-blocks.html", "scheduling/availability.html", "scheduling/calendar.html",
+			"usage/detail.html", "usage/list.html", "home.html", "profile.html");
 
 	@Test
 	void authenticatedPagesUseSharedRoleAwareNavigation() throws IOException {

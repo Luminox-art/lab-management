@@ -7,12 +7,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.example.labmanagement.scheduling.application.AvailabilityConflictType;
-import com.example.labmanagement.scheduling.application.AvailabilityResponse;
-import com.example.labmanagement.scheduling.application.CalendarEventType;
-import com.example.labmanagement.scheduling.application.SchedulingService;
 import com.example.labmanagement.scheduling.domain.ScheduleDateCalculator;
-import com.example.labmanagement.scheduling.persistence.TietHocRepository;
+import com.example.labmanagement.scheduling.dto.AvailabilityConflictType;
+import com.example.labmanagement.scheduling.dto.AvailabilityResponse;
+import com.example.labmanagement.scheduling.dto.CalendarEventType;
+import com.example.labmanagement.scheduling.repository.TietHocRepository;
+import com.example.labmanagement.scheduling.service.SchedulingService;
 import java.time.LocalDate;
 import java.util.List;
 import org.hamcrest.Matchers;

@@ -1,6 +1,10 @@
 spring:
   application:
     name: lab-management-system
+  datasource:
+    url: ${LAB_DB_URL:jdbc:mysql://localhost:3306/lab_management?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC&useSSL=false&allowPublicKeyRetrieval=true}
+    username: ${LAB_DB_USER:root}
+    password: ${LAB_DB_PASSWORD:12345}
   flyway:
     enabled: true
     locations: classpath:db/migration
@@ -17,6 +21,7 @@ spring:
     basename: ValidationMessages
     encoding: UTF-8
   thymeleaf:
+    cache: false
     check-template-location: false
     encoding: UTF-8
 
@@ -45,3 +50,56 @@ management:
 logging:
   pattern:
     level: "%5p [traceId=%X{traceId:-}]"
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+  datasource:
+    url: ${LAB_DB_URL}
+    username: ${LAB_DB_USER}
+    password: ${LAB_DB_PASSWORD}
+  jpa:
+    show-sql: false
+  thymeleaf:
+    cache: true
+  lifecycle:
+    timeout-per-shutdown-phase: ${LAB_SHUTDOWN_TIMEOUT:30s}
+
+server:
+  forward-headers-strategy: framework
+  shutdown: graceful
+
+management:
+  endpoint:
+    health:
+      show-details: never
+
+debug: false
+trace: false
+
+logging:
+  file:
+    name: ${LAB_LOG_FILE:logs/lab-management.log}
+  level:
+    root: INFO
+    org.hibernate.SQL: WARN
+    org.hibernate.orm.jdbc.bind: OFF
+    org.springframework.jdbc.core: WARN
+  logback:
+    rollingpolicy:
+      file-name-pattern: ${LAB_LOG_FILE:logs/lab-management.log}.%d{yyyy-MM-dd}.%i.gz
+      max-file-size: ${LAB_LOG_MAX_FILE_SIZE:10MB}
+      max-history: ${LAB_LOG_MAX_HISTORY:30}
+      total-size-cap: ${LAB_LOG_TOTAL_SIZE_CAP:1GB}
+
+---
+spring:
+  config:
+    activate:
+      on-profile: test
+  datasource:
+    url: ${LAB_TEST_DB_URL:jdbc:mysql://localhost:3306/lab_management_test?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC&useSSL=false&allowPublicKeyRetrieval=true}
+    username: ${LAB_TEST_DB_USER:lab_app}
+    password: ${LAB_TEST_DB_PASSWORD}

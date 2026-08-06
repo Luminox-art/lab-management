@@ -13,8 +13,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.example.labmanagement.identity.domain.NguoiDung;
 import com.example.labmanagement.identity.domain.NguoiDungTrangThai;
 import com.example.labmanagement.identity.domain.VaiTro;
-import com.example.labmanagement.identity.persistence.NguoiDungRepository;
-import com.example.labmanagement.identity.persistence.VaiTroRepository;
+import com.example.labmanagement.identity.repository.NguoiDungRepository;
+import com.example.labmanagement.identity.repository.VaiTroRepository;
 import jakarta.servlet.http.HttpSession;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;

@@ -6,7 +6,7 @@ import static org.mockito.Mockito.when;
 import com.example.labmanagement.identity.domain.NguoiDung;
 import com.example.labmanagement.identity.domain.NguoiDungTrangThai;
 import com.example.labmanagement.identity.domain.VaiTro;
-import com.example.labmanagement.identity.persistence.NguoiDungRepository;
+import com.example.labmanagement.identity.repository.NguoiDungRepository;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

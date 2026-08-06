@@ -4,12 +4,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.example.labmanagement.common.error.ApiException;
-import com.example.labmanagement.incident.application.IncidentCreateRequest;
-import com.example.labmanagement.incident.application.IncidentResponse;
-import com.example.labmanagement.incident.application.IncidentService;
-import com.example.labmanagement.incident.application.IncidentUpdateRequest;
 import com.example.labmanagement.incident.domain.MucDoSuCo;
 import com.example.labmanagement.incident.domain.SuCoTrangThai;
+import com.example.labmanagement.incident.dto.IncidentCreateRequest;
+import com.example.labmanagement.incident.dto.IncidentResponse;
+import com.example.labmanagement.incident.dto.IncidentUpdateRequest;
+import com.example.labmanagement.incident.service.IncidentService;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;

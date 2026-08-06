@@ -26,7 +26,7 @@
 <main class="page-shell" id="main-content" tabindex="-1">
     <div class="page-heading">
         <div>
-            <h1>Phiếu đăng ký</h1>
+            <h1 th:text="${manager ? 'Duyệt phiếu đăng ký' : 'Phiếu đăng ký'}">Phiếu đăng ký</h1>
             <p class="subtitle" th:text="${manager ? 'Hàng đợi phiếu chờ duyệt, kèm cảnh báo để xử lý an toàn.' : 'Theo dõi các phiếu bạn được phép xem.'}"></p>
         </div>
         <a class="button button-primary" th:if="${canCreate}" th:href="@{/registrations/new}">Tạo phiếu</a>
@@ -115,7 +115,12 @@
                             th:text="${warning.type.name() == 'CAPACITY' ? 'Sức chứa: ' + warning.message : (warning.type.name() == 'SUPERVISOR' ? 'GVHD: ' + warning.message : 'Xung đột: ' + warning.message)}"></li>
                     </ul>
                 </td>
-                <td><a class="button button-secondary" th:href="@{/registrations/{id}(id=${registration.id})}">Chi tiết</a></td>
+                <td>
+                    <a class="button button-primary" th:if="${manager}"
+                       th:href="@{/registrations/{id}(id=${registration.id})}">Xem và duyệt</a>
+                    <a class="button button-secondary" th:unless="${manager}"
+                       th:href="@{/registrations/{id}(id=${registration.id})}">Chi tiết</a>
+                </td>
             </tr>
             <tr th:if="${result.empty}">
                 <td class="empty-state" th:colspan="${manager ? 9 : 7}">Không có phiếu phù hợp. Hãy thay đổi bộ lọc.</td>

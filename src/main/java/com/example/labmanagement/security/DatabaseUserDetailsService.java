@@ -2,7 +2,7 @@ package com.example.labmanagement.security;
 
 import com.example.labmanagement.identity.domain.NguoiDung;
 import com.example.labmanagement.identity.domain.NguoiDungTrangThai;
-import com.example.labmanagement.identity.persistence.NguoiDungRepository;
+import com.example.labmanagement.identity.repository.NguoiDungRepository;
 import java.util.Locale;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;

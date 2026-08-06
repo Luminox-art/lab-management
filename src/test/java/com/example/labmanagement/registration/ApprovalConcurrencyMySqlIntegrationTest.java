@@ -2,14 +2,14 @@ package com.example.labmanagement.registration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.example.labmanagement.catalog.application.CatalogService;
-import com.example.labmanagement.catalog.application.DeviceUpdateRequest;
 import com.example.labmanagement.catalog.domain.ThietBiTrangThai;
+import com.example.labmanagement.catalog.dto.DeviceUpdateRequest;
+import com.example.labmanagement.catalog.service.CatalogService;
 import com.example.labmanagement.common.error.ApiException;
-import com.example.labmanagement.registration.application.ApprovalRequest;
-import com.example.labmanagement.registration.application.ApprovalService;
-import com.example.labmanagement.scheduling.application.AdminBlockRequest;
-import com.example.labmanagement.scheduling.application.AdminBlockService;
+import com.example.labmanagement.registration.dto.ApprovalRequest;
+import com.example.labmanagement.registration.service.ApprovalService;
+import com.example.labmanagement.scheduling.dto.AdminBlockRequest;
+import com.example.labmanagement.scheduling.service.AdminBlockService;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.concurrent.Callable;

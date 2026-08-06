@@ -10,11 +10,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.example.labmanagement.common.error.ApiException;
-import com.example.labmanagement.scheduling.application.AdminBlockCreationResponse;
-import com.example.labmanagement.scheduling.application.AdminBlockRequest;
-import com.example.labmanagement.scheduling.application.AdminBlockService;
-import com.example.labmanagement.scheduling.application.AvailabilityConflictType;
-import com.example.labmanagement.scheduling.application.SchedulingService;
+import com.example.labmanagement.scheduling.dto.AdminBlockCreationResponse;
+import com.example.labmanagement.scheduling.dto.AdminBlockRequest;
+import com.example.labmanagement.scheduling.dto.AvailabilityConflictType;
+import com.example.labmanagement.scheduling.service.AdminBlockService;
+import com.example.labmanagement.scheduling.service.SchedulingService;
 import java.time.LocalDate;
 import java.util.List;
 import org.junit.jupiter.api.AfterEach;

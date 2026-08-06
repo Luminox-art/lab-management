@@ -4,13 +4,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.example.labmanagement.common.error.ApiException;
-import com.example.labmanagement.registration.application.RegistrationCancelRequest;
-import com.example.labmanagement.registration.application.RegistrationFormRequest;
-import com.example.labmanagement.registration.application.RegistrationResponse;
-import com.example.labmanagement.registration.application.RegistrationScheduleRequest;
-import com.example.labmanagement.registration.application.RegistrationService;
 import com.example.labmanagement.registration.domain.LoaiPhieu;
 import com.example.labmanagement.registration.domain.PhieuDangKyTrangThai;
+import com.example.labmanagement.registration.dto.RegistrationCancelRequest;
+import com.example.labmanagement.registration.dto.RegistrationFormRequest;
+import com.example.labmanagement.registration.dto.RegistrationResponse;
+import com.example.labmanagement.registration.dto.RegistrationScheduleRequest;
+import com.example.labmanagement.registration.service.RegistrationService;
 import java.time.LocalDate;
 import java.util.List;
 import org.junit.jupiter.api.Test;

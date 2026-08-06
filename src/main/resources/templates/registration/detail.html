@@ -34,6 +34,7 @@
             <p class="subtitle" th:text="|Tạo lúc ${#temporals.format(registration.createdAt, 'dd/MM/yyyy HH:mm')} · Cập nhật ${#temporals.format(registration.updatedAt, 'dd/MM/yyyy HH:mm')}|"></p>
         </div>
         <div class="actions">
+            <a class="button button-primary" href="#approval-heading" th:if="${canDecide}">Đi tới phê duyệt</a>
             <a class="button button-secondary" th:if="${registration.canEdit}"
                th:href="@{/registrations/{id}/edit(id=${registration.id})}">Sửa phiếu</a>
             <a class="button button-secondary" th:href="@{/registrations}">Quay lại danh sách</a>

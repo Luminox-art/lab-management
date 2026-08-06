@@ -61,7 +61,7 @@
                     <label for="role">Vai trò đăng ký <span aria-hidden="true">*</span></label>
                     <select id="role" th:field="*{role}" required th:attr="aria-invalid=${#fields.hasErrors('role')}">
                         <option th:each="roleOption : ${roles}" th:value="${roleOption}"
-                                th:text="${roleOption == T(com.example.labmanagement.identity.application.RegistrationRole).GV ? 'Giảng viên' : 'Sinh viên'}"></option>
+                                th:text="${roleOption == T(com.example.labmanagement.identity.dto.RegistrationRole).GV ? 'Giảng viên' : 'Sinh viên'}"></option>
                     </select>
                     <p class="field-error" id="role-error" role="alert" th:errors="*{role}"></p>
                 </div>

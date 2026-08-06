@@ -2,13 +2,13 @@ package com.example.labmanagement.reporting;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.example.labmanagement.notification.application.NotificationResponse;
-import com.example.labmanagement.notification.application.NotificationService;
 import com.example.labmanagement.notification.domain.NotificationType;
-import com.example.labmanagement.reporting.application.DashboardFrequencyResponse;
-import com.example.labmanagement.reporting.application.DashboardResponse;
-import com.example.labmanagement.reporting.application.DashboardService;
+import com.example.labmanagement.notification.dto.NotificationResponse;
+import com.example.labmanagement.notification.service.NotificationService;
 import com.example.labmanagement.reporting.domain.DashboardGroup;
+import com.example.labmanagement.reporting.dto.DashboardFrequencyResponse;
+import com.example.labmanagement.reporting.dto.DashboardResponse;
+import com.example.labmanagement.reporting.service.DashboardService;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;

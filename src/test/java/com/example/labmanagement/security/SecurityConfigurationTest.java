@@ -29,6 +29,12 @@ class SecurityConfigurationTest {
 	}
 
 	@Test
+	void swaggerDocumentationIsPubliclyAccessible() throws Exception {
+		mockMvc.perform(get("/v3/api-docs")).andExpect(status().isOk());
+		mockMvc.perform(get("/swagger-ui/index.html")).andExpect(status().isOk());
+	}
+
+	@Test
 	void stateChangingRequestRequiresCsrfToken() throws Exception {
 		mockMvc.perform(post("/secured").with(user("tester"))).andExpect(status().isForbidden());
 		mockMvc.perform(post("/secured").with(user("tester")).with(csrf())).andExpect(status().isOk());
@@ -48,6 +54,11 @@ class SecurityConfigurationTest {
 
 		@GetMapping("/secured")
 		String get() {
+			return "ok";
+		}
+
+		@GetMapping({"/v3/api-docs", "/swagger-ui/index.html"})
+		String swaggerDocumentation() {
 			return "ok";
 		}
 

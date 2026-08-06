@@ -9,16 +9,16 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.example.labmanagement.catalog.application.CatalogService;
-import com.example.labmanagement.catalog.application.DeviceTypeRequest;
-import com.example.labmanagement.catalog.application.DeviceTypeResponse;
-import com.example.labmanagement.catalog.application.RoomGroupRequest;
-import com.example.labmanagement.catalog.application.RoomGroupResponse;
 import com.example.labmanagement.catalog.domain.PhongTrangThai;
 import com.example.labmanagement.catalog.domain.ThietBiTrangThai;
-import com.example.labmanagement.catalog.persistence.PhongRepository;
-import com.example.labmanagement.catalog.persistence.TaiNguyenRepository;
-import com.example.labmanagement.catalog.persistence.ThietBiRepository;
+import com.example.labmanagement.catalog.dto.DeviceTypeRequest;
+import com.example.labmanagement.catalog.dto.DeviceTypeResponse;
+import com.example.labmanagement.catalog.dto.RoomGroupRequest;
+import com.example.labmanagement.catalog.dto.RoomGroupResponse;
+import com.example.labmanagement.catalog.repository.PhongRepository;
+import com.example.labmanagement.catalog.repository.TaiNguyenRepository;
+import com.example.labmanagement.catalog.repository.ThietBiRepository;
+import com.example.labmanagement.catalog.service.CatalogService;
 import com.example.labmanagement.common.error.ApiException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;

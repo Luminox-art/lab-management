@@ -30,7 +30,8 @@ public class SecurityConfiguration {
 		LoginUrlAuthenticationEntryPoint loginEntryPoint = new LoginUrlAuthenticationEntryPoint("/login");
 		http.authorizeHttpRequests(authorization -> authorization
 				.requestMatchers("/actuator/health/readiness", "/api/v1/auth/register", "/api/v1/auth/login", "/login",
-						"/register", "/registration-pending", "/error", "/css/**", "/js/**")
+						"/register", "/registration-pending", "/error", "/css/**", "/js/**", "/v3/api-docs",
+						"/v3/api-docs.yaml", "/v3/api-docs/**", "/swagger-ui.html", "/swagger-ui/**")
 				.permitAll().requestMatchers("/api/v1/users/**").hasRole("CBQL")
 				.requestMatchers(HttpMethod.POST, "/api/v1/rooms", "/api/v1/devices").hasRole("CBQL")
 				.requestMatchers(HttpMethod.PUT, "/api/v1/rooms/**", "/api/v1/devices/**").hasRole("CBQL")

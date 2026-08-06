@@ -13,7 +13,8 @@
                 <a th:attr="aria-current=${#strings.startsWith(currentPath ?: '', '/catalog/devices') ? 'page' : null}"
                    th:href="@{/catalog/devices}">Thiết bị</a>
                 <a th:attr="aria-current=${#strings.startsWith(currentPath ?: '', '/registrations') ? 'page' : null}"
-                   th:href="@{/registrations}">Phiếu</a>
+                   th:href="@{/registrations}"
+                   th:text="${navManager == true ? 'Duyệt phiếu' : 'Phiếu'}">Phiếu</a>
                 <a th:attr="aria-current=${#strings.startsWith(currentPath ?: '', '/sessions') ? 'page' : null}"
                    th:href="@{/sessions}">Phiên</a>
                 <a th:attr="aria-current=${#strings.startsWith(currentPath ?: '', '/incidents') ? 'page' : null}"
