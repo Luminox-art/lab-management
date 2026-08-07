@@ -10,12 +10,36 @@ import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 public final class RegistrationForms {
 
 	private RegistrationForms() {
+	}
+
+	public static List<ScheduleRange> scheduleRanges(List<RegistrationScheduleResponse> schedules) {
+		if (schedules == null || schedules.isEmpty()) {
+			return List.of();
+		}
+		List<RegistrationScheduleResponse> sorted = schedules.stream()
+				.sorted(Comparator.comparingInt(RegistrationScheduleResponse::dayOfWeek)
+						.thenComparingInt(RegistrationScheduleResponse::periodId))
+				.toList();
+		List<ScheduleRange> ranges = new ArrayList<>();
+		for (RegistrationScheduleResponse schedule : sorted) {
+			if (!ranges.isEmpty()) {
+				ScheduleRange previous = ranges.getLast();
+				if (previous.dayOfWeek() == schedule.dayOfWeek() && previous.endPeriodId() + 1 == schedule.periodId()) {
+					ranges.set(ranges.size() - 1, previous.extend(schedule));
+					continue;
+				}
+			}
+			ranges.add(ScheduleRange.from(schedule));
+		}
+		return List.copyOf(ranges);
 	}
 
 	public static final class RegistrationForm {
@@ -68,8 +92,7 @@ public final class RegistrationForms {
 			form.participantCount = response.participantCount();
 			form.startDate = response.startDate();
 			form.endDate = response.endDate();
-			form.schedules = response.schedules().stream()
-					.map(schedule -> new ScheduleForm(schedule.dayOfWeek(), schedule.periodId())).toList();
+			form.schedules = scheduleRanges(response.schedules()).stream().map(ScheduleForm::from).toList();
 			form.deviceIds = response.devices().stream().map(device -> device.id()).toList();
 			form.courseCode = response.courseCode();
 			form.classGroup = response.classGroup();
@@ -80,8 +103,8 @@ public final class RegistrationForms {
 
 		public RegistrationFormRequest toRequest() {
 			return new RegistrationFormRequest(type, purpose, roomId, participantCount, startDate, endDate,
-					schedules.stream().map(ScheduleForm::toRequest).toList(), deviceIds, courseCode, classGroup,
-					supervisorId, version);
+					schedules.stream().flatMap(schedule -> schedule.toRequests().stream()).toList(), deviceIds,
+					courseCode, classGroup, supervisorId, version);
 		}
 
 		public LoaiPhieu getType() {
@@ -186,22 +209,35 @@ public final class RegistrationForms {
 		@NotNull
 		@Min(2)
 		@Max(8)
-		private Integer dayOfWeek = 2;
+		private Integer dayOfWeek;
 
 		@NotNull
 		@Positive
-		private Integer periodId = 1;
+		private Integer startPeriodId;
+
+		@NotNull
+		@Positive
+		private Integer endPeriodId;
 
 		public ScheduleForm() {
 		}
 
-		public ScheduleForm(Integer dayOfWeek, Integer periodId) {
+		public ScheduleForm(Integer dayOfWeek, Integer startPeriodId, Integer endPeriodId) {
 			this.dayOfWeek = dayOfWeek;
-			this.periodId = periodId;
+			this.startPeriodId = startPeriodId;
+			this.endPeriodId = endPeriodId;
 		}
 
-		public RegistrationScheduleRequest toRequest() {
-			return new RegistrationScheduleRequest(dayOfWeek, periodId);
+		private static ScheduleForm from(ScheduleRange range) {
+			return new ScheduleForm(range.dayOfWeek(), range.startPeriodId(), range.endPeriodId());
+		}
+
+		public List<RegistrationScheduleRequest> toRequests() {
+			List<RegistrationScheduleRequest> requests = new ArrayList<>();
+			for (int periodId = startPeriodId; periodId <= endPeriodId; periodId++) {
+				requests.add(new RegistrationScheduleRequest(dayOfWeek, periodId));
+			}
+			return List.copyOf(requests);
 		}
 
 		public Integer getDayOfWeek() {
@@ -212,12 +248,39 @@ public final class RegistrationForms {
 			this.dayOfWeek = dayOfWeek;
 		}
 
-		public Integer getPeriodId() {
-			return periodId;
+		public Integer getStartPeriodId() {
+			return startPeriodId;
 		}
 
-		public void setPeriodId(Integer periodId) {
-			this.periodId = periodId;
+		public void setStartPeriodId(Integer startPeriodId) {
+			this.startPeriodId = startPeriodId;
+		}
+
+		public Integer getEndPeriodId() {
+			return endPeriodId;
+		}
+
+		public void setEndPeriodId(Integer endPeriodId) {
+			this.endPeriodId = endPeriodId;
+		}
+	}
+
+	public record ScheduleRange(int dayOfWeek, String dayOfWeekLabel, int startPeriodId, int endPeriodId,
+			String startPeriodName, String endPeriodName, LocalTime startTime, LocalTime endTime, int periodCount) {
+
+		private static ScheduleRange from(RegistrationScheduleResponse schedule) {
+			return new ScheduleRange(schedule.dayOfWeek(), schedule.dayOfWeekLabel(), schedule.periodId(),
+					schedule.periodId(), schedule.periodName(), schedule.periodName(), schedule.startTime(),
+					schedule.endTime(), 1);
+		}
+
+		private ScheduleRange extend(RegistrationScheduleResponse schedule) {
+			return new ScheduleRange(dayOfWeek, dayOfWeekLabel, startPeriodId, schedule.periodId(), startPeriodName,
+					schedule.periodName(), startTime, schedule.endTime(), periodCount + 1);
+		}
+
+		public String periodLabel() {
+			return startPeriodId == endPeriodId ? startPeriodName : startPeriodName + "–" + endPeriodName;
 		}
 	}
 

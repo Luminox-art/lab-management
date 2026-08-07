@@ -969,31 +969,40 @@ select[multiple] {
 
 .schedule-list {
     display: grid;
-    gap: var(--space-3);
+    gap: var(--space-2);
 }
 
 .schedule-row {
     min-width: 0;
     margin: 0;
-    padding: var(--space-4);
-    background: var(--color-surface-muted);
+    padding: var(--space-3);
+    background: var(--color-surface);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
 }
 
-.schedule-row legend {
-    padding-inline: var(--space-2);
-}
-
 .schedule-fields {
     display: grid;
-    grid-template-columns: minmax(10rem, 1fr) minmax(14rem, 1.5fr) auto;
+    grid-template-columns: minmax(8rem, 0.8fr) repeat(2, minmax(12rem, 1.2fr)) auto;
     align-items: end;
-    gap: var(--space-3);
+    gap: var(--space-2);
 }
 
 .schedule-remove {
     align-self: end;
+    min-height: 2.75rem;
+}
+
+.schedule-row-error {
+    margin: var(--space-2) 0 0;
+}
+
+.schedule-range-summary {
+    margin: var(--space-2) 0 0;
+}
+
+.schedule-row [aria-invalid="true"] {
+    border-color: var(--color-danger);
 }
 
 .device-fieldset {
@@ -1024,6 +1033,10 @@ select[multiple] {
     padding: var(--space-3);
     cursor: pointer;
     background: var(--color-surface);
+}
+
+.device-option[hidden] {
+    display: none;
 }
 
 .device-option:hover,

@@ -40,7 +40,9 @@ import com.example.labmanagement.registration.repository.PhieuGiangDayRepository
 import com.example.labmanagement.registration.repository.PhieuHuongDanRepository;
 import com.example.labmanagement.registration.repository.XuLyPhieuRepository;
 import com.example.labmanagement.scheduling.domain.TietHoc;
+import com.example.labmanagement.scheduling.dto.AvailabilityResponse;
 import com.example.labmanagement.scheduling.repository.TietHocRepository;
+import com.example.labmanagement.scheduling.service.SchedulingService;
 import com.example.labmanagement.usage.repository.PhienSuDungRepository;
 import jakarta.persistence.EntityManager;
 import java.time.Clock;
@@ -90,6 +92,8 @@ class RegistrationServiceTest {
 	@Mock
 	private ApprovalService approvalService;
 	@Mock
+	private SchedulingService schedulingService;
+	@Mock
 	private EntityManager entityManager;
 
 	private RegistrationService service;
@@ -106,8 +110,16 @@ class RegistrationServiceTest {
 	void setUp() {
 		service = new RegistrationService(userRepository, roomRepository, deviceRepository, periodRepository,
 				registrationRepository, scheduleRepository, allocationRepository, teachingRepository,
-				supervisionRepository, historyRepository, sessionRepository, approvalService, entityManager,
-				Clock.fixed(NOW, ZoneOffset.UTC));
+				supervisionRepository, historyRepository, sessionRepository, approvalService, schedulingService,
+				entityManager, Clock.fixed(NOW, ZoneOffset.UTC));
+		AvailabilityResponse available = org.mockito.Mockito.mock(AvailabilityResponse.class);
+		org.mockito.Mockito.lenient().when(available.available()).thenReturn(true);
+		org.mockito.Mockito.lenient()
+				.when(schedulingService.checkAvailability(org.mockito.ArgumentMatchers.anyString(),
+						org.mockito.ArgumentMatchers.anyCollection(), org.mockito.ArgumentMatchers.any(),
+						org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.anyInt(),
+						org.mockito.ArgumentMatchers.anyInt()))
+				.thenReturn(available);
 		instructorRole = new VaiTro("GV", "Giảng viên");
 		studentRole = new VaiTro("SV", "Sinh viên");
 		managerRole = new VaiTro("CBQL", "Cán bộ quản lý");
@@ -249,6 +261,25 @@ class RegistrationServiceTest {
 						List.of(fixedDevice.getId()), null, null)))
 				.isInstanceOfSatisfying(ApiException.class,
 						exception -> assertThat(exception.getCode()).isEqualTo(ErrorCode.BUSINESS_RULE_VIOLATION));
+
+		verifyNoAggregateWrites();
+	}
+
+	@Test
+	void unavailableScheduleIsRejectedBeforeWritingAggregate() {
+		stubActor(instructor);
+		when(roomRepository.findById(room.getId())).thenReturn(Optional.of(room));
+		when(periodRepository.findAllById(List.of(1))).thenReturn(List.of(firstPeriod));
+		AvailabilityResponse unavailable = org.mockito.Mockito.mock(AvailabilityResponse.class);
+		when(unavailable.available()).thenReturn(false);
+		when(unavailable.conflicts()).thenReturn(List.of());
+		when(schedulingService.checkAvailability(room.getId(), List.of(), START_DATE, END_DATE, 2, 1))
+				.thenReturn(unavailable);
+
+		assertThatThrownBy(() -> service.create(instructor.getEmail(),
+				teachingRequest(20, List.of(new RegistrationScheduleRequest(2, 1)), List.of(), null)))
+				.isInstanceOfSatisfying(ApiException.class,
+						exception -> assertThat(exception.getCode()).isEqualTo(ErrorCode.RESOURCE_CONFLICT));
 
 		verifyNoAggregateWrites();
 	}

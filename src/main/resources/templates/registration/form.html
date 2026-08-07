@@ -59,6 +59,7 @@
                             th:attr="aria-invalid=${#fields.hasErrors('roomId')}">
                         <option value="">Chọn phòng</option>
                         <option th:each="room : ${rooms}" th:value="${room.id}"
+                                th:attr="data-capacity=${room.capacity}"
                                 th:text="|${room.id} — ${room.name} (${room.capacity} chỗ)|"></option>
                     </select>
                     <p class="field-error" id="room-error" role="alert" th:errors="*{roomId}"></p>
@@ -75,7 +76,7 @@
                     <input id="participantCount" th:field="*{participantCount}" type="number" min="1"
                            inputmode="numeric" required aria-describedby="participant-help participant-error"
                            th:attr="aria-invalid=${#fields.hasErrors('participantCount')}">
-                    <p class="helper" id="participant-help">Số người phải phù hợp với sức chứa phòng.</p>
+                    <p class="helper" id="participant-help">Chọn phòng để áp dụng giới hạn sức chứa.</p>
                     <p class="field-error" id="participant-error" role="alert" th:errors="*{participantCount}"></p>
                 </div>
                 <div class="field">
@@ -97,15 +98,16 @@
             <div class="section-heading">
                 <div>
                     <h2 id="schedule-heading">Lịch sử dụng</h2>
-                    <p class="helper">Thêm từng cặp thứ và tiết. Các dòng lịch trong cùng phiếu không được trùng nhau.</p>
+                    <p class="helper">Chọn thứ, tiết bắt đầu và tiết kết thúc cho từng buổi. Các khoảng tiết trong cùng thứ không được giao nhau.</p>
                 </div>
                 <button class="button-secondary" type="button" data-add-schedule hidden>Thêm lịch</button>
             </div>
             <p class="field-error" role="alert" th:errors="*{schedules}"></p>
+            <div class="message" role="status" aria-live="polite" data-availability-status hidden></div>
             <div class="schedule-list" id="schedule-list" aria-live="polite">
                 <fieldset class="schedule-row" data-schedule-row
                           th:each="schedule, scheduleStatus : *{schedules}">
-                    <legend th:text="|Lịch ${scheduleStatus.index + 1}|" data-schedule-legend>Lịch</legend>
+                    <legend class="sr-only" th:text="|Lịch ${scheduleStatus.index + 1}|" data-schedule-legend>Lịch</legend>
                     <div class="schedule-fields">
                         <div class="field">
                             <label th:for="|schedule-day-${scheduleStatus.index}|" data-day-label>Thứ <span aria-hidden="true">*</span></label>
@@ -113,6 +115,7 @@
                                     th:name="|schedules[${scheduleStatus.index}].dayOfWeek|"
                                     required data-schedule-day
                                     th:attr="aria-describedby=|schedule-day-error-${scheduleStatus.index}|,aria-invalid=${#fields.hasErrors('schedules[' + scheduleStatus.index + '].dayOfWeek')}">
+                                <option value="">Chọn thứ</option>
                                 <option th:each="day : ${dayOptions}" th:value="${day.value}" th:text="${day.label}"
                                         th:selected="${day.value == schedule.dayOfWeek}"></option>
                             </select>
@@ -120,43 +123,81 @@
                                th:errors="*{schedules[__${scheduleStatus.index}__].dayOfWeek}"></p>
                         </div>
                         <div class="field">
-                            <label th:for="|schedule-period-${scheduleStatus.index}|" data-period-label>Tiết học <span aria-hidden="true">*</span></label>
-                            <select th:id="|schedule-period-${scheduleStatus.index}|"
-                                    th:name="|schedules[${scheduleStatus.index}].periodId|"
-                                    required data-schedule-period
-                                    th:attr="aria-describedby=|schedule-period-error-${scheduleStatus.index}|,aria-invalid=${#fields.hasErrors('schedules[' + scheduleStatus.index + '].periodId')}">
+                            <label th:for="|schedule-period-start-${scheduleStatus.index}|" data-start-period-label>Tiết bắt đầu <span aria-hidden="true">*</span></label>
+                            <select th:id="|schedule-period-start-${scheduleStatus.index}|"
+                                    th:name="|schedules[${scheduleStatus.index}].startPeriodId|"
+                                    required data-period-start
+                                    th:attr="aria-describedby=|schedule-period-start-error-${scheduleStatus.index}|,aria-invalid=${#fields.hasErrors('schedules[' + scheduleStatus.index + '].startPeriodId')}">
+                                <option value="">Chọn tiết bắt đầu</option>
                                 <option th:each="period : ${periods}" th:value="${period.id}"
                                         th:text="|${period.name} (${period.startTime}–${period.endTime})|"
-                                        th:selected="${period.id == schedule.periodId}"></option>
+                                        th:attr="data-start-time=${period.startTime},data-end-time=${period.endTime},data-period-name=${period.name}"
+                                        th:selected="${period.id == schedule.startPeriodId}"></option>
                             </select>
-                            <p class="field-error" th:id="|schedule-period-error-${scheduleStatus.index}|" role="alert"
-                               th:errors="*{schedules[__${scheduleStatus.index}__].periodId}"></p>
+                            <p class="field-error" th:id="|schedule-period-start-error-${scheduleStatus.index}|" role="alert"
+                               th:errors="*{schedules[__${scheduleStatus.index}__].startPeriodId}"></p>
+                        </div>
+                        <div class="field">
+                            <label th:for="|schedule-period-end-${scheduleStatus.index}|" data-end-period-label>Tiết kết thúc <span aria-hidden="true">*</span></label>
+                            <select th:id="|schedule-period-end-${scheduleStatus.index}|"
+                                    th:name="|schedules[${scheduleStatus.index}].endPeriodId|"
+                                    required data-period-end
+                                    th:attr="aria-describedby=|schedule-period-end-error-${scheduleStatus.index}|,aria-invalid=${#fields.hasErrors('schedules[' + scheduleStatus.index + '].endPeriodId')}">
+                                <option value="">Chọn tiết kết thúc</option>
+                                <option th:each="period : ${periods}" th:value="${period.id}"
+                                        th:text="|${period.name} (${period.startTime}–${period.endTime})|"
+                                        th:attr="data-start-time=${period.startTime},data-end-time=${period.endTime},data-period-name=${period.name}"
+                                        th:selected="${period.id == schedule.endPeriodId}"></option>
+                            </select>
+                            <p class="field-error" th:id="|schedule-period-end-error-${scheduleStatus.index}|" role="alert"
+                               th:errors="*{schedules[__${scheduleStatus.index}__].endPeriodId}"></p>
                         </div>
                         <button class="button-danger schedule-remove" type="button" data-remove-schedule hidden
-                                th:attr="aria-label=|Xóa lịch ${scheduleStatus.index + 1}|">Xóa lịch</button>
+                                th:attr="aria-label=|Xóa lịch ${scheduleStatus.index + 1}|">Xóa</button>
                     </div>
+                    <p class="helper schedule-range-summary" aria-live="polite" data-schedule-range-summary></p>
+                    <p class="field-error schedule-row-error" role="alert" data-schedule-client-error hidden></p>
+                    <p class="field-error schedule-row-error" role="alert" data-schedule-availability-error hidden></p>
                 </fieldset>
             </div>
             <p class="sr-only" id="schedule-announcement" aria-live="polite"></p>
             <template id="schedule-row-template">
                 <fieldset class="schedule-row" data-schedule-row>
-                    <legend data-schedule-legend>Lịch</legend>
+                    <legend class="sr-only" data-schedule-legend>Lịch</legend>
                     <div class="schedule-fields">
                         <div class="field">
                             <label data-day-label>Thứ <span aria-hidden="true">*</span></label>
                             <select required data-schedule-day>
+                                <option value="">Chọn thứ</option>
                                 <option th:each="day : ${dayOptions}" th:value="${day.value}" th:text="${day.label}"></option>
                             </select>
+                            <p class="field-error" role="alert"></p>
                         </div>
                         <div class="field">
-                            <label data-period-label>Tiết học <span aria-hidden="true">*</span></label>
-                            <select required data-schedule-period>
+                            <label data-start-period-label>Tiết bắt đầu <span aria-hidden="true">*</span></label>
+                            <select required data-period-start>
+                                <option value="">Chọn tiết bắt đầu</option>
                                 <option th:each="period : ${periods}" th:value="${period.id}"
-                                        th:text="|${period.name} (${period.startTime}–${period.endTime})|"></option>
+                                        th:text="|${period.name} (${period.startTime}–${period.endTime})|"
+                                        th:attr="data-start-time=${period.startTime},data-end-time=${period.endTime},data-period-name=${period.name}"></option>
                             </select>
+                            <p class="field-error" role="alert"></p>
                         </div>
-                        <button class="button-danger schedule-remove" type="button" data-remove-schedule>Xóa lịch</button>
+                        <div class="field">
+                            <label data-end-period-label>Tiết kết thúc <span aria-hidden="true">*</span></label>
+                            <select required data-period-end>
+                                <option value="">Chọn tiết kết thúc</option>
+                                <option th:each="period : ${periods}" th:value="${period.id}"
+                                        th:text="|${period.name} (${period.startTime}–${period.endTime})|"
+                                        th:attr="data-start-time=${period.startTime},data-end-time=${period.endTime},data-period-name=${period.name}"></option>
+                            </select>
+                            <p class="field-error" role="alert"></p>
+                        </div>
+                        <button class="button-danger schedule-remove" type="button" data-remove-schedule>Xóa</button>
                     </div>
+                    <p class="helper schedule-range-summary" aria-live="polite" data-schedule-range-summary></p>
+                    <p class="field-error schedule-row-error" role="alert" data-schedule-client-error hidden></p>
+                    <p class="field-error schedule-row-error" role="alert" data-schedule-availability-error hidden></p>
                 </fieldset>
             </template>
         </section>
@@ -164,6 +205,7 @@
         <section class="panel" aria-labelledby="device-heading">
             <h2 id="device-heading">Thiết bị mong muốn</h2>
             <p class="helper" id="device-help">Thiết bị là yêu cầu mong muốn; cán bộ quản lý sẽ xác nhận phân bổ khi duyệt phiếu.</p>
+            <p class="helper" role="status" aria-live="polite" data-device-filter-status></p>
             <fieldset class="device-fieldset" aria-describedby="device-help">
                 <legend class="sr-only">Chọn thiết bị</legend>
                 <div class="device-options">
@@ -171,7 +213,7 @@
                            th:for="|device-${deviceStatus.index}|">
                         <input th:id="|device-${deviceStatus.index}|" name="deviceIds" type="checkbox"
                                th:value="${device.id}" th:checked="${#lists.contains(registrationForm.deviceIds, device.id)}"
-                               th:attr="data-instructor-required=${device.instructorRequired}">
+                               th:attr="data-instructor-required=${device.instructorRequired},data-mobile=${device.mobile},data-room-id=${device.roomId}">
                         <span class="device-option-copy">
                             <strong th:text="|${device.id} — ${device.name}|"></strong>
                             <span th:text="${device.typeName}"></span>

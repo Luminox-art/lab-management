@@ -92,18 +92,20 @@
                 <thead>
                 <tr>
                     <th scope="col">Thứ</th>
-                    <th scope="col">Tiết</th>
+                    <th scope="col">Khoảng tiết</th>
+                    <th scope="col">Số tiết</th>
                     <th scope="col">Thời gian</th>
                 </tr>
                 </thead>
                 <tbody>
-                <tr th:each="schedule : ${registration.schedules}">
+                <tr th:each="schedule : ${scheduleRanges}">
                     <td th:text="${schedule.dayOfWeekLabel}"></td>
-                    <td th:text="${schedule.periodName}"></td>
+                    <td th:text="${schedule.periodLabel}"></td>
+                    <td th:text="${schedule.periodCount}"></td>
                     <td th:text="|${schedule.startTime}–${schedule.endTime}|"></td>
                 </tr>
-                <tr th:if="${#lists.isEmpty(registration.schedules)}">
-                    <td class="empty-state" colspan="3">Phiếu chưa có lịch sử dụng.</td>
+                <tr th:if="${#lists.isEmpty(scheduleRanges)}">
+                    <td class="empty-state" colspan="4">Phiếu chưa có lịch sử dụng.</td>
                 </tr>
                 </tbody>
             </table>

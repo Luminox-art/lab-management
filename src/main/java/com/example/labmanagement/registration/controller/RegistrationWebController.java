@@ -83,6 +83,7 @@ public class RegistrationWebController {
 	String create(@Valid @ModelAttribute("registrationForm") RegistrationForms.RegistrationForm form,
 			BindingResult bindingResult, Model model, Authentication authentication,
 			RedirectAttributes redirectAttributes) {
+		validateScheduleFields(form, bindingResult);
 		if (bindingResult.hasErrors()) {
 			return form(model, authentication, false, null);
 		}
@@ -121,6 +122,7 @@ public class RegistrationWebController {
 			@Valid @ModelAttribute("registrationForm") RegistrationForms.RegistrationForm form,
 			BindingResult bindingResult, Model model, Authentication authentication,
 			RedirectAttributes redirectAttributes) {
+		validateScheduleFields(form, bindingResult);
 		if (bindingResult.hasErrors()) {
 			return form(model, authentication, true, id);
 		}
@@ -139,7 +141,9 @@ public class RegistrationWebController {
 			@Valid @ModelAttribute("cancellationForm") RegistrationForms.CancellationForm form,
 			BindingResult bindingResult, Principal principal, Model model, RedirectAttributes redirectAttributes) {
 		if (bindingResult.hasErrors()) {
-			model.addAttribute("registration", registrationService.get(principal.getName(), id));
+			RegistrationResponse registration = registrationService.get(principal.getName(), id);
+			model.addAttribute("registration", registration);
+			model.addAttribute("scheduleRanges", RegistrationForms.scheduleRanges(registration.schedules()));
 			return "registration/detail";
 		}
 		try {
@@ -198,6 +202,7 @@ public class RegistrationWebController {
 		boolean manager = hasRole(authentication, "CBQL");
 		boolean pending = registration.status() == PhieuDangKyTrangThai.CHO_DUYET;
 		model.addAttribute("registration", registration);
+		model.addAttribute("scheduleRanges", RegistrationForms.scheduleRanges(registration.schedules()));
 		model.addAttribute("manager", manager);
 		model.addAttribute("canDecide", manager && pending);
 		if (!manager) {
@@ -247,6 +252,63 @@ public class RegistrationWebController {
 		return hasRole(authentication, "SV")
 				? List.of(LoaiPhieu.HOC_TAP, LoaiPhieu.NGHIEN_CUU)
 				: List.of(LoaiPhieu.values());
+	}
+
+	private void validateScheduleFields(RegistrationForms.RegistrationForm form, BindingResult bindingResult) {
+		List<RegistrationForms.ScheduleForm> schedules = form.getSchedules();
+		if (schedules == null) {
+			return;
+		}
+		int expandedScheduleCount = 0;
+		for (int index = 0; index < schedules.size(); index++) {
+			RegistrationForms.ScheduleForm schedule = schedules.get(index);
+			if (schedule == null || schedule.getDayOfWeek() == null || schedule.getStartPeriodId() == null
+					|| schedule.getEndPeriodId() == null) {
+				continue;
+			}
+			if (schedule.getEndPeriodId() < schedule.getStartPeriodId()) {
+				rejectScheduleField(bindingResult, index, "endPeriodId", "registration.schedule.invalid-range",
+						"Tiết kết thúc phải bằng hoặc sau tiết bắt đầu.");
+				continue;
+			}
+			expandedScheduleCount += schedule.getEndPeriodId() - schedule.getStartPeriodId() + 1;
+			for (int previous = 0; previous < index; previous++) {
+				RegistrationForms.ScheduleForm candidate = schedules.get(previous);
+				if (candidate != null && candidate.getDayOfWeek() != null && candidate.getStartPeriodId() != null
+						&& candidate.getEndPeriodId() != null
+						&& candidate.getEndPeriodId() >= candidate.getStartPeriodId()
+						&& schedule.getDayOfWeek().equals(candidate.getDayOfWeek())
+						&& schedule.getStartPeriodId() <= candidate.getEndPeriodId()
+						&& candidate.getStartPeriodId() <= schedule.getEndPeriodId()) {
+					rejectScheduleField(bindingResult, previous, "endPeriodId", "registration.schedule.overlap",
+							"Khoảng tiết này giao với một lịch khác.");
+					rejectScheduleField(bindingResult, index, "endPeriodId", "registration.schedule.overlap",
+							"Khoảng tiết này giao với một lịch khác.");
+				}
+			}
+			if (form.getStartDate() != null && form.getEndDate() != null
+					&& !form.getEndDate().isBefore(form.getStartDate())
+					&& schedule.getDayOfWeek() >= ScheduleDateCalculator.MONDAY
+					&& schedule.getDayOfWeek() <= ScheduleDateCalculator.SUNDAY
+					&& ScheduleDateCalculator
+							.datesForSystemDay(form.getStartDate(), form.getEndDate(), schedule.getDayOfWeek())
+							.isEmpty()) {
+				rejectScheduleField(bindingResult, index, "dayOfWeek", "registration.schedule.outside-range",
+						"Khoảng ngày không chứa thứ đã chọn.");
+			}
+		}
+		if (expandedScheduleCount > 128 && !bindingResult.hasFieldErrors("schedules")) {
+			bindingResult.rejectValue("schedules", "registration.schedule.limit",
+					"Một phiếu không được có quá 128 tiết sử dụng.");
+		}
+	}
+
+	private void rejectScheduleField(BindingResult bindingResult, int index, String field, String code,
+			String message) {
+		String fieldPath = "schedules[" + index + "]." + field;
+		if (!bindingResult.hasFieldErrors(fieldPath)) {
+			bindingResult.rejectValue(fieldPath, code, message);
+		}
 	}
 
 	private boolean hasRole(Authentication authentication, String role) {

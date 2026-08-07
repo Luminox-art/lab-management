@@ -1,12 +1,17 @@
 package com.example.labmanagement.registration.controller;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrlPattern;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
@@ -22,6 +27,8 @@ import com.example.labmanagement.registration.dto.ApprovalWarningResponse;
 import com.example.labmanagement.registration.dto.ApprovalWarningType;
 import com.example.labmanagement.registration.dto.RegistrationDeviceOptionResponse;
 import com.example.labmanagement.registration.dto.RegistrationDeviceResponse;
+import com.example.labmanagement.registration.dto.RegistrationFormRequest;
+import com.example.labmanagement.registration.dto.RegistrationForms;
 import com.example.labmanagement.registration.dto.RegistrationHistoryResponse;
 import com.example.labmanagement.registration.dto.RegistrationResponse;
 import com.example.labmanagement.registration.dto.RegistrationScheduleResponse;
@@ -40,6 +47,7 @@ import java.util.List;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.data.domain.PageImpl;
@@ -110,10 +118,70 @@ class RegistrationWebControllerTest {
 				.andExpect(content().string(Matchers.containsString("value=\"NGHIEN_CUU\"")))
 				.andExpect(content().string(Matchers.not(Matchers.containsString("value=\"GIANG_DAY\""))))
 				.andExpect(content().string(Matchers.containsString("TB0001")))
-				.andExpect(content().string(Matchers.containsString("GV001")));
+				.andExpect(content().string(Matchers.containsString("GV001")))
+				.andExpect(content().string(Matchers.containsString("data-capacity=\"40\"")))
+				.andExpect(content().string(Matchers.containsString("data-mobile=\"true\"")))
+				.andExpect(content().string(Matchers.containsString("data-availability-status")));
 
 		mockMvc.perform(get("/registrations/new").with(user("cb001@lab.local").roles("CBQL")))
 				.andExpect(status().isForbidden());
+	}
+
+	@Test
+	void createRegistrationBindsMultipleSchedulesAndRedirects() throws Exception {
+		when(registrationService.create(eq(USER_EMAIL), any(RegistrationFormRequest.class))).thenReturn(response());
+
+		mockMvc.perform(post("/registrations").with(user(USER_EMAIL).roles("SV")).with(csrf()).param("type", "HOC_TAP")
+				.param("purpose", "Thực hành mạng").param("roomId", "P0601").param("participantCount", "20")
+				.param("startDate", "2035-01-01").param("endDate", "2035-01-07").param("schedules[0].dayOfWeek", "2")
+				.param("schedules[0].startPeriodId", "1").param("schedules[0].endPeriodId", "3")
+				.param("schedules[1].dayOfWeek", "3").param("schedules[1].startPeriodId", "2")
+				.param("schedules[1].endPeriodId", "2")).andExpect(status().is3xxRedirection())
+				.andExpect(redirectedUrl("/registrations/" + REGISTRATION_ID));
+
+		ArgumentCaptor<RegistrationFormRequest> requestCaptor = ArgumentCaptor.forClass(RegistrationFormRequest.class);
+		verify(registrationService).create(eq(USER_EMAIL), requestCaptor.capture());
+		assertThat(requestCaptor.getValue().schedules())
+				.extracting(schedule -> schedule.dayOfWeek() + "|" + schedule.periodId())
+				.containsExactly("2|1", "2|2", "2|3", "3|2");
+	}
+
+	@Test
+	void overlappingScheduleRangesReturnInlineErrorWithoutCallingService() throws Exception {
+		mockMvc.perform(post("/registrations").with(user(USER_EMAIL).roles("SV")).with(csrf()).param("type", "HOC_TAP")
+				.param("purpose", "Thực hành mạng").param("roomId", "P0601").param("participantCount", "20")
+				.param("startDate", "2035-01-01").param("endDate", "2035-01-07").param("schedules[0].dayOfWeek", "2")
+				.param("schedules[0].startPeriodId", "1").param("schedules[0].endPeriodId", "3")
+				.param("schedules[1].dayOfWeek", "2").param("schedules[1].startPeriodId", "3")
+				.param("schedules[1].endPeriodId", "5")).andExpect(status().isOk())
+				.andExpect(view().name("registration/form"))
+				.andExpect(content().string(Matchers.containsString("Khoảng tiết này giao với một lịch khác.")));
+
+		verify(registrationService, never()).create(any(), any());
+	}
+
+	@Test
+	void scheduleRangeEndingBeforeStartReturnsInlineError() throws Exception {
+		mockMvc.perform(post("/registrations").with(user(USER_EMAIL).roles("SV")).with(csrf()).param("type", "HOC_TAP")
+				.param("purpose", "Thực hành mạng").param("roomId", "P0601").param("participantCount", "20")
+				.param("startDate", "2035-01-01").param("endDate", "2035-01-07").param("schedules[0].dayOfWeek", "2")
+				.param("schedules[0].startPeriodId", "3").param("schedules[0].endPeriodId", "1"))
+				.andExpect(status().isOk()).andExpect(view().name("registration/form"))
+				.andExpect(content().string(Matchers.containsString("Tiết kết thúc phải bằng hoặc sau tiết bắt đầu.")));
+
+		verify(registrationService, never()).create(any(), any());
+	}
+
+	@Test
+	void scheduleDayOutsideDateRangeReturnsInlineError() throws Exception {
+		mockMvc.perform(post("/registrations").with(user(USER_EMAIL).roles("SV")).with(csrf()).param("type", "HOC_TAP")
+				.param("purpose", "Thực hành mạng").param("roomId", "P0601").param("participantCount", "20")
+				.param("startDate", "2035-01-01").param("endDate", "2035-01-01").param("schedules[0].dayOfWeek", "3")
+				.param("schedules[0].startPeriodId", "1").param("schedules[0].endPeriodId", "3"))
+				.andExpect(status().isOk()).andExpect(view().name("registration/form"))
+				.andExpect(content().string(Matchers.containsString("Khoảng ngày không chứa thứ đã chọn.")));
+
+		verify(registrationService, never()).create(any(), any());
 	}
 
 	@Test
@@ -136,12 +204,35 @@ class RegistrationWebControllerTest {
 	}
 
 	@Test
+	void editRegistrationGroupsConsecutivePeriodsIntoOneRange() throws Exception {
+		List<RegistrationScheduleResponse> schedules = List.of(
+				new RegistrationScheduleResponse(2, "Thứ 2", 1, "Tiết 1", LocalTime.of(7, 0), LocalTime.of(7, 50)),
+				new RegistrationScheduleResponse(2, "Thứ 2", 2, "Tiết 2", LocalTime.of(7, 50), LocalTime.of(8, 40)),
+				new RegistrationScheduleResponse(2, "Thứ 2", 3, "Tiết 3", LocalTime.of(8, 40), LocalTime.of(9, 30)));
+		when(registrationService.get(USER_EMAIL, REGISTRATION_ID)).thenReturn(response(schedules));
+
+		var result = mockMvc
+				.perform(get("/registrations/{id}/edit", REGISTRATION_ID).with(user(USER_EMAIL).roles("SV")))
+				.andExpect(status().isOk()).andExpect(view().name("registration/form")).andReturn();
+
+		RegistrationForms.RegistrationForm form = (RegistrationForms.RegistrationForm) result.getModelAndView()
+				.getModel().get("registrationForm");
+		assertThat(form.getSchedules()).singleElement().satisfies(range -> {
+			assertThat(range.getDayOfWeek()).isEqualTo(2);
+			assertThat(range.getStartPeriodId()).isEqualTo(1);
+			assertThat(range.getEndPeriodId()).isEqualTo(3);
+		});
+	}
+
+	@Test
 	void registrationDetailRendersAggregateAndCancelRequiresCsrf() throws Exception {
 		when(registrationService.get(LECTURER_EMAIL, REGISTRATION_ID)).thenReturn(response());
 
 		mockMvc.perform(get("/registrations/{id}", REGISTRATION_ID).with(user(LECTURER_EMAIL).roles("GV")))
 				.andExpect(status().isOk()).andExpect(view().name("registration/detail"))
 				.andExpect(content().string(Matchers.containsString(REGISTRATION_ID)))
+				.andExpect(content().string(Matchers.containsString("Khoảng tiết")))
+				.andExpect(content().string(Matchers.containsString("Số tiết")))
 				.andExpect(content().string(Matchers.containsString("INT1234")))
 				.andExpect(content().string(Matchers.containsString("TB0001")))
 				.andExpect(content().string(Matchers.containsString("GV001")))
@@ -175,11 +266,14 @@ class RegistrationWebControllerTest {
 	}
 
 	private RegistrationResponse response() {
+		return response(List.of(
+				new RegistrationScheduleResponse(2, "Thứ 2", 1, "Tiết 1", LocalTime.of(7, 0), LocalTime.of(7, 50))));
+	}
+
+	private RegistrationResponse response(List<RegistrationScheduleResponse> schedules) {
 		return new RegistrationResponse(REGISTRATION_ID, LoaiPhieu.GIANG_DAY, "Thực hành mạng", "P0601", "Phòng 6.1",
 				10, LocalDate.of(2026, 9, 1), LocalDate.of(2026, 9, 30), PhieuDangKyTrangThai.CHO_DUYET, 0, "GV001",
-				"Giảng viên 01", "INT1234", "01", null, null,
-				List.of(new RegistrationScheduleResponse(2, "Thứ 2", 1, "Tiết 1", LocalTime.of(7, 0),
-						LocalTime.of(7, 50))),
+				"Giảng viên 01", "INT1234", "01", null, null, schedules,
 				List.of(new RegistrationDeviceResponse("TB0001", "Robot", "Robot", true, true, false)),
 				List.of(new RegistrationHistoryResponse(HanhDongXuLyPhieu.HUY, "SV001", "Sinh viên 01", "Đổi kế hoạch",
 						CREATED_AT)),

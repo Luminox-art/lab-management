@@ -175,6 +175,9 @@
         });
 
         document.addEventListener("submit", function (event) {
+            if (event.defaultPrevented) {
+                return;
+            }
             var form = event.target;
             if (form.dataset.confirm && form.dataset.confirmed !== "true") {
                 event.preventDefault();

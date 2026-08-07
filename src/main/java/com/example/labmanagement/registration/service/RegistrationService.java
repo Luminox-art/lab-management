@@ -38,7 +38,10 @@ import com.example.labmanagement.registration.repository.PhieuHuongDanRepository
 import com.example.labmanagement.registration.repository.XuLyPhieuRepository;
 import com.example.labmanagement.scheduling.domain.ScheduleDateCalculator;
 import com.example.labmanagement.scheduling.domain.TietHoc;
+import com.example.labmanagement.scheduling.dto.AvailabilityConflictResponse;
+import com.example.labmanagement.scheduling.dto.AvailabilityResponse;
 import com.example.labmanagement.scheduling.repository.TietHocRepository;
+import com.example.labmanagement.scheduling.service.SchedulingService;
 import com.example.labmanagement.usage.repository.PhienSuDungRepository;
 import jakarta.persistence.EntityManager;
 import java.time.Clock;
@@ -91,6 +94,7 @@ public class RegistrationService {
 	private final XuLyPhieuRepository historyRepository;
 	private final PhienSuDungRepository sessionRepository;
 	private final ApprovalService approvalService;
+	private final SchedulingService schedulingService;
 	private final EntityManager entityManager;
 	private final Clock clock;
 
@@ -99,8 +103,8 @@ public class RegistrationService {
 			PhieuDangKyRepository registrationRepository, LichDangKyRepository scheduleRepository,
 			PhieuDangKyThietBiRepository allocationRepository, PhieuGiangDayRepository teachingRepository,
 			PhieuHuongDanRepository supervisionRepository, XuLyPhieuRepository historyRepository,
-			PhienSuDungRepository sessionRepository, ApprovalService approvalService, EntityManager entityManager,
-			Clock clock) {
+			PhienSuDungRepository sessionRepository, ApprovalService approvalService,
+			SchedulingService schedulingService, EntityManager entityManager, Clock clock) {
 		this.userRepository = userRepository;
 		this.roomRepository = roomRepository;
 		this.deviceRepository = deviceRepository;
@@ -113,6 +117,7 @@ public class RegistrationService {
 		this.historyRepository = historyRepository;
 		this.sessionRepository = sessionRepository;
 		this.approvalService = approvalService;
+		this.schedulingService = schedulingService;
 		this.entityManager = entityManager;
 		this.clock = clock;
 	}
@@ -249,7 +254,25 @@ public class RegistrationService {
 		List<ThietBi> devices = prepareDevices(request.deviceIds(), room);
 		TeachingData teaching = prepareTeaching(request.type(), request.courseCode(), request.classGroup());
 		NguoiDung supervisor = prepareSupervisor(actor, devices, request.supervisorId());
+		assertAvailable(room, request.startDate(), request.endDate(), schedules, devices);
 		return new PreparedRegistration(room, purpose, participantCount, schedules, devices, teaching, supervisor);
+	}
+
+	private void assertAvailable(Phong room, LocalDate startDate, LocalDate endDate, List<PreparedSchedule> schedules,
+			List<ThietBi> devices) {
+		List<String> deviceIds = devices.stream().map(ThietBi::getId).sorted().toList();
+		for (PreparedSchedule schedule : schedules) {
+			AvailabilityResponse availability = schedulingService.checkAvailability(room.getId(), deviceIds, startDate,
+					endDate, schedule.dayOfWeek(), schedule.period().getId());
+			if (availability.available()) {
+				continue;
+			}
+			AvailabilityConflictResponse first = availability.conflicts().isEmpty()
+					? null
+					: availability.conflicts().getFirst();
+			String message = first == null ? "Lịch đã chọn không khả dụng." : first.message();
+			throw conflict(message);
+		}
 	}
 
 	private List<PreparedSchedule> prepareSchedules(List<RegistrationScheduleRequest> requestedSchedules,
