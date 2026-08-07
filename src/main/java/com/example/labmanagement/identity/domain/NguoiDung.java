@@ -91,6 +91,10 @@ public class NguoiDung extends AuditedVersionedEntity {
 		this.passwordHash = passwordHash;
 	}
 
+	public void activate() {
+		this.status = NguoiDungTrangThai.HOAT_DONG;
+	}
+
 	public void updateByAdministrator(String fullName, String email, String classOrUnit, VaiTro role,
 			NguoiDungTrangThai status) {
 		this.fullName = fullName;

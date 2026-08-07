@@ -74,7 +74,7 @@ class IdentityWebControllerTest {
 				.andExpect(content().string(org.hamcrest.Matchers.containsString("Tạo phiếu mới"))).andExpect(content()
 						.string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("Quản trị vận hành"))));
 		mockMvc.perform(get("/home").with(user("manager@example.edu").roles("CBQL"))).andExpect(status().isOk())
-				.andExpect(content().string(org.hamcrest.Matchers.containsString("Mở hàng đợi duyệt")))
+				.andExpect(content().string(org.hamcrest.Matchers.containsString("Duyệt tài khoản mới")))
 				.andExpect(content().string(org.hamcrest.Matchers.containsString("Quản trị vận hành")));
 	}
 

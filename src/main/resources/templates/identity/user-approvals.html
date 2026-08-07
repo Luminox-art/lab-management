@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Duyệt tài khoản</title>
+    <link rel="stylesheet" th:href="@{/css/catalog.css}">
+</head>
+<body>
+<a class="skip-link" href="#main-content">Bỏ qua điều hướng</a>
+<header class="app-header" th:replace="~{fragments/navigation :: header}"></header>
+<main class="page-shell" id="main-content" tabindex="-1">
+    <div class="page-heading">
+        <div>
+            <h1>Duyệt tài khoản</h1>
+            <p class="subtitle">Kiểm tra các tài khoản mới đăng ký trước khi cho phép đăng nhập hệ thống.</p>
+        </div>
+    </div>
+
+    <p class="message message-success" role="status" th:if="${success}" th:text="${success}"></p>
+    <p class="message message-error" role="alert" th:if="${error}" th:text="${error}"></p>
+
+    <section class="panel" aria-labelledby="user-filter-heading">
+        <h2 id="user-filter-heading">Tìm tài khoản</h2>
+        <form method="get" th:action="@{/admin/users}">
+            <div class="filter-grid">
+                <div class="field">
+                    <label for="keyword">Mã, họ tên hoặc email</label>
+                    <input id="keyword" name="keyword" type="search" th:value="${keyword}"
+                           placeholder="Nhập thông tin cần tìm">
+                </div>
+            </div>
+            <div class="toolbar form-actions">
+                <button type="submit">Tìm kiếm</button>
+                <a class="button button-secondary" th:href="@{/admin/users}">Xóa bộ lọc</a>
+            </div>
+        </form>
+    </section>
+
+    <p class="result-summary" aria-live="polite" th:text="|Có ${result.totalElements} tài khoản đang chờ duyệt|">
+        Có 0 tài khoản đang chờ duyệt
+    </p>
+    <div class="table-wrap" role="region" aria-label="Danh sách tài khoản chờ duyệt" tabindex="0">
+        <table>
+            <thead>
+            <tr>
+                <th scope="col">Mã tài khoản</th>
+                <th scope="col">Họ tên</th>
+                <th scope="col">Email</th>
+                <th scope="col">Lớp/đơn vị</th>
+                <th scope="col">Vai trò đăng ký</th>
+                <th scope="col">Trạng thái</th>
+                <th scope="col">Thao tác</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="account : ${result.content}">
+                <td th:text="${account.id}"></td>
+                <td th:text="${account.fullName}"></td>
+                <td th:text="${account.email}"></td>
+                <td th:text="${account.classOrUnit ?: '—'}"></td>
+                <td th:text="${account.roleId == 'GV' ? 'Giảng viên' : (account.roleId == 'SV' ? 'Sinh viên' : account.roleId)}"></td>
+                <td><span class="status-chip status-cho_duyet">Chờ duyệt</span></td>
+                <td>
+                    <form method="post" th:action="@{/admin/users/{id}/approve(id=${account.id})}"
+                          data-confirm="Xác nhận kích hoạt tài khoản này? Người dùng sẽ có thể đăng nhập ngay sau khi phê duyệt.">
+                        <input th:name="${_csrf.parameterName}" th:value="${_csrf.token}" type="hidden">
+                        <input name="version" th:value="${account.version}" type="hidden">
+                        <button class="button-primary" type="submit">Phê duyệt</button>
+                    </form>
+                </td>
+            </tr>
+            <tr th:if="${result.empty}">
+                <td class="empty-state" colspan="7">Không có tài khoản nào đang chờ duyệt.</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <nav class="pagination" aria-label="Phân trang tài khoản chờ duyệt" th:if="${result.totalPages > 1}">
+        <a class="button button-secondary" rel="prev" th:if="${result.hasPrevious()}"
+           th:href="@{/admin/users(keyword=${keyword},page=${result.number - 1},size=${result.size})}">Trang trước</a>
+        <span th:text="|Trang ${result.number + 1} / ${result.totalPages}|">Trang 1 / 1</span>
+        <a class="button button-secondary" rel="next" th:if="${result.hasNext()}"
+           th:href="@{/admin/users(keyword=${keyword},page=${result.number + 1},size=${result.size})}">Trang sau</a>
+    </nav>
+</main>
+</body>
+</html>

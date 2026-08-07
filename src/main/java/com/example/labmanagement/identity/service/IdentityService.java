@@ -106,6 +106,20 @@ public class IdentityService {
 		return flushAndMap(user, "Email đã được sử dụng.");
 	}
 
+	@Transactional
+	public UserProfileResponse approveUser(String id, long version) {
+		NguoiDung user = findUserById(id);
+		if (user.getVersion() != version) {
+			throw conflict("Dữ liệu tài khoản đã được cập nhật bởi yêu cầu khác.");
+		}
+		if (user.getStatus() != NguoiDungTrangThai.CHO_DUYET) {
+			throw conflict("Chỉ có thể phê duyệt tài khoản đang chờ duyệt.");
+		}
+		user.activate();
+		userRepository.flush();
+		return toResponse(user);
+	}
+
 	private UserProfileResponse flushAndMap(NguoiDung user, String conflictMessage) {
 		try {
 			userRepository.flush();

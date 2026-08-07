@@ -121,6 +121,19 @@ class IdentityServiceTest {
 		verify(userRepository, never()).flush();
 	}
 
+	@Test
+	void approvesPendingUserAndActivatesAccount() {
+		VaiTro role = new VaiTro("SV", "Sinh viên");
+		NguoiDung user = user("SV900", "sv900@example.edu", "password", role, NguoiDungTrangThai.CHO_DUYET);
+		when(userRepository.findById("SV900")).thenReturn(Optional.of(user));
+
+		UserProfileResponse response = identityService.approveUser("SV900", 0L);
+
+		assertThat(response.status()).isEqualTo(NguoiDungTrangThai.HOAT_DONG);
+		assertThat(user.getStatus()).isEqualTo(NguoiDungTrangThai.HOAT_DONG);
+		verify(userRepository).flush();
+	}
+
 	private NguoiDung user(String id, String email, String password, VaiTro role, NguoiDungTrangThai status) {
 		return new NguoiDung(id, "Người dùng", email, passwordEncoder.encode(password), null, role, status);
 	}

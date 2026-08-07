@@ -17,7 +17,7 @@
             <p class="subtitle">Truy cập nhanh các công việc và dữ liệu phù hợp với vai trò của bạn.</p>
         </div>
         <a class="button button-primary" th:if="${navCanCreateRegistration}" th:href="@{/registrations/new}">Tạo phiếu mới</a>
-        <a class="button button-primary" th:if="${navManager}" th:href="@{/registrations(status='CHO_DUYET')}">Mở hàng đợi duyệt</a>
+        <a class="button button-primary" th:if="${navManager}" th:href="@{/admin/users}">Duyệt tài khoản mới</a>
     </section>
 
     <section aria-labelledby="primary-work-heading">
@@ -35,6 +35,7 @@
     <section aria-labelledby="manager-work-heading" th:if="${navManager}">
         <div class="section-heading"><h2 id="manager-work-heading">Quản trị vận hành</h2></div>
         <div class="home-grid">
+            <a class="home-card" th:href="@{/admin/users}"><strong>Duyệt tài khoản</strong><span>Kích hoạt tài khoản giảng viên và sinh viên mới đăng ký.</span></a>
             <a class="home-card" th:href="@{/dashboard}"><strong>Dashboard</strong><span>Đối chiếu tần suất sử dụng, sự cố và bảo trì.</span></a>
             <a class="home-card" th:href="@{/catalog/rooms}"><strong>Phòng và thiết bị</strong><span>Quản lý danh mục và trạng thái tài nguyên.</span></a>
             <a class="home-card" th:href="@{/admin-blocks}"><strong>Lịch chặn</strong><span>Chặn tài nguyên theo ngày và tiết học.</span></a>

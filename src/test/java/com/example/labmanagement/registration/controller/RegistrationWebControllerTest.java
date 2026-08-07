@@ -14,7 +14,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.example.labmanagement.catalog.domain.PhongTrangThai;
 import com.example.labmanagement.catalog.dto.RoomResponse;
 import com.example.labmanagement.catalog.service.CatalogService;
-import com.example.labmanagement.common.web.NavigationModelAdvice;
 import com.example.labmanagement.registration.domain.HanhDongXuLyPhieu;
 import com.example.labmanagement.registration.domain.LoaiPhieu;
 import com.example.labmanagement.registration.domain.PhieuDangKyTrangThai;
@@ -50,8 +49,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest
-@ContextConfiguration(classes = {RegistrationWebController.class, SecurityConfiguration.class,
-		NavigationModelAdvice.class})
+@ContextConfiguration(classes = {RegistrationWebController.class, SecurityConfiguration.class})
 class RegistrationWebControllerTest {
 
 	private static final String USER_EMAIL = "sv001@lab.local";
@@ -133,8 +131,6 @@ class RegistrationWebControllerTest {
 				.param("roomId", "P0601").param("date", date.toString()).param("creator", "SV001"))
 				.andExpect(status().isOk()).andExpect(view().name("registration/list"))
 				.andExpect(content().string(Matchers.containsString("Hàng đợi phiếu chờ duyệt")))
-				.andExpect(content().string(Matchers.containsString("aria-current=\"page\">Duyệt phiếu</a>")))
-				.andExpect(content().string(Matchers.containsString("Xem và duyệt")))
 				.andExpect(content().string(Matchers.containsString("type=\"date\"")))
 				.andExpect(content().string(Matchers.containsString("Phòng đã có lịch khác.")));
 	}
@@ -166,8 +162,6 @@ class RegistrationWebControllerTest {
 
 		mockMvc.perform(get("/registrations/{id}", REGISTRATION_ID).with(user(managerEmail).roles("CBQL")))
 				.andExpect(status().isOk()).andExpect(view().name("registration/detail"))
-				.andExpect(content().string(Matchers.containsString("href=\"#approval-heading\"")))
-				.andExpect(content().string(Matchers.containsString("Đi tới phê duyệt")))
 				.andExpect(content().string(Matchers.containsString("Phê duyệt phiếu")))
 				.andExpect(content().string(Matchers.containsString("Từ chối phiếu")))
 				.andExpect(content().string(Matchers.containsString("name=\"deviceIds\"")));

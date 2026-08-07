@@ -15,8 +15,8 @@ class StageTwelveUiTest {
 			"catalog/rooms.html", "incident/detail.html", "incident/form.html", "incident/list.html",
 			"maintenance/detail.html", "maintenance/form.html", "maintenance/list.html", "notification/list.html",
 			"registration/detail.html", "registration/form.html", "registration/list.html", "reporting/dashboard.html",
-			"scheduling/admin-blocks.html", "scheduling/availability.html", "scheduling/calendar.html",
-			"usage/detail.html", "usage/list.html", "home.html", "profile.html");
+			"identity/user-approvals.html", "scheduling/admin-blocks.html", "scheduling/availability.html",
+			"scheduling/calendar.html", "usage/detail.html", "usage/list.html", "home.html", "profile.html");
 
 	@Test
 	void authenticatedPagesUseSharedRoleAwareNavigation() throws IOException {
@@ -25,8 +25,9 @@ class StageTwelveUiTest {
 					.contains("th:replace=\"~{fragments/navigation :: header}\"");
 		}
 		String navigation = read("templates/fragments/navigation.html");
-		assertThat(navigation).contains("th:if=\"${navManager}\"").contains("/dashboard").contains("/maintenances")
-				.contains("/admin-blocks");
+		assertThat(navigation).contains("th:if=\"${navManager}\"").contains("/dashboard").contains("/admin/users")
+				.contains("/maintenances").contains("/admin-blocks").contains("data-sidebar-toggle")
+				.contains("data-sidebar-dismiss");
 	}
 
 	@Test
@@ -34,8 +35,10 @@ class StageTwelveUiTest {
 		String css = read("static/css/catalog.css");
 		String javascript = read("static/js/app-ui.js");
 		assertThat(css).contains("@media (max-width: 48rem)", "@media (max-width: 36rem)",
-				"@media (prefers-reduced-motion: reduce)", ".confirm-dialog", ".button-loading");
-		assertThat(javascript).contains("aria-invalid", "aria-busy", "showModal", "requestSubmit");
+				"@media (prefers-reduced-motion: reduce)", ".confirm-dialog", ".button-loading",
+				"--sidebar-collapsed-width", ".app-header:hover", "body.nav-open .app-header");
+		assertThat(javascript).contains("aria-invalid", "aria-busy", "showModal", "requestSubmit", "nav-open", "Escape",
+				"aria-expanded");
 	}
 
 	@Test
@@ -44,6 +47,7 @@ class StageTwelveUiTest {
 			assertThat(read("templates/" + template)).as(template).doesNotContain("onsubmit=\"return confirm");
 		}
 		assertThat(read("templates/registration/detail.html")).contains("data-confirm=");
+		assertThat(read("templates/identity/user-approvals.html")).contains("data-confirm=");
 		assertThat(read("templates/usage/detail.html")).contains("data-confirm=");
 	}
 

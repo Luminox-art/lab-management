@@ -84,7 +84,46 @@
         return dialog;
     }
 
+    function initializeSidebar() {
+        var sidebar = document.querySelector("[data-sidebar]");
+        var toggle = document.querySelector("[data-sidebar-toggle]");
+        var dismiss = document.querySelector("[data-sidebar-dismiss]");
+        if (!sidebar || !toggle || !dismiss) {
+            return;
+        }
+
+        function setOpen(open, restoreFocus) {
+            document.body.classList.toggle("nav-open", open);
+            toggle.setAttribute("aria-expanded", String(open));
+            toggle.setAttribute("aria-label", open ? "Đóng menu điều hướng" : "Mở menu điều hướng");
+            if (!open && restoreFocus) {
+                toggle.focus();
+            }
+        }
+
+        toggle.addEventListener("click", function () {
+            setOpen(!document.body.classList.contains("nav-open"), false);
+        });
+        dismiss.addEventListener("click", function () {
+            setOpen(false, true);
+        });
+        document.addEventListener("keydown", function (event) {
+            if (event.key === "Escape" && document.body.classList.contains("nav-open")) {
+                setOpen(false, true);
+            }
+        });
+
+        var desktop = window.matchMedia("(min-width: 64.001rem)");
+        desktop.addEventListener("change", function (event) {
+            if (event.matches) {
+                setOpen(false, false);
+            }
+        });
+    }
+
     document.addEventListener("DOMContentLoaded", function () {
+        initializeSidebar();
+
         var firstInvalid = document.querySelector('[aria-invalid="true"]');
         if (firstInvalid) {
             firstInvalid.focus();
