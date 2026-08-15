@@ -15,9 +15,8 @@ spring:
       ddl-auto: validate
     open-in-view: false
     properties:
-      hibernate.physical_naming_strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+      hibernate.physical_naming_strategy: com.example.labmanagement.common.persistence.LowercaseTablePhysicalNamingStrategy
       hibernate.jdbc.time_zone: UTC
-      hibernate.hbm2ddl.jdbc_metadata_extraction_strategy: individually
   messages:
     basename: ValidationMessages
     encoding: UTF-8
