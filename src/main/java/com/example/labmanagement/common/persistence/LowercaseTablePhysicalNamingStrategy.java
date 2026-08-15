@@ -1,7 +1,6 @@
 package com.example.labmanagement.common.persistence;
 
 import java.util.Locale;
-
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
