@@ -170,8 +170,8 @@ public class SchedulingWebController {
 		}
 
 		private CalendarEventView merge(CalendarEventView next) {
-			return new CalendarEventView(type, false, startPeriodName, next.endPeriodName, startTime, next.endTime, title,
-					detail);
+			return new CalendarEventView(type, false, startPeriodName, next.endPeriodName, startTime, next.endTime,
+					title, detail);
 		}
 
 		public String periodLabel() {

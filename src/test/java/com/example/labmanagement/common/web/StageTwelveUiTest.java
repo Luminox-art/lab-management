@@ -47,13 +47,12 @@ class StageTwelveUiTest {
 		String javascript = read("static/js/registration-form.js");
 		assertThat(template).contains("data-capacity", "data-mobile", "data-room-id", "data-availability-status",
 				"data-schedule-client-error", "data-schedule-availability-error", "data-period-start",
-				"data-period-end", "data-room-calendar-link", "data-schedule-room-availability",
-				"Chọn tiết bắt đầu", "Chọn tiết kết thúc");
+				"data-period-end", "data-room-calendar-link", "data-schedule-room-availability", "Chọn tiết bắt đầu",
+				"Chọn tiết kết thúc");
 		assertThat(javascript).contains("MAX_SCHEDULES = 128", "Khoảng tiết này giao với một lịch khác.",
 				"Khoảng ngày không chứa thứ đã chọn.", "fetch(availabilityUrl(row, periodId)",
-				"form.requestSubmit(submitter)", "device.dataset.mobile === \"true\"",
-				"fetch(roomCalendarUrl()", "option.dataset.roomUnavailable = \"true\"",
-				"Khoảng tiết chứa tiết không khả dụng của phòng.");
+				"form.requestSubmit(submitter)", "device.dataset.mobile === \"true\"", "fetch(roomCalendarUrl()",
+				"option.dataset.roomUnavailable = \"true\"", "Khoảng tiết chứa tiết không khả dụng của phòng.");
 		assertThat(read("templates/registration/detail.html")).contains("${scheduleRanges}", "${schedule.periodLabel}",
 				"${schedule.periodCount}");
 	}
