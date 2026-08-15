@@ -55,13 +55,17 @@
                 </div>
                 <div class="field">
                     <label for="roomId">Phòng <span aria-hidden="true">*</span></label>
-                    <select id="roomId" th:field="*{roomId}" required aria-describedby="room-error"
+                    <select id="roomId" th:field="*{roomId}" required aria-describedby="room-help room-error"
                             th:attr="aria-invalid=${#fields.hasErrors('roomId')}">
                         <option value="">Chọn phòng</option>
                         <option th:each="room : ${rooms}" th:value="${room.id}"
                                 th:attr="data-capacity=${room.capacity}"
                                 th:text="|${room.id} — ${room.name} (${room.capacity} chỗ)|"></option>
                     </select>
+                    <p class="helper" id="room-help">
+                        <a class="button button-secondary" th:href="@{/schedule/calendar}" target="_blank" rel="noopener"
+                           data-room-calendar-link hidden>Xem lịch phòng đã chọn<span class="sr-only"> (mở trong thẻ mới)</span></a>
+                    </p>
                     <p class="field-error" id="room-error" role="alert" th:errors="*{roomId}"></p>
                 </div>
                 <div class="field field-wide">
@@ -156,6 +160,8 @@
                                 th:attr="aria-label=|Xóa lịch ${scheduleStatus.index + 1}|">Xóa</button>
                     </div>
                     <p class="helper schedule-range-summary" aria-live="polite" data-schedule-range-summary></p>
+                    <p class="helper schedule-room-availability" role="status" aria-live="polite"
+                       data-schedule-room-availability></p>
                     <p class="field-error schedule-row-error" role="alert" data-schedule-client-error hidden></p>
                     <p class="field-error schedule-row-error" role="alert" data-schedule-availability-error hidden></p>
                 </fieldset>
@@ -196,6 +202,8 @@
                         <button class="button-danger schedule-remove" type="button" data-remove-schedule>Xóa</button>
                     </div>
                     <p class="helper schedule-range-summary" aria-live="polite" data-schedule-range-summary></p>
+                    <p class="helper schedule-room-availability" role="status" aria-live="polite"
+                       data-schedule-room-availability></p>
                     <p class="field-error schedule-row-error" role="alert" data-schedule-client-error hidden></p>
                     <p class="field-error schedule-row-error" role="alert" data-schedule-availability-error hidden></p>
                 </fieldset>

@@ -121,7 +121,9 @@ class RegistrationWebControllerTest {
 				.andExpect(content().string(Matchers.containsString("GV001")))
 				.andExpect(content().string(Matchers.containsString("data-capacity=\"40\"")))
 				.andExpect(content().string(Matchers.containsString("data-mobile=\"true\"")))
-				.andExpect(content().string(Matchers.containsString("data-availability-status")));
+				.andExpect(content().string(Matchers.containsString("data-availability-status")))
+				.andExpect(content().string(Matchers.containsString("data-room-calendar-link")))
+				.andExpect(content().string(Matchers.containsString("data-schedule-room-availability")));
 
 		mockMvc.perform(get("/registrations/new").with(user("cb001@lab.local").roles("CBQL")))
 				.andExpect(status().isForbidden());

@@ -100,6 +100,10 @@ class SchedulingWebControllerTest {
 		List<CalendarEventResponse> events = List.of(
 				new CalendarEventResponse(CalendarEventType.APPROVED_REGISTRATION, MONDAY, 2, 1, "Tiết 1",
 						LocalTime.of(7, 0), LocalTime.of(7, 50), false, "Lịch đã duyệt", "Đã xếp lịch"),
+				new CalendarEventResponse(CalendarEventType.APPROVED_REGISTRATION, MONDAY, 2, 2, "Tiết 2",
+						LocalTime.of(7, 50), LocalTime.of(8, 40), false, "Lịch đã duyệt", "Đã xếp lịch"),
+				new CalendarEventResponse(CalendarEventType.APPROVED_REGISTRATION, MONDAY, 2, 3, "Tiết 3",
+						LocalTime.of(8, 40), LocalTime.of(9, 30), false, "Lịch đã duyệt", "Đã xếp lịch"),
 				new CalendarEventResponse(CalendarEventType.IN_USE_REGISTRATION, MONDAY, 2, 1, "Tiết 1",
 						LocalTime.of(7, 0), LocalTime.of(7, 50), false, "Lịch đang sử dụng", "Đang sử dụng"),
 				new CalendarEventResponse(CalendarEventType.BLOCKED_SCHEDULE, MONDAY, 2, null, null, null, null, true,
@@ -113,6 +117,8 @@ class SchedulingWebControllerTest {
 				.andExpect(content().string(Matchers.containsString("Đã duyệt")))
 				.andExpect(content().string(Matchers.containsString("Đang sử dụng")))
 				.andExpect(content().string(Matchers.containsString("Lịch chặn")))
+				.andExpect(content().string(Matchers.containsString("Tiết 1–3 . 07:00–09:30")))
+				.andExpect(content().string(Matchers.containsString("calendar-scroll")))
 				.andExpect(content().string(Matchers.containsString("Hôm nay")))
 				.andExpect(content().string(Matchers.containsString("Chủ nhật, 13/09/2026")));
 	}

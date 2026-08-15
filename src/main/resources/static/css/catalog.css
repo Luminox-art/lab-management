@@ -874,10 +874,32 @@ select[multiple] {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
     gap: var(--space-3);
+    align-items: start;
+}
+
+.calendar-scroll {
+    max-width: 100%;
+    overflow-x: auto;
+    padding-bottom: var(--space-2);
+    overscroll-behavior-inline: contain;
+}
+
+.calendar-scroll:focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
+}
+
+.calendar-scroll-hint {
+    margin: 0 0 var(--space-2);
+}
+
+.calendar-grid.calendar-week {
+    grid-template-columns: repeat(7, minmax(11rem, 1fr));
 }
 
 .calendar-day {
     min-width: 0;
+    min-height: 10rem;
     padding: var(--space-3);
     background: var(--color-surface);
     border: 1px solid var(--color-border);
@@ -999,6 +1021,19 @@ select[multiple] {
 
 .schedule-range-summary {
     margin: var(--space-2) 0 0;
+}
+
+.schedule-room-availability {
+    margin: var(--space-2) 0 0;
+}
+
+.schedule-room-availability[data-state="available"] {
+    color: var(--color-success);
+}
+
+.schedule-room-availability[data-state="conflict"],
+.schedule-room-availability[data-state="error"] {
+    color: var(--color-danger);
 }
 
 .schedule-row [aria-invalid="true"] {

@@ -87,24 +87,30 @@
             <li><span class="legend-marker event-blocked_schedule" aria-hidden="true"></span>Lịch chặn</li>
         </ul>
 
-        <div class="calendar-grid" th:classappend="| calendar-${view}|">
-            <article class="calendar-day" th:each="day : ${calendarDays}">
-                <h3 th:text="${day.label}">Thứ Hai, 01/01/2026</h3>
-                <p class="empty-state compact" th:if="${#lists.isEmpty(day.events)}">Không có lịch</p>
-                <ol class="calendar-events" th:unless="${#lists.isEmpty(day.events)}">
-                    <li class="calendar-event" th:each="event : ${day.events}"
-                        th:classappend="| event-${#strings.toLowerCase(event.type.name())}|">
-                        <span class="event-status"
-                              th:text="${event.type.name() == 'APPROVED_REGISTRATION' ? 'Đã duyệt' :
-                              (event.type.name() == 'IN_USE_REGISTRATION' ? 'Đang sử dụng' : 'Lịch chặn')}"></span>
-                        <strong th:text="${event.title}"></strong>
-                        <span th:if="${event.allDay}">Cả ngày</span>
-                        <span th:unless="${event.allDay}"
-                              th:text="|${event.periodName} · ${event.startTime}–${event.endTime}|"></span>
-                        <span th:text="${event.detail}"></span>
-                    </li>
-                </ol>
-            </article>
+        <p class="helper calendar-scroll-hint" id="calendar-scroll-hint" th:if="${view == 'week'}">
+            Cuộn ngang để xem đủ 7 ngày trên màn hình hẹp.
+        </p>
+        <div class="calendar-scroll" role="region" aria-label="Lịch phòng theo thời gian" tabindex="0"
+             th:attr="aria-describedby=${view == 'week'} ? 'calendar-scroll-hint' : null">
+            <div class="calendar-grid" th:classappend="| calendar-${view}|">
+                <article class="calendar-day" th:each="day : ${calendarDays}">
+                    <h3 th:text="${day.label}">Thứ Hai, 01/01/2026</h3>
+                    <p class="empty-state compact" th:if="${#lists.isEmpty(day.events)}">Không có lịch</p>
+                    <ol class="calendar-events" th:unless="${#lists.isEmpty(day.events)}">
+                        <li class="calendar-event" th:each="event : ${day.events}"
+                            th:classappend="| event-${#strings.toLowerCase(event.type.name())}|">
+                            <span class="event-status"
+                                  th:text="${event.type.name() == 'APPROVED_REGISTRATION' ? 'Đã duyệt' :
+                                  (event.type.name() == 'IN_USE_REGISTRATION' ? 'Đang sử dụng' : 'Lịch chặn')}"></span>
+                            <strong th:text="${event.title}"></strong>
+                            <span th:if="${event.allDay}">Cả ngày</span>
+                            <span th:unless="${event.allDay}"
+                                  th:text="|${event.periodLabel} · ${event.startTime}–${event.endTime}|"></span>
+                            <span th:text="${event.detail}"></span>
+                        </li>
+                    </ol>
+                </article>
+            </div>
         </div>
     </section>
 

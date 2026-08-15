@@ -5,16 +5,19 @@ import com.example.labmanagement.common.error.ApiException;
 import com.example.labmanagement.scheduling.domain.ScheduleDateCalculator;
 import com.example.labmanagement.scheduling.dto.AvailabilityResponse;
 import com.example.labmanagement.scheduling.dto.CalendarEventResponse;
+import com.example.labmanagement.scheduling.dto.CalendarEventType;
 import com.example.labmanagement.scheduling.dto.RoomCalendarResponse;
 import com.example.labmanagement.scheduling.service.SchedulingService;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -126,13 +129,59 @@ public class SchedulingWebController {
 				.map(entry -> new CalendarDayView(entry.getKey(),
 						ScheduleDateCalculator.systemDayLabel(ScheduleDateCalculator.toSystemDay(entry.getKey())) + ", "
 								+ DATE_LABEL.format(entry.getKey()),
-						List.copyOf(entry.getValue())))
+						groupAdjacentEvents(entry.getValue())))
 				.toList();
+	}
+
+	private List<CalendarEventView> groupAdjacentEvents(List<CalendarEventResponse> events) {
+		List<CalendarEventView> groupedEvents = new ArrayList<>();
+		for (CalendarEventResponse event : events) {
+			CalendarEventView next = CalendarEventView.from(event);
+			if (!groupedEvents.isEmpty()) {
+				int lastIndex = groupedEvents.size() - 1;
+				CalendarEventView current = groupedEvents.get(lastIndex);
+				if (current.canMerge(next)) {
+					groupedEvents.set(lastIndex, current.merge(next));
+					continue;
+				}
+			}
+			groupedEvents.add(next);
+		}
+		return List.copyOf(groupedEvents);
 	}
 
 	public record DayOption(int value, String label) {
 	}
 
-	public record CalendarDayView(LocalDate date, String label, List<CalendarEventResponse> events) {
+	public record CalendarDayView(LocalDate date, String label, List<CalendarEventView> events) {
+	}
+
+	public record CalendarEventView(CalendarEventType type, boolean allDay, String startPeriodName,
+			String endPeriodName, LocalTime startTime, LocalTime endTime, String title, String detail) {
+
+		private static CalendarEventView from(CalendarEventResponse event) {
+			return new CalendarEventView(event.type(), event.allDay(), event.periodName(), event.periodName(),
+					event.startTime(), event.endTime(), event.title(), event.detail());
+		}
+
+		private boolean canMerge(CalendarEventView next) {
+			return !allDay && !next.allDay && type == next.type && Objects.equals(title, next.title)
+					&& Objects.equals(detail, next.detail) && Objects.equals(endTime, next.startTime);
+		}
+
+		private CalendarEventView merge(CalendarEventView next) {
+			return new CalendarEventView(type, false, startPeriodName, next.endPeriodName, startTime, next.endTime, title,
+					detail);
+		}
+
+		public String periodLabel() {
+			if (Objects.equals(startPeriodName, endPeriodName)) {
+				return startPeriodName;
+			}
+			String periodPrefix = "Tiết ";
+			return startPeriodName.startsWith(periodPrefix) && endPeriodName.startsWith(periodPrefix)
+					? startPeriodName + "–" + endPeriodName.substring(periodPrefix.length())
+					: startPeriodName + "–" + endPeriodName;
+		}
 	}
 }

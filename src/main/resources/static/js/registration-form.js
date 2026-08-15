@@ -14,7 +14,14 @@
     const availabilityStatus = form.querySelector("[data-availability-status]");
     const startDateInput = form.querySelector("#startDate");
     const endDateInput = form.querySelector("#endDate");
+    const roomSelect = form.querySelector("#roomId");
+    const roomCalendarLink = form.querySelector("[data-room-calendar-link]");
     let availabilityChecking = false;
+    let roomCalendar = null;
+    let roomCalendarKey = "";
+    let roomCalendarState = "idle";
+    let roomCalendarRequest = 0;
+    let roomCalendarRefreshTimer = null;
 
     function scheduleRows() {
         return scheduleList ? Array.from(scheduleList.querySelectorAll("[data-schedule-row]")) : [];
@@ -70,7 +77,8 @@
             legend.textContent = `Lịch ${number}`;
             removeButton.hidden = rows.length === 1;
             removeButton.setAttribute("aria-label", `Xóa lịch ${number}`);
-            updateRangeOptions(row, false);
+            rememberPeriodOptions(row);
+            applyRoomCalendarToRow(row);
             updateRangeSummary(row);
         });
         if (addScheduleButton) {
@@ -105,6 +113,18 @@
         });
     }
 
+    function rememberPeriodOptions(row) {
+        row.querySelectorAll("[data-period-start] option[value], [data-period-end] option[value]").forEach(function (option) {
+            if (option.value && !option.dataset.baseLabel) {
+                option.dataset.baseLabel = option.textContent;
+            }
+        });
+    }
+
+    function optionIsRoomUnavailable(option) {
+        return option && option.dataset.roomUnavailable === "true";
+    }
+
     function periodIndex(row, value) {
         return periodOptions(row).findIndex(function (option) {
             return option.value === value;
@@ -124,13 +144,26 @@
 
     function updateRangeOptions(row, clearInvalidEnd) {
         const range = selectedRange(row);
-        if (clearInvalidEnd && range.startIndex >= 0 && range.endIndex >= 0 && range.endIndex < range.startIndex) {
-            range.end.value = "";
-            range.endIndex = -1;
-        }
-        Array.from(range.end.options).forEach(function (option, index) {
-            option.disabled = Boolean(option.value) && range.startIndex >= 0 && index - 1 < range.startIndex;
+        const options = periodOptions(row);
+        Array.from(range.start.options).forEach(function (option) {
+            option.disabled = Boolean(option.value) && optionIsRoomUnavailable(option);
         });
+        Array.from(range.end.options).forEach(function (option) {
+            if (!option.value) {
+                option.disabled = false;
+                return;
+            }
+            const optionIndex = periodIndex(row, option.value);
+            const crossesUnavailable = range.startIndex >= 0 && optionIndex >= range.startIndex
+                && options.slice(range.startIndex, optionIndex + 1).some(optionIsRoomUnavailable);
+            option.disabled = optionIsRoomUnavailable(option)
+                || (range.startIndex >= 0 && optionIndex < range.startIndex)
+                || crossesUnavailable;
+        });
+        const selectedEnd = range.end.selectedOptions.length ? range.end.selectedOptions[0] : null;
+        if (clearInvalidEnd && selectedEnd && selectedEnd.disabled) {
+            range.end.value = "";
+        }
     }
 
     function updateRangeSummary(row) {
@@ -149,6 +182,162 @@
             ? startOption.dataset.periodName
             : `${startOption.dataset.periodName}–${endOption.dataset.periodName}`;
         summary.textContent = `${periodLabel} (${startOption.dataset.startTime}–${endOption.dataset.endTime}) · ${periodCount} tiết`;
+    }
+
+    function calendarSelectionKey() {
+        if (!roomSelect || !roomSelect.value || !startDateInput.value || !endDateInput.value
+                || startDateInput.value > endDateInput.value) {
+            return "";
+        }
+        return `${roomSelect.value}|${startDateInput.value}|${endDateInput.value}`;
+    }
+
+    function formatCalendarDate(value) {
+        const parts = String(value || "").split("-");
+        return parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : String(value || "");
+    }
+
+    function describeBusyEvents(events) {
+        const byDate = new Map();
+        events.forEach(function (event) {
+            const titles = byDate.get(event.date) || new Set();
+            titles.add(event.title || "Không khả dụng");
+            byDate.set(event.date, titles);
+        });
+        return Array.from(byDate.entries()).sort(function (left, right) {
+            return left[0].localeCompare(right[0]);
+        }).map(function (entry) {
+            return `${formatCalendarDate(entry[0])} (${Array.from(entry[1]).join(", ")})`;
+        }).join(", ");
+    }
+
+    function roomEventsFor(row, periodId, includeAllDay) {
+        if (!roomCalendar) {
+            return [];
+        }
+        const day = row.querySelector("[data-schedule-day]").value;
+        return (roomCalendar.events || []).filter(function (event) {
+            return String(event.dayOfWeek) === day
+                && ((includeAllDay && event.allDay) || String(event.periodId) === String(periodId));
+        });
+    }
+
+    function setRoomAvailabilityStatus(row, message, state) {
+        const status = row.querySelector("[data-schedule-room-availability]");
+        if (!status) {
+            return;
+        }
+        status.textContent = message;
+        if (state) {
+            status.dataset.state = state;
+        } else {
+            delete status.dataset.state;
+        }
+    }
+
+    function resetRoomPeriodOptions(row) {
+        row.querySelectorAll("[data-period-start] option[value], [data-period-end] option[value]").forEach(function (option) {
+            if (!option.value) {
+                return;
+            }
+            option.textContent = option.dataset.baseLabel || option.textContent;
+            option.removeAttribute("title");
+            delete option.dataset.roomUnavailable;
+        });
+    }
+
+    function markPeriodUnavailable(row, periodId, events) {
+        const dates = Array.from(new Set(events.map(function (event) {
+            return event.date;
+        }))).sort();
+        const shortLabel = dates.length === 1 ? formatCalendarDate(dates[0]) : `${dates.length} ngày`;
+        ["[data-period-start]", "[data-period-end]"].forEach(function (selector) {
+            const option = Array.from(row.querySelector(selector).options).find(function (candidate) {
+                return candidate.value === String(periodId);
+            });
+            if (!option) {
+                return;
+            }
+            option.dataset.roomUnavailable = "true";
+            option.textContent = `${option.dataset.baseLabel || option.textContent} — Bận ${shortLabel}`;
+            option.title = `Không khả dụng: ${describeBusyEvents(events)}`;
+        });
+    }
+
+    function roomConflictSummary(row) {
+        const day = row.querySelector("[data-schedule-day]").value;
+        if (!roomCalendar || !day) {
+            return "";
+        }
+        const parts = [];
+        const allDayEvents = (roomCalendar.events || []).filter(function (event) {
+            return String(event.dayOfWeek) === day && event.allDay;
+        });
+        if (allDayEvents.length) {
+            parts.push(`Cả ngày: ${describeBusyEvents(allDayEvents)}`);
+        }
+        periodOptions(row).forEach(function (option) {
+            const events = roomEventsFor(row, option.value, false);
+            if (events.length) {
+                parts.push(`${option.dataset.periodName}: ${describeBusyEvents(events)}`);
+            }
+        });
+        return parts.join("; ");
+    }
+
+    function rangeContainsUnavailablePeriod(row) {
+        const range = selectedRange(row);
+        return range.startIndex >= 0 && range.endIndex >= range.startIndex
+            && periodOptions(row).slice(range.startIndex, range.endIndex + 1).some(optionIsRoomUnavailable);
+    }
+
+    function applyRoomCalendarToRow(row) {
+        rememberPeriodOptions(row);
+        resetRoomPeriodOptions(row);
+        const key = calendarSelectionKey();
+        const day = row.querySelector("[data-schedule-day]").value;
+        if (!key) {
+            setRoomAvailabilityStatus(row, "Chọn phòng và khoảng ngày để xem các tiết đã bận.", "");
+            updateRangeOptions(row, false);
+            return;
+        }
+        if (!day) {
+            setRoomAvailabilityStatus(row, "Chọn thứ để xem các tiết đã bận của phòng.", "");
+            updateRangeOptions(row, false);
+            return;
+        }
+        if (roomCalendarState === "loading" || roomCalendarKey !== key) {
+            setRoomAvailabilityStatus(row, "Đang tải lịch bận của phòng…", "loading");
+            updateRangeOptions(row, false);
+            return;
+        }
+        if (roomCalendarState === "error" || !roomCalendar) {
+            setRoomAvailabilityStatus(row, "Không thể tải lịch bận. Hệ thống vẫn kiểm tra lại khi gửi phiếu.", "error");
+            updateRangeOptions(row, false);
+            return;
+        }
+
+        periodOptions(row).forEach(function (option) {
+            const events = roomEventsFor(row, option.value, true);
+            if (events.length) {
+                markPeriodUnavailable(row, option.value, events);
+            }
+        });
+
+        const range = selectedRange(row);
+        if (rangeContainsUnavailablePeriod(row)) {
+            const startOption = range.start.selectedOptions.length ? range.start.selectedOptions[0] : null;
+            if (optionIsRoomUnavailable(startOption)) {
+                range.start.value = "";
+            }
+            range.end.value = "";
+            announce("Đã bỏ chọn khoảng tiết vì lịch phòng vừa cập nhật có xung đột.");
+        }
+        updateRangeOptions(row, false);
+        updateRangeSummary(row);
+        const conflict = roomConflictSummary(row);
+        setRoomAvailabilityStatus(row, conflict ? `Không khả dụng — ${conflict}.` : "Tất cả tiết của thứ này đang khả dụng.",
+            conflict ? "conflict" : "available");
     }
 
     function rangeContainsSystemDay(from, to, systemDay) {
@@ -184,6 +373,11 @@
                 if (range.endIndex < range.startIndex) {
                     markClientInvalid(periodEnd);
                     error.textContent = "Tiết kết thúc phải bằng hoặc sau tiết bắt đầu.";
+                    error.hidden = false;
+                    firstInvalid = firstInvalid || periodEnd;
+                } else if (rangeContainsUnavailablePeriod(row)) {
+                    markClientInvalid(periodEnd);
+                    error.textContent = "Khoảng tiết chứa tiết không khả dụng của phòng.";
                     error.hidden = false;
                     firstInvalid = firstInvalid || periodEnd;
                 } else {
@@ -308,7 +502,11 @@
         scheduleList.addEventListener("change", function (event) {
             if (event.target.matches("[data-schedule-day], [data-period-start], [data-period-end]")) {
                 const row = event.target.closest("[data-schedule-row]");
-                updateRangeOptions(row, event.target.matches("[data-period-start]"));
+                if (event.target.matches("[data-schedule-day]")) {
+                    applyRoomCalendarToRow(row);
+                } else {
+                    updateRangeOptions(row, event.target.matches("[data-period-start]"));
+                }
                 updateRangeSummary(row);
                 validateSchedules(false);
                 clearAvailability();
@@ -318,6 +516,8 @@
             input.addEventListener("change", function () {
                 validateSchedules(false);
                 clearAvailability();
+                updateRoomCalendarLink();
+                scheduleRoomCalendarRefresh();
             });
         });
         reindexSchedules();
@@ -343,7 +543,6 @@
         updateTeachingSection();
     }
 
-    const roomSelect = form.querySelector("#roomId");
     const participantInput = form.querySelector("#participantCount");
     const participantHelp = form.querySelector("#participant-help");
     const deviceFilterStatus = form.querySelector("[data-device-filter-status]");
@@ -403,11 +602,92 @@
         updateSupervisorSection();
     }
 
+    function updateRoomCalendarLink() {
+        if (!roomCalendarLink || !roomSelect || !roomSelect.value) {
+            if (roomCalendarLink) {
+                roomCalendarLink.hidden = true;
+            }
+            return;
+        }
+        const params = new URLSearchParams({roomId: roomSelect.value});
+        if (startDateInput.value) {
+            params.set("from", startDateInput.value);
+        }
+        if (endDateInput.value) {
+            params.set("to", endDateInput.value);
+        }
+        roomCalendarLink.href = `/schedule/calendar?${params.toString()}`;
+        roomCalendarLink.hidden = false;
+    }
+
+    function roomCalendarUrl() {
+        const params = new URLSearchParams({from: startDateInput.value, to: endDateInput.value});
+        return `/api/v1/rooms/${encodeURIComponent(roomSelect.value)}/calendar?${params.toString()}`;
+    }
+
+    function refreshRoomCalendar() {
+        const key = calendarSelectionKey();
+        const request = ++roomCalendarRequest;
+        if (!key) {
+            roomCalendar = null;
+            roomCalendarKey = "";
+            roomCalendarState = "idle";
+            if (scheduleList) {
+                scheduleList.removeAttribute("aria-busy");
+            }
+            scheduleRows().forEach(applyRoomCalendarToRow);
+            return;
+        }
+        roomCalendar = null;
+        roomCalendarKey = key;
+        roomCalendarState = "loading";
+        if (scheduleList) {
+            scheduleList.setAttribute("aria-busy", "true");
+        }
+        scheduleRows().forEach(applyRoomCalendarToRow);
+        fetch(roomCalendarUrl(), {headers: {Accept: "application/json"}}).then(function (response) {
+            if (!response.ok) {
+                throw new Error("room-calendar-request-failed");
+            }
+            return response.json();
+        }).then(function (payload) {
+            if (request !== roomCalendarRequest) {
+                return;
+            }
+            roomCalendar = payload.data;
+            roomCalendarState = "loaded";
+            if (scheduleList) {
+                scheduleList.removeAttribute("aria-busy");
+            }
+            scheduleRows().forEach(applyRoomCalendarToRow);
+            validateSchedules(false);
+        }).catch(function () {
+            if (request !== roomCalendarRequest) {
+                return;
+            }
+            roomCalendar = null;
+            roomCalendarState = "error";
+            if (scheduleList) {
+                scheduleList.removeAttribute("aria-busy");
+            }
+            scheduleRows().forEach(applyRoomCalendarToRow);
+        });
+    }
+
+    function scheduleRoomCalendarRefresh() {
+        if (roomCalendarRefreshTimer) {
+            window.clearTimeout(roomCalendarRefreshTimer);
+        }
+        roomCalendarRefreshTimer = window.setTimeout(refreshRoomCalendar, 150);
+    }
+
     if (roomSelect) {
         roomSelect.addEventListener("change", function () {
             updateParticipantLimit();
             updateDevicesForRoom();
             clearAvailability();
+            updateRoomCalendarLink();
+            scheduleRoomCalendarRefresh();
         });
     }
     if (participantInput) {
@@ -421,6 +701,8 @@
     });
     updateParticipantLimit();
     updateDevicesForRoom();
+    updateRoomCalendarLink();
+    scheduleRoomCalendarRefresh();
 
     function availabilityUrl(row, periodId) {
         const params = new URLSearchParams();
