@@ -55,6 +55,8 @@ CREATE DATABASE IF NOT EXISTS lab_management
 
 ### 3. Khai báo tài khoản MySQL
 
+Sửa tài khoản và mật khẩu trong application.yml.
+
 Trong PowerShell, thay `root` và `mat-khau-mysql` bằng tài khoản MySQL trên máy:
 
 ```powershell
