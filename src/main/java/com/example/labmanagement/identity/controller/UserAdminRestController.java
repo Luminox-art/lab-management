@@ -7,6 +7,7 @@ import com.example.labmanagement.identity.dto.PageMeta;
 import com.example.labmanagement.identity.dto.UserProfileResponse;
 import com.example.labmanagement.identity.service.IdentityService;
 import jakarta.validation.Valid;
+import java.security.Principal;
 import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -30,15 +31,17 @@ public class UserAdminRestController {
 	@GetMapping
 	ApiResponse<List<UserProfileResponse>> users(@RequestParam(required = false) NguoiDungTrangThai status,
 			@RequestParam(required = false) String role, @RequestParam(required = false) String keyword,
-			@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size) {
-		Page<UserProfileResponse> result = identityService.searchUsers(status, role, keyword, page, size);
+			@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size,
+			Principal principal) {
+		Page<UserProfileResponse> result = identityService.searchUsers(principal.getName(), status, role, keyword, page,
+				size);
 		return ApiResponse.of(result.getContent(),
 				new PageMeta(result.getNumber(), result.getSize(), result.getTotalElements(), result.getTotalPages()));
 	}
 
 	@PatchMapping("/{id}")
 	ApiResponse<UserProfileResponse> updateUser(@PathVariable String id,
-			@Valid @RequestBody AdminUserUpdateRequest request) {
-		return ApiResponse.of(identityService.updateUser(id, request));
+			@Valid @RequestBody AdminUserUpdateRequest request, Principal principal) {
+		return ApiResponse.of(identityService.updateUser(principal.getName(), id, request));
 	}
 }

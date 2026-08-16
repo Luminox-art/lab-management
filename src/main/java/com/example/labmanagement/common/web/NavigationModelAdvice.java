@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 @ControllerAdvice
 public class NavigationModelAdvice {
 
-	private static final String ROLE_MANAGER = "ROLE_CBQL";
+	private static final Set<String> MANAGEMENT_ROLES = Set.of("ROLE_CBQL", "ROLE_ADMIN");
 	private static final Set<String> REGISTRATION_ROLES = Set.of("ROLE_GV", "ROLE_SV");
 
 	@ModelAttribute
@@ -29,7 +29,7 @@ public class NavigationModelAdvice {
 
 		Set<String> authorities = authentication.getAuthorities().stream().map(GrantedAuthority::getAuthority)
 				.collect(java.util.stream.Collectors.toSet());
-		model.addAttribute("navManager", authorities.contains(ROLE_MANAGER));
+		model.addAttribute("navManager", authorities.stream().anyMatch(MANAGEMENT_ROLES::contains));
 		model.addAttribute("navCanCreateRegistration", authorities.stream().anyMatch(REGISTRATION_ROLES::contains));
 	}
 }

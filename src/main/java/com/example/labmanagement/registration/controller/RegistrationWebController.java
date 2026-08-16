@@ -57,7 +57,7 @@ public class RegistrationWebController {
 			Authentication authentication, Model model) {
 		Page<RegistrationSummaryResponse> result = registrationService.search(authentication.getName(), type, status,
 				roomId, date, creator, page, size);
-		boolean manager = hasRole(authentication, "CBQL");
+		boolean manager = isManager(authentication);
 		model.addAttribute("result", result);
 		model.addAttribute("types", LoaiPhieu.values());
 		model.addAttribute("statuses",
@@ -199,7 +199,7 @@ public class RegistrationWebController {
 	}
 
 	private void prepareDecisionModel(Model model, Authentication authentication, RegistrationResponse registration) {
-		boolean manager = hasRole(authentication, "CBQL");
+		boolean manager = isManager(authentication);
 		boolean pending = registration.status() == PhieuDangKyTrangThai.CHO_DUYET;
 		model.addAttribute("registration", registration);
 		model.addAttribute("scheduleRanges", RegistrationForms.scheduleRanges(registration.schedules()));
@@ -314,6 +314,10 @@ public class RegistrationWebController {
 	private boolean hasRole(Authentication authentication, String role) {
 		return authentication != null && authentication.getAuthorities().stream()
 				.anyMatch(authority -> ("ROLE_" + role).equals(authority.getAuthority()));
+	}
+
+	private boolean isManager(Authentication authentication) {
+		return hasRole(authentication, "CBQL") || hasRole(authentication, "ADMIN");
 	}
 
 	private ApiException accessDenied() {

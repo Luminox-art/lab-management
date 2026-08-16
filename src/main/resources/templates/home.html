@@ -12,7 +12,7 @@
 <main class="page-shell" id="main-content" tabindex="-1">
     <section class="home-hero" aria-labelledby="home-heading">
         <div>
-            <p class="eyebrow" th:text="${profile.roleId == 'CBQL' ? 'Không gian quản lý' : (profile.roleId == 'GV' ? 'Không gian giảng viên' : 'Không gian sinh viên')}"></p>
+			<p class="eyebrow" th:text="${profile.roleId == 'ADMIN' ? 'Không gian quản trị' : (profile.roleId == 'CBQL' ? 'Không gian quản lý' : (profile.roleId == 'GV' ? 'Không gian giảng viên' : 'Không gian sinh viên'))}"></p>
             <h1 id="home-heading" th:text="|Xin chào, ${profile.fullName}|"></h1>
             <p class="subtitle">Truy cập nhanh các công việc và dữ liệu phù hợp với vai trò của bạn.</p>
         </div>

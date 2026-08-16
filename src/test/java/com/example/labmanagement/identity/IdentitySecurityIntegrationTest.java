@@ -140,6 +140,7 @@ class IdentitySecurityIntegrationTest {
 
 	@Test
 	void onlyManagerCanFilterAndUpdateUsersWithOptimisticVersion() throws Exception {
+		createUser("S2MANAGER", "manager", NguoiDungTrangThai.HOAT_DONG, "CBQL");
 		NguoiDung target = createUser("S2TARGET", "s2target@example.edu", NguoiDungTrangThai.CHO_DUYET, "SV");
 		String update = """
 				{"fullName":"Tài khoản đã duyệt","email":"s2target@example.edu","classOrUnit":"Khoa CNTT",
@@ -165,6 +166,27 @@ class IdentitySecurityIntegrationTest {
 		mockMvc.perform(patch("/api/v1/users/S2TARGET").with(user("manager").roles("CBQL")).with(csrf())
 				.contentType(MediaType.APPLICATION_JSON).content(update.replace(",\"version\":0", "")))
 				.andExpect(status().isBadRequest());
+	}
+
+	@Test
+	void managerCannotSeeOrModifyAdministratorButAdministratorCanManageManager() throws Exception {
+		createUser("S2MANAGER", "manager@example.edu", NguoiDungTrangThai.HOAT_DONG, "CBQL");
+		createUser("S2ADMIN", "admin@example.edu", NguoiDungTrangThai.HOAT_DONG, "ADMIN");
+
+		mockMvc.perform(
+				get("/api/v1/users").with(user("manager@example.edu").roles("CBQL")).param("keyword", "S2ADMIN"))
+				.andExpect(status().isOk()).andExpect(jsonPath("$.data.length()").value(0));
+		mockMvc.perform(patch("/api/v1/users/S2ADMIN").with(user("manager@example.edu").roles("CBQL")).with(csrf())
+				.contentType(MediaType.APPLICATION_JSON).content("""
+						{"fullName":"Admin","email":"admin@example.edu","classOrUnit":"CNTT",
+						 "roleId":"SV","status":"BI_KHOA","version":0}
+						""")).andExpect(status().isNotFound());
+
+		mockMvc.perform(patch("/api/v1/users/S2MANAGER").with(user("admin@example.edu").roles("ADMIN")).with(csrf())
+				.contentType(MediaType.APPLICATION_JSON).content("""
+						{"fullName":"Cán bộ mới","email":"manager@example.edu","classOrUnit":"CNTT",
+						 "roleId":"GV","status":"HOAT_DONG","version":0}
+						""")).andExpect(status().isOk()).andExpect(jsonPath("$.data.roleId").value("GV"));
 	}
 
 	private NguoiDung createUser(String id, String email, NguoiDungTrangThai status, String roleId) {

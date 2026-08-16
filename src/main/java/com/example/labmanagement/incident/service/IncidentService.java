@@ -8,6 +8,7 @@ import com.example.labmanagement.common.error.ApiException;
 import com.example.labmanagement.common.error.ErrorCode;
 import com.example.labmanagement.identity.domain.NguoiDung;
 import com.example.labmanagement.identity.domain.NguoiDungTrangThai;
+import com.example.labmanagement.identity.domain.RolePolicy;
 import com.example.labmanagement.identity.repository.NguoiDungRepository;
 import com.example.labmanagement.incident.domain.MucDoSuCo;
 import com.example.labmanagement.incident.domain.SuCo;
@@ -38,7 +39,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class IncidentService {
 
-	private static final String ROLE_MANAGER = "CBQL";
 	private static final int MAX_PAGE_SIZE = 100;
 
 	private final NguoiDungRepository userRepository;
@@ -154,8 +154,9 @@ public class IncidentService {
 
 	@Transactional(readOnly = true)
 	public List<IncidentHandlerOptionResponse> handlerOptions() {
-		return userRepository.findAllByRole_IdAndStatusOrderByFullNameAsc(ROLE_MANAGER, NguoiDungTrangThai.HOAT_DONG)
-				.stream().map(user -> new IncidentHandlerOptionResponse(user.getId(), user.getFullName())).toList();
+		return userRepository
+				.findAllByRole_IdAndStatusOrderByFullNameAsc(RolePolicy.MANAGER, NguoiDungTrangThai.HOAT_DONG).stream()
+				.map(user -> new IncidentHandlerOptionResponse(user.getId(), user.getFullName())).toList();
 	}
 
 	private void assertResourceBelongsToSession(TaiNguyen resource, PhienSuDung session) {
@@ -203,7 +204,8 @@ public class IncidentService {
 	private NguoiDung findActiveManager(String userId) {
 		NguoiDung handler = userRepository.findById(normalizeRequired(userId, "Người xử lý không được để trống."))
 				.orElseThrow(() -> notFound("Không tìm thấy người xử lý."));
-		if (handler.getStatus() != NguoiDungTrangThai.HOAT_DONG || !ROLE_MANAGER.equals(handler.getRole().getId())) {
+		if (handler.getStatus() != NguoiDungTrangThai.HOAT_DONG
+				|| !RolePolicy.MANAGER.equals(handler.getRole().getId())) {
 			throw business("Người xử lý phải là cán bộ quản lý đang hoạt động.");
 		}
 		return handler;
@@ -244,7 +246,7 @@ public class IncidentService {
 	}
 
 	private boolean isManager(NguoiDung user) {
-		return ROLE_MANAGER.equals(user.getRole().getId());
+		return RolePolicy.isManager(user.getRole().getId());
 	}
 
 	private String normalizeRequired(String value, String message) {

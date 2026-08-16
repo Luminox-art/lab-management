@@ -115,7 +115,7 @@ public class IncidentWebController {
 	}
 
 	private void prepareDetail(Model model, Authentication authentication, IncidentResponse incident) {
-		boolean manager = hasRole(authentication, "CBQL");
+		boolean manager = hasRole(authentication, "CBQL") || hasRole(authentication, "ADMIN");
 		model.addAttribute("incident", incident);
 		model.addAttribute("manager", manager);
 		model.addAttribute("terminal",

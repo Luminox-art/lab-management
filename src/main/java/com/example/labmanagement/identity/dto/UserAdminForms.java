@@ -25,7 +25,7 @@ public final class UserAdminForms {
 		@Size(max = 150)
 		private String classOrUnit;
 		@NotBlank
-		@Pattern(regexp = "CBQL|GV|SV")
+		@Pattern(regexp = "ADMIN|CBQL|GV|SV")
 		private String roleId;
 		@NotNull
 		private NguoiDungTrangThai status;

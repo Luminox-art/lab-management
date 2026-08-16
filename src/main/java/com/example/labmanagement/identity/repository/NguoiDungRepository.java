@@ -20,6 +20,8 @@ public interface NguoiDungRepository extends JpaRepository<NguoiDung, String> {
 
 	boolean existsByEmailIgnoreCaseAndIdNot(String email, String id);
 
+	long countByRole_IdAndStatus(String roleId, NguoiDungTrangThai status);
+
 	@EntityGraph(attributePaths = "role")
 	List<NguoiDung> findAllByRole_IdAndStatusOrderByFullNameAsc(String roleId, NguoiDungTrangThai status);
 
@@ -27,11 +29,12 @@ public interface NguoiDungRepository extends JpaRepository<NguoiDung, String> {
 			select user from NguoiDung user
 			where (:status is null or user.status = :status)
 			  and (:roleId is null or user.role.id = :roleId)
+			  and (:excludedRoleId is null or user.role.id <> :excludedRoleId)
 			  and (:keyword is null
 			       or lower(user.id) like lower(concat('%', :keyword, '%'))
 			       or lower(user.fullName) like lower(concat('%', :keyword, '%'))
 			       or lower(user.email) like lower(concat('%', :keyword, '%')))
 			""")
 	Page<NguoiDung> search(@Param("status") NguoiDungTrangThai status, @Param("roleId") String roleId,
-			@Param("keyword") String keyword, Pageable pageable);
+			@Param("excludedRoleId") String excludedRoleId, @Param("keyword") String keyword, Pageable pageable);
 }

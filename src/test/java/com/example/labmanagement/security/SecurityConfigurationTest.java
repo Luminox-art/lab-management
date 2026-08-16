@@ -52,6 +52,7 @@ class SecurityConfigurationTest {
 		mockMvc.perform(get("/api/v1/users").with(user("lecturer").roles("GV"))).andExpect(status().isForbidden())
 				.andExpect(jsonPath("$.code").value("ACCESS_DENIED"));
 		mockMvc.perform(get("/api/v1/users").with(user("manager").roles("CBQL"))).andExpect(status().isOk());
+		mockMvc.perform(get("/api/v1/users").with(user("administrator").roles("ADMIN"))).andExpect(status().isOk());
 	}
 
 	@RestController

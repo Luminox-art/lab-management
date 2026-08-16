@@ -10,6 +10,6 @@ import jakarta.validation.constraints.Size;
 
 public record AdminUserUpdateRequest(@NotBlank @Size(max = 150) String fullName,
 		@NotBlank @Email @Size(max = 254) String email, @Size(max = 150) String classOrUnit,
-		@NotBlank @Pattern(regexp = "CBQL|GV|SV") String roleId, @NotNull NguoiDungTrangThai status,
+		@NotBlank @Pattern(regexp = "ADMIN|CBQL|GV|SV") String roleId, @NotNull NguoiDungTrangThai status,
 		@NotNull @PositiveOrZero Long version) {
 }

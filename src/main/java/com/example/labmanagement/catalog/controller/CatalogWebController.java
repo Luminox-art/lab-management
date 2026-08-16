@@ -290,6 +290,7 @@ public class CatalogWebController {
 
 	private boolean isManager(Authentication authentication) {
 		return authentication != null && authentication.getAuthorities().stream()
-				.anyMatch(authority -> "ROLE_CBQL".equals(authority.getAuthority()));
+				.anyMatch(authority -> "ROLE_CBQL".equals(authority.getAuthority())
+						|| "ROLE_ADMIN".equals(authority.getAuthority()));
 	}
 }

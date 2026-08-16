@@ -10,6 +10,7 @@ import com.example.labmanagement.common.error.ApiException;
 import com.example.labmanagement.common.error.ErrorCode;
 import com.example.labmanagement.identity.domain.NguoiDung;
 import com.example.labmanagement.identity.domain.NguoiDungTrangThai;
+import com.example.labmanagement.identity.domain.RolePolicy;
 import com.example.labmanagement.identity.repository.NguoiDungRepository;
 import com.example.labmanagement.incident.domain.SuCo;
 import com.example.labmanagement.incident.domain.SuCoTrangThai;
@@ -51,7 +52,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class UsageSessionService {
 
-	private static final String ROLE_MANAGER = "CBQL";
 	private static final int CHECK_IN_EARLY_MINUTES = 30;
 
 	private final NguoiDungRepository userRepository;
@@ -401,7 +401,7 @@ public class UsageSessionService {
 	}
 
 	private boolean isManager(NguoiDung actor) {
-		return ROLE_MANAGER.equals(actor.getRole().getId());
+		return RolePolicy.isManager(actor.getRole().getId());
 	}
 
 	private PhienSuDung lockSession(Long sessionId) {

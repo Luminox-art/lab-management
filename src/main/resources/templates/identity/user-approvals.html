@@ -33,8 +33,8 @@
                     <label for="role">Vai trò</label>
                     <select id="role" name="role">
                         <option value="">Tất cả vai trò</option>
-                        <option th:each="item : ${roles}" th:value="${item}" th:selected="${item == role}"
-                                th:text="${item == 'CBQL' ? 'Cán bộ quản lý' : (item == 'GV' ? 'Giảng viên' : 'Sinh viên')}"></option>
+						<option th:each="item : ${roles}" th:value="${item}" th:selected="${item == role}"
+								th:text="${item == 'ADMIN' ? 'Quản trị hệ thống' : (item == 'CBQL' ? 'Cán bộ quản lý' : (item == 'GV' ? 'Giảng viên' : 'Sinh viên'))}"></option>
                     </select>
                 </div>
                 <div class="field">
@@ -84,23 +84,24 @@
                 </td>
                 <td th:text="${account.email}"></td>
                 <td th:text="${account.classOrUnit ?: '—'}"></td>
-                <td th:text="${account.roleId == 'CBQL' ? 'Cán bộ quản lý' : (account.roleId == 'GV' ? 'Giảng viên' : 'Sinh viên')}"></td>
+				<td th:text="${account.roleId == 'ADMIN' ? 'Quản trị hệ thống' : (account.roleId == 'CBQL' ? 'Cán bộ quản lý' : (account.roleId == 'GV' ? 'Giảng viên' : 'Sinh viên'))}"></td>
                 <td>
                     <span class="status-chip"
                           th:classappend="| status-${#strings.toLowerCase(account.status.name())}|"
                           th:text="${account.status.name() == 'CHO_DUYET' ? 'Chờ duyệt' : (account.status.name() == 'HOAT_DONG' ? 'Hoạt động' : 'Bị khóa')}"></span>
                 </td>
                 <td>
-                    <div class="actions">
-                        <a class="button button-secondary" th:href="@{/admin/users/{id}/edit(id=${account.id})}">Chỉnh sửa</a>
-                        <form method="post" th:if="${account.status.name() == 'CHO_DUYET'}"
+					<div class="actions"
+						 th:if="${administrator or account.roleId == 'GV' or account.roleId == 'SV'}">
+						<a class="button button-secondary" th:href="@{/admin/users/{id}/edit(id=${account.id})}">Chỉnh sửa</a>
+						<form method="post" th:if="${account.status.name() == 'CHO_DUYET' and account.email != actorEmail}"
                               th:action="@{/admin/users/{id}/approve(id=${account.id})}"
                               data-confirm="Xác nhận phê duyệt tài khoản? Người dùng sẽ có thể đăng nhập ngay.">
                             <input th:name="${_csrf.parameterName}" th:value="${_csrf.token}" type="hidden">
                             <input name="version" th:value="${account.version}" type="hidden">
                             <button type="submit">Phê duyệt</button>
                         </form>
-                        <form method="post" th:if="${account.status.name() == 'HOAT_DONG'}"
+						<form method="post" th:if="${account.status.name() == 'HOAT_DONG' and account.email != actorEmail}"
                               th:action="@{/admin/users/{id}/status(id=${account.id})}"
                               data-confirm="Xác nhận khóa tài khoản? Người dùng sẽ không thể đăng nhập lại.">
                             <input th:name="${_csrf.parameterName}" th:value="${_csrf.token}" type="hidden">
@@ -108,15 +109,17 @@
                             <input name="version" th:value="${account.version}" type="hidden">
                             <button class="button-danger" type="submit">Khóa</button>
                         </form>
-                        <form method="post" th:if="${account.status.name() == 'BI_KHOA'}"
+						<form method="post" th:if="${account.status.name() == 'BI_KHOA' and account.email != actorEmail}"
                               th:action="@{/admin/users/{id}/status(id=${account.id})}">
                             <input th:name="${_csrf.parameterName}" th:value="${_csrf.token}" type="hidden">
                             <input name="status" value="HOAT_DONG" type="hidden">
                             <input name="version" th:value="${account.version}" type="hidden">
                             <button type="submit">Mở khóa</button>
-                        </form>
-                    </div>
-                </td>
+						</form>
+					</div>
+					<span class="helper"
+						  th:unless="${administrator or account.roleId == 'GV' or account.roleId == 'SV'}">Chỉ xem</span>
+				</td>
             </tr>
             <tr th:if="${result.empty}">
                 <td class="empty-state" colspan="6">Không tìm thấy tài khoản phù hợp.</td>

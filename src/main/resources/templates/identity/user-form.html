@@ -53,9 +53,9 @@
                 </div>
                 <div class="field">
                     <label for="roleId">Vai trò <span aria-hidden="true">*</span></label>
-                    <select id="roleId" th:field="*{roleId}" required aria-describedby="roleId-help roleId-error">
-                        <option th:each="item : ${roles}" th:value="${item}"
-                                th:text="${item == 'CBQL' ? 'Cán bộ quản lý' : (item == 'GV' ? 'Giảng viên' : 'Sinh viên')}"></option>
+					<select id="roleId" th:field="*{roleId}" required aria-describedby="roleId-help roleId-error">
+						<option th:each="item : ${roles}" th:value="${item}"
+								th:text="${item == 'ADMIN' ? 'Quản trị hệ thống' : (item == 'CBQL' ? 'Cán bộ quản lý' : (item == 'GV' ? 'Giảng viên' : 'Sinh viên'))}"></option>
                     </select>
                     <p class="helper" id="roleId-help">Quyền mới áp dụng đầy đủ từ lần đăng nhập tiếp theo.</p>
                     <p class="field-error" id="roleId-error" role="alert" th:errors="*{roleId}"></p>

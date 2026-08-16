@@ -10,6 +10,7 @@ import com.example.labmanagement.common.error.ApiException;
 import com.example.labmanagement.common.error.ErrorCode;
 import com.example.labmanagement.identity.domain.NguoiDung;
 import com.example.labmanagement.identity.domain.NguoiDungTrangThai;
+import com.example.labmanagement.identity.domain.RolePolicy;
 import com.example.labmanagement.identity.repository.NguoiDungRepository;
 import com.example.labmanagement.incident.domain.SuCo;
 import com.example.labmanagement.incident.repository.SuCoRepository;
@@ -48,7 +49,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class MaintenanceService {
 
-	private static final String ROLE_MANAGER = "CBQL";
 	private static final int MAX_PAGE_SIZE = 100;
 	private static final LocalDate OPEN_BLOCK_END = LocalDate.of(9999, 12, 31);
 	private static final Set<BaoTriTrangThai> ACTIVE_STATUSES = Set.of(BaoTriTrangThai.CHO_XU_LY,
@@ -177,8 +177,9 @@ public class MaintenanceService {
 
 	@Transactional(readOnly = true)
 	public List<MaintenanceAssigneeOptionResponse> assigneeOptions() {
-		return userRepository.findAllByRole_IdAndStatusOrderByFullNameAsc(ROLE_MANAGER, NguoiDungTrangThai.HOAT_DONG)
-				.stream().map(user -> new MaintenanceAssigneeOptionResponse(user.getId(), user.getFullName())).toList();
+		return userRepository
+				.findAllByRole_IdAndStatusOrderByFullNameAsc(RolePolicy.MANAGER, NguoiDungTrangThai.HOAT_DONG).stream()
+				.map(user -> new MaintenanceAssigneeOptionResponse(user.getId(), user.getFullName())).toList();
 	}
 
 	private SuCo findSourceIncident(String incidentId, TaiNguyen resource) {
@@ -271,7 +272,7 @@ public class MaintenanceService {
 		NguoiDung manager = normalized == null
 				? null
 				: userRepository.findByEmailIgnoreCase(normalized.toLowerCase(Locale.ROOT)).orElse(null);
-		if (!isActiveManager(manager)) {
+		if (!isActiveManagerActor(manager)) {
 			throw accessDenied("Chỉ cán bộ quản lý đang hoạt động được quản lý bảo trì.");
 		}
 		return manager;
@@ -280,15 +281,20 @@ public class MaintenanceService {
 	private NguoiDung findManagerById(String id) {
 		NguoiDung manager = userRepository.findById(normalizeRequired(id, "Người phụ trách không được để trống."))
 				.orElseThrow(() -> notFound("Không tìm thấy người phụ trách."));
-		if (!isActiveManager(manager)) {
+		if (!isActiveAssignee(manager)) {
 			throw business("Người phụ trách phải là cán bộ quản lý đang hoạt động.");
 		}
 		return manager;
 	}
 
-	private boolean isActiveManager(NguoiDung user) {
+	private boolean isActiveManagerActor(NguoiDung user) {
 		return user != null && user.getStatus() == NguoiDungTrangThai.HOAT_DONG
-				&& ROLE_MANAGER.equals(user.getRole().getId());
+				&& RolePolicy.isManager(user.getRole().getId());
+	}
+
+	private boolean isActiveAssignee(NguoiDung user) {
+		return user != null && user.getStatus() == NguoiDungTrangThai.HOAT_DONG
+				&& RolePolicy.MANAGER.equals(user.getRole().getId());
 	}
 
 	private OffsetDateTime displayTime(Instant instant) {

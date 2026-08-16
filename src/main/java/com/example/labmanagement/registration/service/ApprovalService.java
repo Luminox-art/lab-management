@@ -10,6 +10,7 @@ import com.example.labmanagement.common.error.ApiException;
 import com.example.labmanagement.common.error.ErrorCode;
 import com.example.labmanagement.identity.domain.NguoiDung;
 import com.example.labmanagement.identity.domain.NguoiDungTrangThai;
+import com.example.labmanagement.identity.domain.RolePolicy;
 import com.example.labmanagement.identity.repository.NguoiDungRepository;
 import com.example.labmanagement.registration.domain.HanhDongXuLyPhieu;
 import com.example.labmanagement.registration.domain.LichDangKy;
@@ -50,7 +51,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class ApprovalService {
 
-	private static final String ROLE_MANAGER = "CBQL";
 	private static final String ROLE_STUDENT = "SV";
 	private static final String EMPTY_DEVICE_LOCK_KEY = "__NO_SELECTED_DEVICE__";
 
@@ -241,7 +241,7 @@ public class ApprovalService {
 				? null
 				: userRepository.findByEmailIgnoreCase(normalized.toLowerCase(Locale.ROOT)).orElse(null);
 		if (actor == null || actor.getStatus() != NguoiDungTrangThai.HOAT_DONG
-				|| !ROLE_MANAGER.equals(actor.getRole().getId())) {
+				|| !RolePolicy.isManager(actor.getRole().getId())) {
 			throw accessDenied("Chỉ cán bộ quản lý đang hoạt động được xử lý phiếu.");
 		}
 		return actor;

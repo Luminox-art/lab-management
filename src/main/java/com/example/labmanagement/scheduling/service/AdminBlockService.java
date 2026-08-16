@@ -9,6 +9,7 @@ import com.example.labmanagement.common.error.ApiException;
 import com.example.labmanagement.common.error.ErrorCode;
 import com.example.labmanagement.identity.domain.NguoiDung;
 import com.example.labmanagement.identity.domain.NguoiDungTrangThai;
+import com.example.labmanagement.identity.domain.RolePolicy;
 import com.example.labmanagement.identity.repository.NguoiDungRepository;
 import com.example.labmanagement.registration.domain.LichDangKy;
 import com.example.labmanagement.registration.domain.PhieuDangKyThietBi;
@@ -41,7 +42,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class AdminBlockService {
 
-	private static final String ROLE_MANAGER = "CBQL";
 	private static final String EMPTY_ROOM_LOCK_KEY = "__NO_ROOM__";
 	private static final String EMPTY_DEVICE_LOCK_KEY = "__NO_DEVICE__";
 	private static final Set<PhieuDangKyTrangThai> OCCUPYING_STATUSES = Set.of(PhieuDangKyTrangThai.DA_DUYET,
@@ -262,7 +262,7 @@ public class AdminBlockService {
 				? null
 				: userRepository.findByEmailIgnoreCase(normalized.toLowerCase(Locale.ROOT)).orElse(null);
 		if (actor == null || actor.getStatus() != NguoiDungTrangThai.HOAT_DONG
-				|| !ROLE_MANAGER.equals(actor.getRole().getId())) {
+				|| !RolePolicy.isManager(actor.getRole().getId())) {
 			throw new ApiException(ErrorCode.ACCESS_DENIED, HttpStatus.FORBIDDEN,
 					"Chỉ cán bộ quản lý đang hoạt động được quản lý lịch chặn.");
 		}

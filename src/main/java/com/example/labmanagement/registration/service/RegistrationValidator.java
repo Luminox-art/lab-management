@@ -9,6 +9,7 @@ import com.example.labmanagement.common.error.ApiException;
 import com.example.labmanagement.common.error.ErrorCode;
 import com.example.labmanagement.identity.domain.NguoiDung;
 import com.example.labmanagement.identity.domain.NguoiDungTrangThai;
+import com.example.labmanagement.identity.domain.RolePolicy;
 import com.example.labmanagement.identity.repository.NguoiDungRepository;
 import com.example.labmanagement.registration.domain.LoaiPhieu;
 import com.example.labmanagement.registration.domain.PhieuDangKy;
@@ -38,9 +39,9 @@ import org.springframework.stereotype.Component;
 @Component
 class RegistrationValidator {
 
-	static final String ROLE_MANAGER = "CBQL";
-	static final String ROLE_INSTRUCTOR = "GV";
-	static final String ROLE_STUDENT = "SV";
+	static final String ROLE_MANAGER = RolePolicy.MANAGER;
+	static final String ROLE_INSTRUCTOR = RolePolicy.INSTRUCTOR;
+	static final String ROLE_STUDENT = RolePolicy.STUDENT;
 
 	private static final int MAX_PURPOSE_LENGTH = 2000;
 	private static final int MAX_SCHEDULES = 128;
@@ -120,7 +121,7 @@ class RegistrationValidator {
 	}
 
 	void assertCanView(NguoiDung actor, PhieuDangKy registration) {
-		if (ROLE_MANAGER.equals(actor.getRole().getId()) || registration.getCreator().getId().equals(actor.getId())) {
+		if (isManager(actor.getRole().getId()) || registration.getCreator().getId().equals(actor.getId())) {
 			return;
 		}
 		if (ROLE_INSTRUCTOR.equals(actor.getRole().getId())
@@ -293,12 +294,16 @@ class RegistrationValidator {
 
 	private void assertCanCreateType(NguoiDung actor, LoaiPhieu type) {
 		String roleId = actor.getRole().getId();
-		if (ROLE_MANAGER.equals(roleId) || (!ROLE_INSTRUCTOR.equals(roleId) && !ROLE_STUDENT.equals(roleId))) {
+		if (isManager(roleId) || (!ROLE_INSTRUCTOR.equals(roleId) && !ROLE_STUDENT.equals(roleId))) {
 			throw accessDenied("Vai trò hiện tại không được tạo phiếu đăng ký.");
 		}
 		if (type == LoaiPhieu.GIANG_DAY && !ROLE_INSTRUCTOR.equals(roleId)) {
 			throw accessDenied("Chỉ giảng viên được tạo phiếu giảng dạy.");
 		}
+	}
+
+	boolean isManager(String roleId) {
+		return RolePolicy.isManager(roleId);
 	}
 
 	private Phong findRoom(String roomId) {

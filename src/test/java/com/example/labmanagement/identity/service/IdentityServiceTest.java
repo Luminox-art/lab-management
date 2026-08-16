@@ -11,6 +11,7 @@ import com.example.labmanagement.common.error.ApiException;
 import com.example.labmanagement.common.error.ErrorCode;
 import com.example.labmanagement.identity.domain.NguoiDung;
 import com.example.labmanagement.identity.domain.NguoiDungTrangThai;
+import com.example.labmanagement.identity.domain.RolePolicy;
 import com.example.labmanagement.identity.domain.VaiTro;
 import com.example.labmanagement.identity.dto.AdminUserUpdateRequest;
 import com.example.labmanagement.identity.dto.PasswordChangeRequest;
@@ -31,6 +32,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 @ExtendWith(MockitoExtension.class)
 class IdentityServiceTest {
+	private static final String MANAGER_EMAIL = "manager@example.edu";
+	private static final String ADMIN_EMAIL = "admin@example.edu";
 
 	@Mock
 	private NguoiDungRepository userRepository;
@@ -108,6 +111,7 @@ class IdentityServiceTest {
 
 	@Test
 	void administratorUpdateRejectsStaleVersion() {
+		stubActor("CB900", MANAGER_EMAIL, RolePolicy.MANAGER);
 		VaiTro role = new VaiTro("SV", "Sinh viên");
 		NguoiDung user = user("SV900", "sv900@example.edu", "password", role, NguoiDungTrangThai.CHO_DUYET);
 		when(userRepository.findById("SV900")).thenReturn(Optional.of(user));
@@ -115,7 +119,7 @@ class IdentityServiceTest {
 		AdminUserUpdateRequest request = new AdminUserUpdateRequest("Sinh viên", "sv900@example.edu", null, "SV",
 				NguoiDungTrangThai.HOAT_DONG, 1L);
 
-		assertThatThrownBy(() -> identityService.updateUser("SV900", request)).isInstanceOfSatisfying(
+		assertThatThrownBy(() -> identityService.updateUser(MANAGER_EMAIL, "SV900", request)).isInstanceOfSatisfying(
 				ApiException.class,
 				exception -> assertThat(exception.getCode()).isEqualTo(ErrorCode.RESOURCE_CONFLICT));
 		verify(userRepository, never()).flush();
@@ -123,11 +127,12 @@ class IdentityServiceTest {
 
 	@Test
 	void approvesPendingUserAndActivatesAccount() {
+		stubActor("CB900", MANAGER_EMAIL, RolePolicy.MANAGER);
 		VaiTro role = new VaiTro("SV", "Sinh viên");
 		NguoiDung user = user("SV900", "sv900@example.edu", "password", role, NguoiDungTrangThai.CHO_DUYET);
 		when(userRepository.findById("SV900")).thenReturn(Optional.of(user));
 
-		UserProfileResponse response = identityService.approveUser("SV900", 0L);
+		UserProfileResponse response = identityService.approveUser(MANAGER_EMAIL, "SV900", 0L);
 
 		assertThat(response.status()).isEqualTo(NguoiDungTrangThai.HOAT_DONG);
 		assertThat(user.getStatus()).isEqualTo(NguoiDungTrangThai.HOAT_DONG);
@@ -136,29 +141,96 @@ class IdentityServiceTest {
 
 	@Test
 	void managerCanLockAndUnlockAccountWithCurrentVersion() {
+		stubActor("CB900", MANAGER_EMAIL, RolePolicy.MANAGER);
 		VaiTro role = new VaiTro("SV", "Sinh viên");
 		NguoiDung user = user("SV900", "sv900@example.edu", "password", role, NguoiDungTrangThai.HOAT_DONG);
 		when(userRepository.findById("SV900")).thenReturn(Optional.of(user));
 
-		UserProfileResponse locked = identityService.changeUserStatus("SV900", NguoiDungTrangThai.BI_KHOA, 0L);
+		UserProfileResponse locked = identityService.changeUserStatus(MANAGER_EMAIL, "SV900",
+				NguoiDungTrangThai.BI_KHOA, 0L);
 		assertThat(locked.status()).isEqualTo(NguoiDungTrangThai.BI_KHOA);
 		assertThat(user.getStatus()).isEqualTo(NguoiDungTrangThai.BI_KHOA);
 
-		UserProfileResponse unlocked = identityService.changeUserStatus("SV900", NguoiDungTrangThai.HOAT_DONG, 0L);
+		UserProfileResponse unlocked = identityService.changeUserStatus(MANAGER_EMAIL, "SV900",
+				NguoiDungTrangThai.HOAT_DONG, 0L);
 		assertThat(unlocked.status()).isEqualTo(NguoiDungTrangThai.HOAT_DONG);
 		verify(userRepository, org.mockito.Mockito.times(2)).flush();
 	}
 
 	@Test
 	void statusChangeRejectsStaleVersion() {
+		stubActor("CB900", MANAGER_EMAIL, RolePolicy.MANAGER);
 		VaiTro role = new VaiTro("SV", "Sinh viên");
 		NguoiDung user = user("SV900", "sv900@example.edu", "password", role, NguoiDungTrangThai.HOAT_DONG);
 		when(userRepository.findById("SV900")).thenReturn(Optional.of(user));
 
-		assertThatThrownBy(() -> identityService.changeUserStatus("SV900", NguoiDungTrangThai.BI_KHOA, 1L))
+		assertThatThrownBy(
+				() -> identityService.changeUserStatus(MANAGER_EMAIL, "SV900", NguoiDungTrangThai.BI_KHOA, 1L))
 				.isInstanceOfSatisfying(ApiException.class,
 						exception -> assertThat(exception.getCode()).isEqualTo(ErrorCode.RESOURCE_CONFLICT));
 		verify(userRepository, never()).flush();
+	}
+
+	@Test
+	void managerCannotSeeAdministratorAccount() {
+		stubActor("CB900", MANAGER_EMAIL, RolePolicy.MANAGER);
+		NguoiDung administrator = user("ADMIN", ADMIN_EMAIL, "password",
+				new VaiTro(RolePolicy.ADMIN, "Quản trị hệ thống"), NguoiDungTrangThai.HOAT_DONG);
+		when(userRepository.findById("ADMIN")).thenReturn(Optional.of(administrator));
+
+		assertThatThrownBy(() -> identityService.getUser(MANAGER_EMAIL, "ADMIN"))
+				.isInstanceOfSatisfying(ApiException.class, exception -> {
+					assertThat(exception.getCode()).isEqualTo(ErrorCode.NOT_FOUND);
+					assertThat(exception.getStatus().value()).isEqualTo(404);
+				});
+	}
+
+	@Test
+	void managerCannotModifyAnotherManagerOrPromoteAUser() {
+		stubActor("CB900", MANAGER_EMAIL, RolePolicy.MANAGER);
+		NguoiDung otherManager = user("CB901", "other-manager@example.edu", "password",
+				new VaiTro(RolePolicy.MANAGER, "Cán bộ quản lý"), NguoiDungTrangThai.HOAT_DONG);
+		when(userRepository.findById("CB901")).thenReturn(Optional.of(otherManager));
+		AdminUserUpdateRequest managerUpdate = new AdminUserUpdateRequest("Cán bộ", "other-manager@example.edu", null,
+				RolePolicy.STUDENT, NguoiDungTrangThai.HOAT_DONG, 0L);
+
+		assertThatThrownBy(() -> identityService.updateUser(MANAGER_EMAIL, "CB901", managerUpdate))
+				.isInstanceOfSatisfying(ApiException.class,
+						exception -> assertThat(exception.getCode()).isEqualTo(ErrorCode.ACCESS_DENIED));
+
+		NguoiDung student = user("SV901", "student@example.edu", "password",
+				new VaiTro(RolePolicy.STUDENT, "Sinh viên"), NguoiDungTrangThai.HOAT_DONG);
+		when(userRepository.findById("SV901")).thenReturn(Optional.of(student));
+		AdminUserUpdateRequest promotion = new AdminUserUpdateRequest("Sinh viên", "student@example.edu", null,
+				RolePolicy.MANAGER, NguoiDungTrangThai.HOAT_DONG, 0L);
+		assertThatThrownBy(() -> identityService.updateUser(MANAGER_EMAIL, "SV901", promotion)).isInstanceOfSatisfying(
+				ApiException.class, exception -> assertThat(exception.getCode()).isEqualTo(ErrorCode.ACCESS_DENIED));
+	}
+
+	@Test
+	void administratorCanManageManagerButCannotLockItself() {
+		NguoiDung administrator = stubActor("ADMIN", ADMIN_EMAIL, RolePolicy.ADMIN);
+		NguoiDung manager = user("CB901", "other-manager@example.edu", "password",
+				new VaiTro(RolePolicy.MANAGER, "Cán bộ quản lý"), NguoiDungTrangThai.HOAT_DONG);
+		VaiTro instructorRole = new VaiTro(RolePolicy.INSTRUCTOR, "Giảng viên");
+		when(userRepository.findById("CB901")).thenReturn(Optional.of(manager));
+		when(roleRepository.findById(RolePolicy.INSTRUCTOR)).thenReturn(Optional.of(instructorRole));
+
+		UserProfileResponse updated = identityService.updateUser(ADMIN_EMAIL, "CB901",
+				new AdminUserUpdateRequest("Giảng viên", "other-manager@example.edu", null, RolePolicy.INSTRUCTOR,
+						NguoiDungTrangThai.HOAT_DONG, 0L));
+		assertThat(updated.roleId()).isEqualTo(RolePolicy.INSTRUCTOR);
+
+		when(userRepository.findById("ADMIN")).thenReturn(Optional.of(administrator));
+		assertThatThrownBy(() -> identityService.changeUserStatus(ADMIN_EMAIL, "ADMIN", NguoiDungTrangThai.BI_KHOA, 0L))
+				.isInstanceOfSatisfying(ApiException.class,
+						exception -> assertThat(exception.getCode()).isEqualTo(ErrorCode.RESOURCE_CONFLICT));
+	}
+
+	private NguoiDung stubActor(String id, String email, String roleId) {
+		NguoiDung actor = user(id, email, "password", new VaiTro(roleId, roleId), NguoiDungTrangThai.HOAT_DONG);
+		when(userRepository.findByEmailIgnoreCase(email)).thenReturn(Optional.of(actor));
+		return actor;
 	}
 
 	private NguoiDung user(String id, String email, String password, VaiTro role, NguoiDungTrangThai status) {

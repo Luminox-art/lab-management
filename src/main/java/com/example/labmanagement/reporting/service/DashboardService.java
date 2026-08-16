@@ -5,6 +5,7 @@ import com.example.labmanagement.common.error.ApiException;
 import com.example.labmanagement.common.error.ErrorCode;
 import com.example.labmanagement.identity.domain.NguoiDung;
 import com.example.labmanagement.identity.domain.NguoiDungTrangThai;
+import com.example.labmanagement.identity.domain.RolePolicy;
 import com.example.labmanagement.identity.repository.NguoiDungRepository;
 import com.example.labmanagement.incident.domain.MucDoSuCo;
 import com.example.labmanagement.reporting.domain.DashboardGroup;
@@ -27,7 +28,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class DashboardService {
 
-	private static final String ROLE_MANAGER = "CBQL";
 	private final NguoiDungRepository userRepository;
 	private final DashboardQueryRepository queryRepository;
 	private final Clock clock;
@@ -81,7 +81,7 @@ public class DashboardService {
 		String normalized = email == null ? null : email.trim().toLowerCase(Locale.ROOT);
 		NguoiDung user = normalized == null ? null : userRepository.findByEmailIgnoreCase(normalized).orElse(null);
 		if (user == null || user.getStatus() != NguoiDungTrangThai.HOAT_DONG
-				|| !ROLE_MANAGER.equals(user.getRole().getId())) {
+				|| !RolePolicy.isManager(user.getRole().getId())) {
 			throw new ApiException(ErrorCode.ACCESS_DENIED, HttpStatus.FORBIDDEN,
 					"Chỉ cán bộ quản lý đang hoạt động được xem dashboard.");
 		}

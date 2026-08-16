@@ -104,8 +104,10 @@ public class SchedulingWebController {
 		model.addAttribute("previousDate", selectedDate.minusDays(step));
 		model.addAttribute("nextDate", selectedDate.plusDays(step));
 		model.addAttribute("today", LocalDate.now());
-		model.addAttribute("manager", authentication != null && authentication.getAuthorities().stream()
-				.anyMatch(authority -> "ROLE_CBQL".equals(authority.getAuthority())));
+		model.addAttribute("manager",
+				authentication != null && authentication.getAuthorities().stream()
+						.anyMatch(authority -> "ROLE_CBQL".equals(authority.getAuthority())
+								|| "ROLE_ADMIN".equals(authority.getAuthority())));
 		return "scheduling/calendar";
 	}
 

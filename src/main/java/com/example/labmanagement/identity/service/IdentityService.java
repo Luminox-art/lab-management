@@ -4,6 +4,7 @@ import com.example.labmanagement.common.error.ApiException;
 import com.example.labmanagement.common.error.ErrorCode;
 import com.example.labmanagement.identity.domain.NguoiDung;
 import com.example.labmanagement.identity.domain.NguoiDungTrangThai;
+import com.example.labmanagement.identity.domain.RolePolicy;
 import com.example.labmanagement.identity.domain.VaiTro;
 import com.example.labmanagement.identity.dto.AdminUserUpdateRequest;
 import com.example.labmanagement.identity.dto.PasswordChangeRequest;
@@ -82,25 +83,35 @@ public class IdentityService {
 	}
 
 	@Transactional(readOnly = true)
-	public Page<UserProfileResponse> searchUsers(NguoiDungTrangThai status, String roleId, String keyword, int page,
-			int size) {
+	public Page<UserProfileResponse> searchUsers(String actorEmail, NguoiDungTrangThai status, String roleId,
+			String keyword, int page, int size) {
+		NguoiDung actor = findManagementActor(actorEmail);
 		PageRequest pageable = PageRequest.of(Math.max(page, 0), Math.min(Math.max(size, 1), 100),
 				Sort.by(Sort.Direction.ASC, "id"));
-		return userRepository.search(status, normalizeFilter(roleId), normalizeFilter(keyword), pageable)
+		String excludedRoleId = RolePolicy.isAdministrator(actor.getRole().getId()) ? null : RolePolicy.ADMIN;
+		return userRepository
+				.search(status, normalizeFilter(roleId), excludedRoleId, normalizeFilter(keyword), pageable)
 				.map(this::toResponse);
 	}
 
 	@Transactional(readOnly = true)
-	public UserProfileResponse getUser(String id) {
-		return toResponse(findUserById(id));
+	public UserProfileResponse getUser(String actorEmail, String id) {
+		NguoiDung actor = findManagementActor(actorEmail);
+		NguoiDung target = findUserById(id);
+		assertCanManageTarget(actor, target);
+		return toResponse(target);
 	}
 
 	@Transactional
-	public UserProfileResponse updateUser(String id, AdminUserUpdateRequest request) {
+	public UserProfileResponse updateUser(String actorEmail, String id, AdminUserUpdateRequest request) {
+		NguoiDung actor = findManagementActor(actorEmail);
 		NguoiDung user = findUserById(id);
+		assertCanManageTarget(actor, user);
 		if (user.getVersion() != request.version()) {
 			throw conflict("Dữ liệu tài khoản đã được cập nhật bởi yêu cầu khác.");
 		}
+		assertAssignableRole(actor, request.roleId());
+		assertAdministratorChangeAllowed(actor, user, request.roleId(), request.status());
 		String email = normalizeEmail(request.email());
 		if (userRepository.existsByEmailIgnoreCaseAndIdNot(email, user.getId())) {
 			throw conflict("Email đã được sử dụng.");
@@ -112,8 +123,10 @@ public class IdentityService {
 	}
 
 	@Transactional
-	public UserProfileResponse approveUser(String id, long version) {
+	public UserProfileResponse approveUser(String actorEmail, String id, long version) {
+		NguoiDung actor = findManagementActor(actorEmail);
 		NguoiDung user = findUserById(id);
+		assertCanManageTarget(actor, user);
 		if (user.getVersion() != version) {
 			throw conflict("Dữ liệu tài khoản đã được cập nhật bởi yêu cầu khác.");
 		}
@@ -126,11 +139,14 @@ public class IdentityService {
 	}
 
 	@Transactional
-	public UserProfileResponse changeUserStatus(String id, NguoiDungTrangThai status, long version) {
+	public UserProfileResponse changeUserStatus(String actorEmail, String id, NguoiDungTrangThai status, long version) {
+		NguoiDung actor = findManagementActor(actorEmail);
 		NguoiDung user = findUserById(id);
+		assertCanManageTarget(actor, user);
 		if (user.getVersion() != version) {
 			throw conflict("Dữ liệu tài khoản đã được cập nhật bởi yêu cầu khác.");
 		}
+		assertAdministratorChangeAllowed(actor, user, user.getRole().getId(), status);
 		user.changeStatus(status);
 		userRepository.flush();
 		return toResponse(user);
@@ -153,6 +169,52 @@ public class IdentityService {
 	private NguoiDung findUserById(String id) {
 		return userRepository.findById(id.trim()).orElseThrow(
 				() -> new ApiException(ErrorCode.NOT_FOUND, HttpStatus.NOT_FOUND, "Không tìm thấy tài khoản."));
+	}
+
+	private NguoiDung findManagementActor(String email) {
+		NguoiDung actor = findUserByEmail(email);
+		if (actor.getStatus() != NguoiDungTrangThai.HOAT_DONG || !RolePolicy.isManager(actor.getRole().getId())) {
+			throw accessDenied("Tài khoản không có quyền quản lý người dùng.");
+		}
+		return actor;
+	}
+
+	private void assertCanManageTarget(NguoiDung actor, NguoiDung target) {
+		if (RolePolicy.isAdministrator(actor.getRole().getId())) {
+			return;
+		}
+		if (RolePolicy.isAdministrator(target.getRole().getId())) {
+			throw new ApiException(ErrorCode.NOT_FOUND, HttpStatus.NOT_FOUND, "Không tìm thấy tài khoản.");
+		}
+		if (RolePolicy.MANAGER.equals(target.getRole().getId())) {
+			throw accessDenied("Cán bộ quản lý không được thay đổi tài khoản quản lý khác.");
+		}
+	}
+
+	private void assertAssignableRole(NguoiDung actor, String requestedRoleId) {
+		if (!RolePolicy.isAdministrator(actor.getRole().getId()) && !RolePolicy.INSTRUCTOR.equals(requestedRoleId)
+				&& !RolePolicy.STUDENT.equals(requestedRoleId)) {
+			throw accessDenied("Chỉ quản trị viên được gán vai trò quản lý hoặc quản trị.");
+		}
+	}
+
+	private void assertAdministratorChangeAllowed(NguoiDung actor, NguoiDung target, String requestedRoleId,
+			NguoiDungTrangThai requestedStatus) {
+		if (!RolePolicy.isAdministrator(target.getRole().getId())) {
+			return;
+		}
+		boolean removesAdministrator = !RolePolicy.ADMIN.equals(requestedRoleId)
+				|| requestedStatus != NguoiDungTrangThai.HOAT_DONG;
+		if (!removesAdministrator) {
+			return;
+		}
+		if (actor.getId().equals(target.getId())) {
+			throw conflict("Quản trị viên không thể tự khóa hoặc hạ vai trò của chính mình.");
+		}
+		if (target.getStatus() == NguoiDungTrangThai.HOAT_DONG
+				&& userRepository.countByRole_IdAndStatus(RolePolicy.ADMIN, NguoiDungTrangThai.HOAT_DONG) <= 1) {
+			throw conflict("Hệ thống phải duy trì ít nhất một quản trị viên đang hoạt động.");
+		}
 	}
 
 	private VaiTro findRole(String roleId) {
@@ -182,5 +244,9 @@ public class IdentityService {
 
 	private ApiException conflict(String message) {
 		return new ApiException(ErrorCode.RESOURCE_CONFLICT, HttpStatus.CONFLICT, message);
+	}
+
+	private ApiException accessDenied(String message) {
+		return new ApiException(ErrorCode.ACCESS_DENIED, HttpStatus.FORBIDDEN, message);
 	}
 }

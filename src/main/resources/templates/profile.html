@@ -22,7 +22,7 @@
         <h2 id="account-information-heading">Thông tin tài khoản</h2>
         <dl class="result-details">
             <div><dt>Mã định danh</dt><dd th:text="${profile.id}"></dd></div>
-            <div><dt>Vai trò</dt><dd th:text="${profile.roleId == 'CBQL' ? 'Cán bộ quản lý' : (profile.roleId == 'GV' ? 'Giảng viên' : 'Sinh viên')}"></dd></div>
+			<div><dt>Vai trò</dt><dd th:text="${profile.roleId == 'ADMIN' ? 'Quản trị hệ thống' : (profile.roleId == 'CBQL' ? 'Cán bộ quản lý' : (profile.roleId == 'GV' ? 'Giảng viên' : 'Sinh viên'))}"></dd></div>
             <div><dt>Trạng thái</dt><dd><span class="status-chip" th:classappend="| status-${#strings.toLowerCase(profile.status.name())}|" th:text="${profile.status.name() == 'HOAT_DONG' ? 'Hoạt động' : (profile.status.name() == 'CHO_DUYET' ? 'Chờ duyệt' : 'Bị khóa')}"></span></dd></div>
         </dl>
     </section>

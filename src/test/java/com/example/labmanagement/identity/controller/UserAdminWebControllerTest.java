@@ -37,6 +37,7 @@ import org.springframework.test.web.servlet.MockMvc;
 class UserAdminWebControllerTest {
 
 	private static final String MANAGER_EMAIL = "manager@example.edu";
+	private static final String ADMIN_EMAIL = "admin@example.edu";
 	private static final String ACCOUNT_ID = "SV900";
 
 	@Autowired
@@ -48,7 +49,7 @@ class UserAdminWebControllerTest {
 	@Test
 	void accountManagementIsVisibleOnlyToManagerAndSupportsFilters() throws Exception {
 		UserProfileResponse pending = profile(NguoiDungTrangThai.CHO_DUYET);
-		when(identityService.searchUsers(NguoiDungTrangThai.CHO_DUYET, "SV", "sv900", 0, 20))
+		when(identityService.searchUsers(MANAGER_EMAIL, NguoiDungTrangThai.CHO_DUYET, "SV", "sv900", 0, 20))
 				.thenReturn(new PageImpl<>(List.of(pending), PageRequest.of(0, 20), 1));
 
 		mockMvc.perform(get("/admin/users")).andExpect(status().is3xxRedirection())
@@ -68,8 +69,8 @@ class UserAdminWebControllerTest {
 		UserProfileResponse active = profile(NguoiDungTrangThai.HOAT_DONG);
 		AdminUserUpdateRequest request = new AdminUserUpdateRequest("Sinh viên mới", "sv900@example.edu", "CNTT02",
 				"GV", NguoiDungTrangThai.BI_KHOA, 0L);
-		when(identityService.getUser(ACCOUNT_ID)).thenReturn(active);
-		when(identityService.updateUser(ACCOUNT_ID, request))
+		when(identityService.getUser(MANAGER_EMAIL, ACCOUNT_ID)).thenReturn(active);
+		when(identityService.updateUser(MANAGER_EMAIL, ACCOUNT_ID, request))
 				.thenReturn(new UserProfileResponse(ACCOUNT_ID, "Sinh viên mới", "sv900@example.edu", "CNTT02", "GV",
 						NguoiDungTrangThai.BI_KHOA, 1, Instant.EPOCH, Instant.EPOCH));
 
@@ -82,40 +83,59 @@ class UserAdminWebControllerTest {
 				.param("fullName", "Sinh viên mới").param("email", "sv900@example.edu").param("classOrUnit", "CNTT02")
 				.param("roleId", "GV").param("status", "BI_KHOA").param("version", "0"))
 				.andExpect(status().is3xxRedirection()).andExpect(redirectedUrl("/admin/users"));
-		verify(identityService).updateUser(ACCOUNT_ID, request);
+		verify(identityService).updateUser(MANAGER_EMAIL, ACCOUNT_ID, request);
 	}
 
 	@Test
 	void approvalRequiresManagerAndCsrfThenActivatesAccount() throws Exception {
-		when(identityService.approveUser(ACCOUNT_ID, 0L)).thenReturn(profile(NguoiDungTrangThai.HOAT_DONG));
+		when(identityService.approveUser(MANAGER_EMAIL, ACCOUNT_ID, 0L))
+				.thenReturn(profile(NguoiDungTrangThai.HOAT_DONG));
 
 		mockMvc.perform(post("/admin/users/{id}/approve", ACCOUNT_ID).with(user(MANAGER_EMAIL).roles("CBQL"))
 				.param("version", "0")).andExpect(status().isForbidden());
 		mockMvc.perform(post("/admin/users/{id}/approve", ACCOUNT_ID).with(user("student@example.edu").roles("SV"))
 				.with(csrf()).param("version", "0")).andExpect(status().isForbidden());
-		verify(identityService, never()).approveUser(ACCOUNT_ID, 0L);
+		verify(identityService, never()).approveUser(MANAGER_EMAIL, ACCOUNT_ID, 0L);
 
 		mockMvc.perform(post("/admin/users/{id}/approve", ACCOUNT_ID).with(user(MANAGER_EMAIL).roles("CBQL"))
 				.with(csrf()).param("version", "0")).andExpect(status().is3xxRedirection())
 				.andExpect(redirectedUrl("/admin/users"));
-		verify(identityService).approveUser(ACCOUNT_ID, 0L);
+		verify(identityService).approveUser(MANAGER_EMAIL, ACCOUNT_ID, 0L);
 	}
 
 	@Test
 	void lockAndUnlockRequireManagerAndCsrf() throws Exception {
-		when(identityService.changeUserStatus(ACCOUNT_ID, NguoiDungTrangThai.BI_KHOA, 0L))
+		when(identityService.changeUserStatus(MANAGER_EMAIL, ACCOUNT_ID, NguoiDungTrangThai.BI_KHOA, 0L))
 				.thenReturn(profile(NguoiDungTrangThai.BI_KHOA));
 
 		mockMvc.perform(post("/admin/users/{id}/status", ACCOUNT_ID).with(user(MANAGER_EMAIL).roles("CBQL"))
 				.param("status", "BI_KHOA").param("version", "0")).andExpect(status().isForbidden());
 		mockMvc.perform(post("/admin/users/{id}/status", ACCOUNT_ID).with(user("student@example.edu").roles("SV"))
 				.with(csrf()).param("status", "BI_KHOA").param("version", "0")).andExpect(status().isForbidden());
-		verify(identityService, never()).changeUserStatus(ACCOUNT_ID, NguoiDungTrangThai.BI_KHOA, 0L);
+		verify(identityService, never()).changeUserStatus(MANAGER_EMAIL, ACCOUNT_ID, NguoiDungTrangThai.BI_KHOA, 0L);
 
 		mockMvc.perform(post("/admin/users/{id}/status", ACCOUNT_ID).with(user(MANAGER_EMAIL).roles("CBQL"))
 				.with(csrf()).param("status", "BI_KHOA").param("version", "0")).andExpect(status().is3xxRedirection())
 				.andExpect(redirectedUrl("/admin/users"));
-		verify(identityService).changeUserStatus(ACCOUNT_ID, NguoiDungTrangThai.BI_KHOA, 0L);
+		verify(identityService).changeUserStatus(MANAGER_EMAIL, ACCOUNT_ID, NguoiDungTrangThai.BI_KHOA, 0L);
+	}
+
+	@Test
+	void administratorCanSeeAdministratorRoleWhileManagerSeesOtherManagersReadOnly() throws Exception {
+		UserProfileResponse administrator = new UserProfileResponse("ADMIN", "Admin", ADMIN_EMAIL, null, "ADMIN",
+				NguoiDungTrangThai.HOAT_DONG, 0, Instant.EPOCH, Instant.EPOCH);
+		when(identityService.searchUsers(ADMIN_EMAIL, null, null, null, 0, 20))
+				.thenReturn(new PageImpl<>(List.of(administrator), PageRequest.of(0, 20), 1));
+		mockMvc.perform(get("/admin/users").with(user(ADMIN_EMAIL).roles("ADMIN"))).andExpect(status().isOk())
+				.andExpect(content().string(Matchers.containsString("Quản trị hệ thống")));
+
+		UserProfileResponse manager = new UserProfileResponse("CB901", "Cán bộ", "cb901@example.edu", null, "CBQL",
+				NguoiDungTrangThai.HOAT_DONG, 0, Instant.EPOCH, Instant.EPOCH);
+		when(identityService.searchUsers(MANAGER_EMAIL, null, null, null, 0, 20))
+				.thenReturn(new PageImpl<>(List.of(manager), PageRequest.of(0, 20), 1));
+		mockMvc.perform(get("/admin/users").with(user(MANAGER_EMAIL).roles("CBQL"))).andExpect(status().isOk())
+				.andExpect(content().string(Matchers.containsString("Chỉ xem")))
+				.andExpect(content().string(Matchers.not(Matchers.containsString("href=\"/admin/users/CB901/edit\""))));
 	}
 
 	private UserProfileResponse profile(NguoiDungTrangThai status) {

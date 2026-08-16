@@ -98,7 +98,7 @@ class RegistrationQueryService {
 				Sort.by(Sort.Direction.DESC, "createdAt", "id"));
 		String roleId = actor.getRole().getId();
 		Page<PhieuDangKy> registrations;
-		if (RegistrationValidator.ROLE_MANAGER.equals(roleId)) {
+		if (validator.isManager(roleId)) {
 			registrations = registrationRepository.findQueue(type, PhieuDangKyTrangThai.CHO_DUYET,
 					validator.normalizeOptional(roomId), date, validator.normalizeOptional(creator), pageable);
 		} else if (RegistrationValidator.ROLE_INSTRUCTOR.equals(roleId)) {
@@ -108,7 +108,7 @@ class RegistrationQueryService {
 		} else {
 			throw validator.accessDenied("Vai trò hiện tại không được truy cập phiếu đăng ký.");
 		}
-		return RegistrationValidator.ROLE_MANAGER.equals(roleId)
+		return validator.isManager(roleId)
 				? registrations.map(this::toManagerSummary)
 				: registrations.map(this::toSummary);
 	}
