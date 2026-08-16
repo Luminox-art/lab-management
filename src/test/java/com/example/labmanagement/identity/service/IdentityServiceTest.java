@@ -134,6 +134,33 @@ class IdentityServiceTest {
 		verify(userRepository).flush();
 	}
 
+	@Test
+	void managerCanLockAndUnlockAccountWithCurrentVersion() {
+		VaiTro role = new VaiTro("SV", "Sinh viên");
+		NguoiDung user = user("SV900", "sv900@example.edu", "password", role, NguoiDungTrangThai.HOAT_DONG);
+		when(userRepository.findById("SV900")).thenReturn(Optional.of(user));
+
+		UserProfileResponse locked = identityService.changeUserStatus("SV900", NguoiDungTrangThai.BI_KHOA, 0L);
+		assertThat(locked.status()).isEqualTo(NguoiDungTrangThai.BI_KHOA);
+		assertThat(user.getStatus()).isEqualTo(NguoiDungTrangThai.BI_KHOA);
+
+		UserProfileResponse unlocked = identityService.changeUserStatus("SV900", NguoiDungTrangThai.HOAT_DONG, 0L);
+		assertThat(unlocked.status()).isEqualTo(NguoiDungTrangThai.HOAT_DONG);
+		verify(userRepository, org.mockito.Mockito.times(2)).flush();
+	}
+
+	@Test
+	void statusChangeRejectsStaleVersion() {
+		VaiTro role = new VaiTro("SV", "Sinh viên");
+		NguoiDung user = user("SV900", "sv900@example.edu", "password", role, NguoiDungTrangThai.HOAT_DONG);
+		when(userRepository.findById("SV900")).thenReturn(Optional.of(user));
+
+		assertThatThrownBy(() -> identityService.changeUserStatus("SV900", NguoiDungTrangThai.BI_KHOA, 1L))
+				.isInstanceOfSatisfying(ApiException.class,
+						exception -> assertThat(exception.getCode()).isEqualTo(ErrorCode.RESOURCE_CONFLICT));
+		verify(userRepository, never()).flush();
+	}
+
 	private NguoiDung user(String id, String email, String password, VaiTro role, NguoiDungTrangThai status) {
 		return new NguoiDung(id, "Người dùng", email, passwordEncoder.encode(password), null, role, status);
 	}

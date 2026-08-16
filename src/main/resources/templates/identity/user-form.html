@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Cập nhật tài khoản</title>
+    <link rel="stylesheet" th:href="@{/css/catalog.css}">
+</head>
+<body>
+<a class="skip-link" href="#main-content">Bỏ qua điều hướng</a>
+<header class="app-header" th:replace="~{fragments/navigation :: header}"></header>
+<main class="page-shell" id="main-content" tabindex="-1">
+    <div class="page-heading">
+        <div>
+            <h1>Cập nhật tài khoản</h1>
+            <p class="subtitle">Thay đổi hồ sơ, vai trò và quyền đăng nhập của tài khoản <strong th:text="${userId}"></strong>.</p>
+        </div>
+        <a class="button button-secondary" th:href="@{/admin/users}">Quay lại danh sách</a>
+    </div>
+
+    <section class="panel" aria-labelledby="user-form-heading">
+        <h2 id="user-form-heading">Thông tin tài khoản</h2>
+        <form method="post" th:action="@{/admin/users/{id}(id=${userId})}" th:object="${userForm}"
+              data-confirm="Xác nhận lưu thay đổi tài khoản này?">
+            <input th:name="${_csrf.parameterName}" th:value="${_csrf.token}" type="hidden">
+            <input th:field="*{version}" type="hidden">
+            <div class="message message-error" role="alert" th:if="${#fields.hasGlobalErrors()}">
+                <p th:each="item : ${#fields.globalErrors()}" th:text="${item}"></p>
+            </div>
+            <div class="form-grid">
+                <div class="field">
+                    <label for="id">Mã tài khoản</label>
+                    <input id="id" type="text" th:value="${userId}" readonly aria-describedby="id-help">
+                    <p class="helper" id="id-help">Mã tài khoản không thể thay đổi.</p>
+                </div>
+                <div class="field">
+                    <label for="fullName">Họ và tên <span aria-hidden="true">*</span></label>
+                    <input id="fullName" th:field="*{fullName}" type="text" maxlength="150" required autofocus
+                           aria-describedby="fullName-error">
+                    <p class="field-error" id="fullName-error" role="alert" th:errors="*{fullName}"></p>
+                </div>
+                <div class="field">
+                    <label for="email">Email <span aria-hidden="true">*</span></label>
+                    <input id="email" th:field="*{email}" type="email" maxlength="254" required
+                           aria-describedby="email-error">
+                    <p class="field-error" id="email-error" role="alert" th:errors="*{email}"></p>
+                </div>
+                <div class="field">
+                    <label for="classOrUnit">Lớp/đơn vị</label>
+                    <input id="classOrUnit" th:field="*{classOrUnit}" type="text" maxlength="150"
+                           aria-describedby="classOrUnit-error">
+                    <p class="field-error" id="classOrUnit-error" role="alert" th:errors="*{classOrUnit}"></p>
+                </div>
+                <div class="field">
+                    <label for="roleId">Vai trò <span aria-hidden="true">*</span></label>
+                    <select id="roleId" th:field="*{roleId}" required aria-describedby="roleId-help roleId-error">
+                        <option th:each="item : ${roles}" th:value="${item}"
+                                th:text="${item == 'CBQL' ? 'Cán bộ quản lý' : (item == 'GV' ? 'Giảng viên' : 'Sinh viên')}"></option>
+                    </select>
+                    <p class="helper" id="roleId-help">Quyền mới áp dụng đầy đủ từ lần đăng nhập tiếp theo.</p>
+                    <p class="field-error" id="roleId-error" role="alert" th:errors="*{roleId}"></p>
+                </div>
+                <div class="field">
+                    <label for="status">Trạng thái <span aria-hidden="true">*</span></label>
+                    <select id="status" th:field="*{status}" required aria-describedby="status-help status-error">
+                        <option th:each="item : ${statuses}" th:value="${item}"
+                                th:text="${item.name() == 'CHO_DUYET' ? 'Chờ duyệt' : (item.name() == 'HOAT_DONG' ? 'Hoạt động' : 'Bị khóa')}"></option>
+                    </select>
+                    <p class="helper" id="status-help">“Bị khóa” ngăn các lần đăng nhập mới nhưng không xóa dữ liệu tài khoản.</p>
+                    <p class="field-error" id="status-error" role="alert" th:errors="*{status}"></p>
+                </div>
+            </div>
+            <div class="toolbar form-actions">
+                <button type="submit">Lưu thay đổi</button>
+                <a class="button button-secondary" th:href="@{/admin/users}">Hủy</a>
+            </div>
+        </form>
+    </section>
+</main>
+</body>
+</html>

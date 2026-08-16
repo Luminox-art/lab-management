@@ -1,6 +1,9 @@
 package com.example.labmanagement.identity.controller;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -8,11 +11,13 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
 import com.example.labmanagement.identity.domain.NguoiDungTrangThai;
+import com.example.labmanagement.identity.dto.ProfileUpdateRequest;
 import com.example.labmanagement.identity.dto.RegistrationRequest;
 import com.example.labmanagement.identity.dto.UserProfileResponse;
 import com.example.labmanagement.identity.service.IdentityService;
@@ -62,8 +67,68 @@ class IdentityWebControllerTest {
 		when(identityService.getProfile("student@example.edu")).thenReturn(profile("student@example.edu"));
 
 		mockMvc.perform(get("/profile").with(user("student@example.edu").roles("SV"))).andExpect(status().isOk())
-				.andExpect(view().name("profile"));
+				.andExpect(view().name("profile"))
+				.andExpect(content().string(org.hamcrest.Matchers.containsString("Chỉnh sửa hồ sơ")))
+				.andExpect(content().string(org.hamcrest.Matchers.containsString("Đổi mật khẩu")));
 		verify(identityService).getProfile("student@example.edu");
+	}
+
+	@Test
+	void profileUpdateUsesCurrentPrincipalAndRedirects() throws Exception {
+		when(identityService.updateProfile(eq("student@example.edu"), any(ProfileUpdateRequest.class)))
+				.thenReturn(profile("student@example.edu"));
+
+		mockMvc.perform(post("/profile").with(user("student@example.edu").roles("SV")).with(csrf())
+				.param("fullName", "Tên mới").param("email", "student@example.edu").param("classOrUnit", "CNTT02"))
+				.andExpect(status().is3xxRedirection()).andExpect(redirectedUrl("/profile?updated"));
+
+		verify(identityService).updateProfile(eq("student@example.edu"),
+				argThat(request -> request.fullName().equals("Tên mới") && request.classOrUnit().equals("CNTT02")));
+	}
+
+	@Test
+	void profileEmailChangeLogsOutAndRequiresLoginWithNewEmail() throws Exception {
+		when(identityService.updateProfile(eq("student@example.edu"), any(ProfileUpdateRequest.class)))
+				.thenReturn(profile("new-email@example.edu"));
+
+		mockMvc.perform(post("/profile").with(user("student@example.edu").roles("SV")).with(csrf())
+				.param("fullName", "Sinh viên").param("email", "new-email@example.edu").param("classOrUnit", "CNTT01"))
+				.andExpect(status().is3xxRedirection()).andExpect(redirectedUrl("/login?profileUpdated"));
+	}
+
+	@Test
+	void passwordChangeRequiresMatchingConfirmationAndCurrentPrincipal() throws Exception {
+		when(identityService.getProfile("student@example.edu")).thenReturn(profile("student@example.edu"));
+
+		mockMvc.perform(post("/profile/password").with(user("student@example.edu").roles("SV")).with(csrf())
+				.param("currentPassword", "old-password").param("newPassword", "new-password")
+				.param("confirmPassword", "different-password")).andExpect(status().isOk())
+				.andExpect(view().name("profile"))
+				.andExpect(model().attributeHasFieldErrors("passwordForm", "confirmPassword"))
+				.andExpect(content().string(
+						org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("value=\"old-password\""))))
+				.andExpect(content().string(
+						org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("value=\"new-password\""))))
+				.andExpect(content().string(org.hamcrest.Matchers
+						.not(org.hamcrest.Matchers.containsString("value=\"different-password\""))));
+		verify(identityService, never()).changePassword(any(), any());
+
+		mockMvc.perform(post("/profile/password").with(user("student@example.edu").roles("SV")).with(csrf())
+				.param("currentPassword", "old-password").param("newPassword", "new-password")
+				.param("confirmPassword", "new-password")).andExpect(status().is3xxRedirection())
+				.andExpect(redirectedUrl("/profile?passwordUpdated"));
+		verify(identityService).changePassword(eq("student@example.edu"),
+				argThat(request -> request.currentPassword().equals("old-password")
+						&& request.newPassword().equals("new-password")));
+	}
+
+	@Test
+	void profileChangesRequireCsrf() throws Exception {
+		mockMvc.perform(post("/profile").with(user("student@example.edu").roles("SV")).param("fullName", "Tên mới")
+				.param("email", "student@example.edu")).andExpect(status().isForbidden());
+		mockMvc.perform(post("/profile/password").with(user("student@example.edu").roles("SV"))
+				.param("currentPassword", "old-password").param("newPassword", "new-password")
+				.param("confirmPassword", "new-password")).andExpect(status().isForbidden());
 	}
 
 	@Test
@@ -76,7 +141,7 @@ class IdentityWebControllerTest {
 				.andExpect(content().string(org.hamcrest.Matchers.containsString("Tạo phiếu mới"))).andExpect(content()
 						.string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("Quản trị vận hành"))));
 		mockMvc.perform(get("/home").with(user("manager@example.edu").roles("CBQL"))).andExpect(status().isOk())
-				.andExpect(content().string(org.hamcrest.Matchers.containsString("Duyệt tài khoản mới")))
+				.andExpect(content().string(org.hamcrest.Matchers.containsString("Quản lý tài khoản")))
 				.andExpect(content().string(org.hamcrest.Matchers.containsString("Quản trị vận hành")));
 	}
 

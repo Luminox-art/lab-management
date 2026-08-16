@@ -18,6 +18,7 @@
         </div>
         <p class="message message-error" role="alert" th:if="${param.error}">Thông tin đăng nhập không hợp lệ. Hãy kiểm tra email, mật khẩu và thử lại.</p>
         <p class="message message-success" role="status" th:if="${param.logout}">Bạn đã đăng xuất an toàn.</p>
+        <p class="message message-success" role="status" th:if="${param.profileUpdated}">Hồ sơ đã được cập nhật. Hãy đăng nhập lại bằng email mới.</p>
         <p class="message message-warning" role="alert" th:if="${param.expired}">Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.</p>
         <form method="post" th:action="@{/login}">
             <input th:name="${_csrf.parameterName}" th:value="${_csrf.token}" type="hidden">

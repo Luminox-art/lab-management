@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Duyệt tài khoản</title>
+    <title>Quản lý tài khoản</title>
     <link rel="stylesheet" th:href="@{/css/catalog.css}">
 </head>
 <body>
@@ -12,8 +12,8 @@
 <main class="page-shell" id="main-content" tabindex="-1">
     <div class="page-heading">
         <div>
-            <h1>Duyệt tài khoản</h1>
-            <p class="subtitle">Kiểm tra các tài khoản mới đăng ký trước khi cho phép đăng nhập hệ thống.</p>
+            <h1>Quản lý tài khoản</h1>
+            <p class="subtitle">Tìm kiếm, phê duyệt, cập nhật vai trò và kiểm soát quyền đăng nhập của người dùng.</p>
         </div>
     </div>
 
@@ -29,6 +29,30 @@
                     <input id="keyword" name="keyword" type="search" th:value="${keyword}"
                            placeholder="Nhập thông tin cần tìm">
                 </div>
+                <div class="field">
+                    <label for="role">Vai trò</label>
+                    <select id="role" name="role">
+                        <option value="">Tất cả vai trò</option>
+                        <option th:each="item : ${roles}" th:value="${item}" th:selected="${item == role}"
+                                th:text="${item == 'CBQL' ? 'Cán bộ quản lý' : (item == 'GV' ? 'Giảng viên' : 'Sinh viên')}"></option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label for="status">Trạng thái</label>
+                    <select id="status" name="status">
+                        <option value="">Tất cả trạng thái</option>
+                        <option th:each="item : ${statuses}" th:value="${item}" th:selected="${item == status}"
+                                th:text="${item.name() == 'CHO_DUYET' ? 'Chờ duyệt' : (item.name() == 'HOAT_DONG' ? 'Hoạt động' : 'Bị khóa')}"></option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label for="size">Số dòng mỗi trang</label>
+                    <select id="size" name="size">
+                        <option value="20" th:selected="${result.size == 20}">20</option>
+                        <option value="50" th:selected="${result.size == 50}">50</option>
+                        <option value="100" th:selected="${result.size == 100}">100</option>
+                    </select>
+                </div>
             </div>
             <div class="toolbar form-actions">
                 <button type="submit">Tìm kiếm</button>
@@ -37,52 +61,76 @@
         </form>
     </section>
 
-    <p class="result-summary" aria-live="polite" th:text="|Có ${result.totalElements} tài khoản đang chờ duyệt|">
-        Có 0 tài khoản đang chờ duyệt
+    <p class="result-summary" aria-live="polite" th:text="|Có ${result.totalElements} tài khoản phù hợp|">
+        Có 0 tài khoản phù hợp
     </p>
-    <div class="table-wrap" role="region" aria-label="Danh sách tài khoản chờ duyệt" tabindex="0">
+    <div class="table-wrap" role="region" aria-label="Danh sách tài khoản" tabindex="0">
         <table>
             <thead>
             <tr>
-                <th scope="col">Mã tài khoản</th>
-                <th scope="col">Họ tên</th>
+                <th scope="col">Tài khoản</th>
                 <th scope="col">Email</th>
                 <th scope="col">Lớp/đơn vị</th>
-                <th scope="col">Vai trò đăng ký</th>
+                <th scope="col">Vai trò</th>
                 <th scope="col">Trạng thái</th>
                 <th scope="col">Thao tác</th>
             </tr>
             </thead>
             <tbody>
             <tr th:each="account : ${result.content}">
-                <td th:text="${account.id}"></td>
-                <td th:text="${account.fullName}"></td>
+                <td>
+                    <strong th:text="${account.id}"></strong><br>
+                    <span th:text="${account.fullName}"></span>
+                </td>
                 <td th:text="${account.email}"></td>
                 <td th:text="${account.classOrUnit ?: '—'}"></td>
-                <td th:text="${account.roleId == 'GV' ? 'Giảng viên' : (account.roleId == 'SV' ? 'Sinh viên' : account.roleId)}"></td>
-                <td><span class="status-chip status-cho_duyet">Chờ duyệt</span></td>
+                <td th:text="${account.roleId == 'CBQL' ? 'Cán bộ quản lý' : (account.roleId == 'GV' ? 'Giảng viên' : 'Sinh viên')}"></td>
                 <td>
-                    <form method="post" th:action="@{/admin/users/{id}/approve(id=${account.id})}"
-                          data-confirm="Xác nhận kích hoạt tài khoản này? Người dùng sẽ có thể đăng nhập ngay sau khi phê duyệt.">
-                        <input th:name="${_csrf.parameterName}" th:value="${_csrf.token}" type="hidden">
-                        <input name="version" th:value="${account.version}" type="hidden">
-                        <button class="button-primary" type="submit">Phê duyệt</button>
-                    </form>
+                    <span class="status-chip"
+                          th:classappend="| status-${#strings.toLowerCase(account.status.name())}|"
+                          th:text="${account.status.name() == 'CHO_DUYET' ? 'Chờ duyệt' : (account.status.name() == 'HOAT_DONG' ? 'Hoạt động' : 'Bị khóa')}"></span>
+                </td>
+                <td>
+                    <div class="actions">
+                        <a class="button button-secondary" th:href="@{/admin/users/{id}/edit(id=${account.id})}">Chỉnh sửa</a>
+                        <form method="post" th:if="${account.status.name() == 'CHO_DUYET'}"
+                              th:action="@{/admin/users/{id}/approve(id=${account.id})}"
+                              data-confirm="Xác nhận phê duyệt tài khoản? Người dùng sẽ có thể đăng nhập ngay.">
+                            <input th:name="${_csrf.parameterName}" th:value="${_csrf.token}" type="hidden">
+                            <input name="version" th:value="${account.version}" type="hidden">
+                            <button type="submit">Phê duyệt</button>
+                        </form>
+                        <form method="post" th:if="${account.status.name() == 'HOAT_DONG'}"
+                              th:action="@{/admin/users/{id}/status(id=${account.id})}"
+                              data-confirm="Xác nhận khóa tài khoản? Người dùng sẽ không thể đăng nhập lại.">
+                            <input th:name="${_csrf.parameterName}" th:value="${_csrf.token}" type="hidden">
+                            <input name="status" value="BI_KHOA" type="hidden">
+                            <input name="version" th:value="${account.version}" type="hidden">
+                            <button class="button-danger" type="submit">Khóa</button>
+                        </form>
+                        <form method="post" th:if="${account.status.name() == 'BI_KHOA'}"
+                              th:action="@{/admin/users/{id}/status(id=${account.id})}">
+                            <input th:name="${_csrf.parameterName}" th:value="${_csrf.token}" type="hidden">
+                            <input name="status" value="HOAT_DONG" type="hidden">
+                            <input name="version" th:value="${account.version}" type="hidden">
+                            <button type="submit">Mở khóa</button>
+                        </form>
+                    </div>
                 </td>
             </tr>
             <tr th:if="${result.empty}">
-                <td class="empty-state" colspan="7">Không có tài khoản nào đang chờ duyệt.</td>
+                <td class="empty-state" colspan="6">Không tìm thấy tài khoản phù hợp.</td>
             </tr>
             </tbody>
         </table>
     </div>
 
-    <nav class="pagination" aria-label="Phân trang tài khoản chờ duyệt" th:if="${result.totalPages > 1}">
+    <nav class="pagination" aria-label="Phân trang tài khoản" th:if="${result.totalPages > 1}">
         <a class="button button-secondary" rel="prev" th:if="${result.hasPrevious()}"
-           th:href="@{/admin/users(keyword=${keyword},page=${result.number - 1},size=${result.size})}">Trang trước</a>
+           th:href="@{/admin/users(keyword=${keyword},role=${role},status=${status},page=${result.number - 1},size=${result.size})}">Trang trước</a>
         <span th:text="|Trang ${result.number + 1} / ${result.totalPages}|">Trang 1 / 1</span>
         <a class="button button-secondary" rel="next" th:if="${result.hasNext()}"
-           th:href="@{/admin/users(keyword=${keyword},page=${result.number + 1},size=${result.size})}">Trang sau</a>
+           th:href="@{/admin/users(keyword=${keyword},role=${role},status=${status},page=${result.number + 1},size=${result.size})}">Trang sau</a>
     </nav>
 </main>
 </body>

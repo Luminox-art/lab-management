@@ -15,6 +15,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.example.labmanagement.common.web.NavigationModelAdvice;
 import com.example.labmanagement.identity.domain.NguoiDungTrangThai;
+import com.example.labmanagement.identity.dto.AdminUserUpdateRequest;
 import com.example.labmanagement.identity.dto.UserProfileResponse;
 import com.example.labmanagement.identity.service.IdentityService;
 import com.example.labmanagement.security.SecurityConfiguration;
@@ -45,20 +46,43 @@ class UserAdminWebControllerTest {
 	private IdentityService identityService;
 
 	@Test
-	void pendingAccountQueueIsVisibleOnlyToManager() throws Exception {
+	void accountManagementIsVisibleOnlyToManagerAndSupportsFilters() throws Exception {
 		UserProfileResponse pending = profile(NguoiDungTrangThai.CHO_DUYET);
-		when(identityService.searchUsers(NguoiDungTrangThai.CHO_DUYET, null, "sv900", 0, 20))
+		when(identityService.searchUsers(NguoiDungTrangThai.CHO_DUYET, "SV", "sv900", 0, 20))
 				.thenReturn(new PageImpl<>(List.of(pending), PageRequest.of(0, 20), 1));
 
 		mockMvc.perform(get("/admin/users")).andExpect(status().is3xxRedirection())
 				.andExpect(redirectedUrlPattern("**/login"));
 		mockMvc.perform(get("/admin/users").with(user("student@example.edu").roles("SV")))
 				.andExpect(status().isForbidden());
-		mockMvc.perform(get("/admin/users").with(user(MANAGER_EMAIL).roles("CBQL")).param("keyword", "sv900"))
-				.andExpect(status().isOk()).andExpect(view().name("identity/user-approvals"))
-				.andExpect(content().string(Matchers.containsString("Duyệt tài khoản")))
+		mockMvc.perform(get("/admin/users").with(user(MANAGER_EMAIL).roles("CBQL")).param("keyword", "sv900")
+				.param("role", "SV").param("status", "CHO_DUYET")).andExpect(status().isOk())
+				.andExpect(view().name("identity/user-approvals"))
+				.andExpect(content().string(Matchers.containsString("Quản lý tài khoản")))
 				.andExpect(content().string(Matchers.containsString(ACCOUNT_ID)))
 				.andExpect(content().string(Matchers.containsString("Phê duyệt")));
+	}
+
+	@Test
+	void editPageLoadsCurrentAccountAndManagerCanUpdateIt() throws Exception {
+		UserProfileResponse active = profile(NguoiDungTrangThai.HOAT_DONG);
+		AdminUserUpdateRequest request = new AdminUserUpdateRequest("Sinh viên mới", "sv900@example.edu", "CNTT02",
+				"GV", NguoiDungTrangThai.BI_KHOA, 0L);
+		when(identityService.getUser(ACCOUNT_ID)).thenReturn(active);
+		when(identityService.updateUser(ACCOUNT_ID, request))
+				.thenReturn(new UserProfileResponse(ACCOUNT_ID, "Sinh viên mới", "sv900@example.edu", "CNTT02", "GV",
+						NguoiDungTrangThai.BI_KHOA, 1, Instant.EPOCH, Instant.EPOCH));
+
+		mockMvc.perform(get("/admin/users/{id}/edit", ACCOUNT_ID).with(user(MANAGER_EMAIL).roles("CBQL")))
+				.andExpect(status().isOk()).andExpect(view().name("identity/user-form"))
+				.andExpect(content().string(Matchers.containsString("Cập nhật tài khoản")))
+				.andExpect(content().string(Matchers.containsString("sv900@example.edu")));
+
+		mockMvc.perform(post("/admin/users/{id}", ACCOUNT_ID).with(user(MANAGER_EMAIL).roles("CBQL")).with(csrf())
+				.param("fullName", "Sinh viên mới").param("email", "sv900@example.edu").param("classOrUnit", "CNTT02")
+				.param("roleId", "GV").param("status", "BI_KHOA").param("version", "0"))
+				.andExpect(status().is3xxRedirection()).andExpect(redirectedUrl("/admin/users"));
+		verify(identityService).updateUser(ACCOUNT_ID, request);
 	}
 
 	@Test
@@ -75,6 +99,23 @@ class UserAdminWebControllerTest {
 				.with(csrf()).param("version", "0")).andExpect(status().is3xxRedirection())
 				.andExpect(redirectedUrl("/admin/users"));
 		verify(identityService).approveUser(ACCOUNT_ID, 0L);
+	}
+
+	@Test
+	void lockAndUnlockRequireManagerAndCsrf() throws Exception {
+		when(identityService.changeUserStatus(ACCOUNT_ID, NguoiDungTrangThai.BI_KHOA, 0L))
+				.thenReturn(profile(NguoiDungTrangThai.BI_KHOA));
+
+		mockMvc.perform(post("/admin/users/{id}/status", ACCOUNT_ID).with(user(MANAGER_EMAIL).roles("CBQL"))
+				.param("status", "BI_KHOA").param("version", "0")).andExpect(status().isForbidden());
+		mockMvc.perform(post("/admin/users/{id}/status", ACCOUNT_ID).with(user("student@example.edu").roles("SV"))
+				.with(csrf()).param("status", "BI_KHOA").param("version", "0")).andExpect(status().isForbidden());
+		verify(identityService, never()).changeUserStatus(ACCOUNT_ID, NguoiDungTrangThai.BI_KHOA, 0L);
+
+		mockMvc.perform(post("/admin/users/{id}/status", ACCOUNT_ID).with(user(MANAGER_EMAIL).roles("CBQL"))
+				.with(csrf()).param("status", "BI_KHOA").param("version", "0")).andExpect(status().is3xxRedirection())
+				.andExpect(redirectedUrl("/admin/users"));
+		verify(identityService).changeUserStatus(ACCOUNT_ID, NguoiDungTrangThai.BI_KHOA, 0L);
 	}
 
 	private UserProfileResponse profile(NguoiDungTrangThai status) {

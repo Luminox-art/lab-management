@@ -95,6 +95,10 @@ public class NguoiDung extends AuditedVersionedEntity {
 		this.status = NguoiDungTrangThai.HOAT_DONG;
 	}
 
+	public void changeStatus(NguoiDungTrangThai status) {
+		this.status = status;
+	}
+
 	public void updateByAdministrator(String fullName, String email, String classOrUnit, VaiTro role,
 			NguoiDungTrangThai status) {
 		this.fullName = fullName;

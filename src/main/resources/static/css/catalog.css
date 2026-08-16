@@ -560,7 +560,8 @@ tbody tr:last-child td {
     white-space: nowrap;
 }
 
-.status-san_sang {
+.status-san_sang,
+.status-hoat_dong {
     color: var(--color-success);
     background: var(--color-success-surface);
 }
@@ -574,7 +575,8 @@ tbody tr:last-child td {
 .status-hong,
 .status-ngung_su_dung,
 .status-tu_choi,
-.status-da_huy {
+.status-da_huy,
+.status-bi_khoa {
     color: var(--color-danger);
     background: var(--color-danger-surface);
 }

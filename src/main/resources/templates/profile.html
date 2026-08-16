@@ -11,20 +11,94 @@
 <header class="app-header" th:replace="~{fragments/navigation :: header}"></header>
 <main class="page-shell" id="main-content" tabindex="-1">
     <div class="page-heading">
-        <div><h1>Hồ sơ cá nhân</h1><p class="subtitle">Thông tin tài khoản đang dùng trong hệ thống.</p></div>
+        <div><h1>Hồ sơ cá nhân</h1><p class="subtitle">Cập nhật thông tin liên hệ và bảo vệ tài khoản của bạn.</p></div>
         <a class="button button-secondary" th:href="@{/home}">Về trang chủ</a>
     </div>
-    <section class="panel" aria-labelledby="profile-information-heading">
-        <h2 id="profile-information-heading">Thông tin tài khoản</h2>
+
+    <p class="message message-success" role="status" aria-live="polite" th:if="${param.updated}">Thông tin hồ sơ đã được cập nhật.</p>
+    <p class="message message-success" role="status" aria-live="polite" th:if="${param.passwordUpdated}">Mật khẩu đã được thay đổi.</p>
+
+    <section class="panel" aria-labelledby="account-information-heading">
+        <h2 id="account-information-heading">Thông tin tài khoản</h2>
         <dl class="result-details">
             <div><dt>Mã định danh</dt><dd th:text="${profile.id}"></dd></div>
-            <div><dt>Họ và tên</dt><dd th:text="${profile.fullName}"></dd></div>
-            <div><dt>Email</dt><dd th:text="${profile.email}"></dd></div>
-            <div><dt>Lớp/đơn vị</dt><dd th:text="${profile.classOrUnit ?: '—'}"></dd></div>
             <div><dt>Vai trò</dt><dd th:text="${profile.roleId == 'CBQL' ? 'Cán bộ quản lý' : (profile.roleId == 'GV' ? 'Giảng viên' : 'Sinh viên')}"></dd></div>
-            <div><dt>Trạng thái</dt><dd><span class="status-chip status-san_sang" th:text="${profile.status.name() == 'HOAT_DONG' ? 'Hoạt động' : profile.status}"></span></dd></div>
+            <div><dt>Trạng thái</dt><dd><span class="status-chip" th:classappend="| status-${#strings.toLowerCase(profile.status.name())}|" th:text="${profile.status.name() == 'HOAT_DONG' ? 'Hoạt động' : (profile.status.name() == 'CHO_DUYET' ? 'Chờ duyệt' : 'Bị khóa')}"></span></dd></div>
         </dl>
     </section>
+
+    <section class="panel" aria-labelledby="profile-edit-heading">
+        <h2 id="profile-edit-heading">Chỉnh sửa hồ sơ</h2>
+        <p class="helper">Nếu đổi email, hệ thống sẽ đăng xuất để bạn đăng nhập lại bằng email mới.</p>
+        <form method="post" th:action="@{/profile}" th:object="${profileForm}">
+            <input th:name="${_csrf.parameterName}" th:value="${_csrf.token}" type="hidden">
+            <p class="message message-error" role="alert" th:each="error : ${#fields.globalErrors()}" th:text="${error}"></p>
+            <div class="form-grid">
+                <div class="field">
+                    <label for="profile-full-name">Họ và tên <span aria-hidden="true">*</span></label>
+                    <input id="profile-full-name" th:field="*{fullName}" type="text" autocomplete="name" maxlength="150" required
+                           th:attr="aria-invalid=${#fields.hasErrors('fullName')}">
+                    <p class="field-error" role="alert" th:errors="*{fullName}"></p>
+                </div>
+                <div class="field">
+                    <label for="profile-email">Email đăng nhập <span aria-hidden="true">*</span></label>
+                    <input id="profile-email" th:field="*{email}" type="email" autocomplete="email" maxlength="254" required
+                           th:attr="aria-invalid=${#fields.hasErrors('email')}">
+                    <p class="field-error" role="alert" th:errors="*{email}"></p>
+                </div>
+                <div class="field">
+                    <label for="profile-unit">Lớp/đơn vị</label>
+                    <input id="profile-unit" th:field="*{classOrUnit}" type="text" autocomplete="organization" maxlength="150"
+                           th:attr="aria-invalid=${#fields.hasErrors('classOrUnit')}">
+                    <p class="field-error" role="alert" th:errors="*{classOrUnit}"></p>
+                </div>
+            </div>
+            <div class="form-actions"><button type="submit">Lưu thay đổi</button></div>
+        </form>
+    </section>
+
+    <section class="panel" aria-labelledby="password-change-heading">
+        <h2 id="password-change-heading">Đổi mật khẩu</h2>
+        <p class="helper">Mật khẩu mới phải có từ 8 đến 72 ký tự.</p>
+        <form method="post" th:action="@{/profile/password}" th:object="${passwordForm}" data-confirm="Xác nhận đổi mật khẩu tài khoản?">
+            <input th:name="${_csrf.parameterName}" th:value="${_csrf.token}" type="hidden">
+            <p class="message message-error" role="alert" th:each="error : ${#fields.globalErrors()}" th:text="${error}"></p>
+            <div class="form-grid">
+                <div class="field">
+                    <label for="current-password">Mật khẩu hiện tại <span aria-hidden="true">*</span></label>
+                    <div class="password-control">
+                        <input id="current-password" name="currentPassword" type="password" autocomplete="current-password" required
+                               th:attr="aria-invalid=${#fields.hasErrors('currentPassword')}">
+                        <button class="button button-secondary password-toggle" type="button" data-password-toggle
+                                aria-controls="current-password" aria-pressed="false">Hiện</button>
+                    </div>
+                    <p class="field-error" role="alert" th:errors="*{currentPassword}"></p>
+                </div>
+                <div class="field">
+                    <label for="new-password">Mật khẩu mới <span aria-hidden="true">*</span></label>
+                    <div class="password-control">
+                        <input id="new-password" name="newPassword" type="password" autocomplete="new-password" minlength="8" maxlength="72" required
+                               th:attr="aria-invalid=${#fields.hasErrors('newPassword')}">
+                        <button class="button button-secondary password-toggle" type="button" data-password-toggle
+                                aria-controls="new-password" aria-pressed="false">Hiện</button>
+                    </div>
+                    <p class="field-error" role="alert" th:errors="*{newPassword}"></p>
+                </div>
+                <div class="field">
+                    <label for="confirm-password">Xác nhận mật khẩu mới <span aria-hidden="true">*</span></label>
+                    <div class="password-control">
+                        <input id="confirm-password" name="confirmPassword" type="password" autocomplete="new-password" minlength="8" maxlength="72" required
+                               th:attr="aria-invalid=${#fields.hasErrors('confirmPassword')}">
+                        <button class="button button-secondary password-toggle" type="button" data-password-toggle
+                                aria-controls="confirm-password" aria-pressed="false">Hiện</button>
+                    </div>
+                    <p class="field-error" role="alert" th:errors="*{confirmPassword}"></p>
+                </div>
+            </div>
+            <div class="form-actions"><button type="submit">Đổi mật khẩu</button></div>
+        </form>
+    </section>
+
     <section class="panel danger-panel" aria-labelledby="logout-heading">
         <h2 id="logout-heading">Kết thúc phiên đăng nhập</h2>
         <p>Đăng xuất khi bạn dùng xong thiết bị dùng chung.</p>

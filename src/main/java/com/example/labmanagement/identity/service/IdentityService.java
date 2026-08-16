@@ -90,6 +90,11 @@ public class IdentityService {
 				.map(this::toResponse);
 	}
 
+	@Transactional(readOnly = true)
+	public UserProfileResponse getUser(String id) {
+		return toResponse(findUserById(id));
+	}
+
 	@Transactional
 	public UserProfileResponse updateUser(String id, AdminUserUpdateRequest request) {
 		NguoiDung user = findUserById(id);
@@ -116,6 +121,17 @@ public class IdentityService {
 			throw conflict("Chỉ có thể phê duyệt tài khoản đang chờ duyệt.");
 		}
 		user.activate();
+		userRepository.flush();
+		return toResponse(user);
+	}
+
+	@Transactional
+	public UserProfileResponse changeUserStatus(String id, NguoiDungTrangThai status, long version) {
+		NguoiDung user = findUserById(id);
+		if (user.getVersion() != version) {
+			throw conflict("Dữ liệu tài khoản đã được cập nhật bởi yêu cầu khác.");
+		}
+		user.changeStatus(status);
 		userRepository.flush();
 		return toResponse(user);
 	}
