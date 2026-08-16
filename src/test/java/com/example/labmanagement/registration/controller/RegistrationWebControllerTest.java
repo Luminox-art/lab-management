@@ -85,8 +85,8 @@ class RegistrationWebControllerTest {
 		RoomResponse room = new RoomResponse("P0601", "Phòng 6.1", "NP01", "Nhóm phòng máy", "Tầng 6", 40,
 				PhongTrangThai.SAN_SANG, 0);
 		when(catalogService.selectableRooms()).thenReturn(List.of(room));
-		when(registrationService.deviceOptions()).thenReturn(
-				List.of(new RegistrationDeviceOptionResponse("TB0001", "Robot", "Robot", true, true, "P0601")));
+		when(registrationService.deviceOptions()).thenReturn(List
+				.of(new RegistrationDeviceOptionResponse("TB0001", "Robot", "Robot", true, true, "P0601", "P1001")));
 		when(registrationService.supervisorOptions())
 				.thenReturn(List.of(new SupervisorOptionResponse("GV001", "Giảng viên 01", "Khoa CNTT")));
 		when(schedulingService.periods())
@@ -121,6 +121,8 @@ class RegistrationWebControllerTest {
 				.andExpect(content().string(Matchers.containsString("GV001")))
 				.andExpect(content().string(Matchers.containsString("data-capacity=\"40\"")))
 				.andExpect(content().string(Matchers.containsString("data-mobile=\"true\"")))
+				.andExpect(content().string(Matchers.containsString("Đang sử dụng tại P1001")))
+				.andExpect(content().string(Matchers.containsString("Phòng quản lý: P0601")))
 				.andExpect(content().string(Matchers.containsString("data-availability-status")))
 				.andExpect(content().string(Matchers.containsString("data-room-calendar-link")))
 				.andExpect(content().string(Matchers.containsString("data-schedule-room-availability")));

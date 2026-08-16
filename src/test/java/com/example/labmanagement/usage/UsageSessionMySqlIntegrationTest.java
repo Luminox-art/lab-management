@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.example.labmanagement.common.error.ApiException;
 import com.example.labmanagement.incident.domain.MucDoSuCo;
+import com.example.labmanagement.registration.service.RegistrationService;
 import com.example.labmanagement.usage.domain.PhienSuDungTrangThai;
 import com.example.labmanagement.usage.dto.SessionCheckInRequest;
 import com.example.labmanagement.usage.dto.SessionCheckOutRequest;
@@ -49,6 +50,9 @@ class UsageSessionMySqlIntegrationTest {
 	private UsageSessionService sessionService;
 
 	@Autowired
+	private RegistrationService registrationService;
+
+	@Autowired
 	private JdbcTemplate jdbcTemplate;
 
 	@Autowired
@@ -81,12 +85,14 @@ class UsageSessionMySqlIntegrationTest {
 		jdbcTemplate.update("DELETE FROM LichDangKy WHERE MaPhieu LIKE 'S8-%'");
 		jdbcTemplate.update("DELETE FROM PhieuDangKy WHERE MaPhieu LIKE 'S8-%'");
 		jdbcTemplate.update("UPDATE ThietBi SET TrangThai = 'SAN_SANG' WHERE MaThietBi IN ('TB0001','TB0002')");
+		jdbcTemplate.update("UPDATE ThietBi SET MaPhong = 'P0601' WHERE MaThietBi = 'TB0001'");
 	}
 
 	@Test
 	void generatesIdempotentlyAndPersistsTheCompleteCheckInOutAggregate() {
 		assertThat(clock.instant()).isEqualTo(Instant.parse("2026-08-01T01:00:00Z"));
 		insertApprovedRegistration("S8-HAPPY", TODAY, 7, 2, "TB0001");
+		jdbcTemplate.update("UPDATE ThietBi SET MaPhong = 'P0602' WHERE MaThietBi = 'TB0001'");
 
 		assertThat(generationService.generateForRegistration("S8-HAPPY")).isEqualTo(1);
 		assertThat(generationService.generateForRegistration("S8-HAPPY")).isZero();
@@ -108,6 +114,12 @@ class UsageSessionMySqlIntegrationTest {
 				.isEqualTo("DANG_SU_DUNG");
 		assertThat(value("SELECT TrangThai FROM ThietBi WHERE MaThietBi = 'TB0001'", String.class))
 				.isEqualTo("DANG_SU_DUNG");
+		assertThat(value("SELECT MaPhong FROM ThietBi WHERE MaThietBi = 'TB0001'", String.class)).isEqualTo("P0602");
+		assertThat(registrationService.deviceOptions()).filteredOn(option -> option.id().equals("TB0001"))
+				.singleElement().satisfies(option -> {
+					assertThat(option.managementRoomId()).isEqualTo("P0602");
+					assertThat(option.currentUsageRoomId()).isEqualTo("P0601");
+				});
 		assertConflict(() -> sessionService.checkIn(ACTOR_EMAIL, sessionId,
 				new SessionCheckInRequest(checkedIn.version(), List.of())));
 
@@ -121,6 +133,7 @@ class UsageSessionMySqlIntegrationTest {
 		assertThat(value("SELECT TrangThai FROM PhieuDangKy WHERE MaPhieu = 'S8-HAPPY'", String.class))
 				.isEqualTo("HOAN_THANH");
 		assertThat(value("SELECT TrangThai FROM ThietBi WHERE MaThietBi = 'TB0001'", String.class)).isEqualTo("HONG");
+		assertThat(value("SELECT MaPhong FROM ThietBi WHERE MaThietBi = 'TB0001'", String.class)).isEqualTo("P0602");
 		assertThat(value("SELECT TinhTrangTra FROM PhienSuDungThietBi WHERE MaPhien = ? AND MaThietBi = 'TB0001'",
 				String.class, sessionId)).isEqualTo("Hỏng cổng nguồn");
 		assertThat(value("SELECT COUNT(*) FROM SuCo WHERE MaPhien = ? AND TrangThai = 'MOI'", Integer.class, sessionId))

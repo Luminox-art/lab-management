@@ -27,7 +27,7 @@
     <div class="page-heading">
         <div>
             <h1>Danh mục thiết bị</h1>
-            <p class="subtitle">Tra cứu theo mã, tên, loại, phòng hiện tại, serial hoặc trạng thái.</p>
+            <p class="subtitle">Tra cứu theo mã, tên, loại, phòng quản lý, serial hoặc trạng thái.</p>
         </div>
         <a class="button button-primary" th:if="${canManage}" th:href="@{/catalog/devices/new}">Thêm thiết bị</a>
     </div>
@@ -52,7 +52,7 @@
                     </select>
                 </div>
                 <div class="field">
-                    <label for="room">Phòng hiện tại</label>
+                    <label for="room">Phòng quản lý</label>
                     <select id="room" name="room">
                         <option value="">Tất cả phòng</option>
                         <option th:each="item : ${rooms}" th:value="${item.id}" th:text="|${item.id} — ${item.name}|"
@@ -96,7 +96,7 @@
                 <th scope="col">Tên thiết bị</th>
                 <th scope="col">Loại</th>
                 <th scope="col">Serial / Model</th>
-                <th scope="col">Phòng</th>
+                <th scope="col">Phòng quản lý</th>
                 <th scope="col">Trạng thái</th>
                 <th scope="col" th:if="${canManage}">Thao tác</th>
             </tr>

@@ -39,7 +39,9 @@ class IdentityWebControllerTest {
 	void loginAndRegistrationPagesArePublic() throws Exception {
 		mockMvc.perform(get("/login").param("error", "true")).andExpect(status().isOk()).andExpect(view().name("login"))
 				.andExpect(content().string(org.hamcrest.Matchers.containsString("Thông tin đăng nhập không hợp lệ")));
-		mockMvc.perform(get("/register")).andExpect(status().isOk()).andExpect(view().name("register"));
+		mockMvc.perform(get("/register")).andExpect(status().isOk()).andExpect(view().name("register"))
+				.andExpect(content().string(org.hamcrest.Matchers.containsString("Giảng viên")))
+				.andExpect(content().string(org.hamcrest.Matchers.containsString("Sinh viên")));
 	}
 
 	@Test

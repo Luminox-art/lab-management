@@ -129,10 +129,20 @@ class MySqlPersistenceTest {
 	void flywayIsValidAndSecondMigrationRunDoesNotRepeat() {
 		flyway.validate();
 
-		assertThat(flyway.info().applied()).hasSize(6);
+		assertThat(flyway.info().applied()).hasSize(7);
 		assertThat(flyway.migrate().migrationsExecuted).isZero();
 		assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM flyway_schema_history WHERE success = 1",
-				Integer.class)).isEqualTo(6);
+				Integer.class)).isEqualTo(7);
+	}
+
+	@Test
+	void seededIncidentsDoNotHaveFutureReportedTimes() {
+		assertThat(jdbcTemplate.queryForObject("""
+				SELECT COUNT(*)
+				FROM SuCo
+				WHERE MaSuCo REGEXP '^SC(P)?[0-9]{4}$'
+				  AND ThoiDiemBao > UTC_TIMESTAMP(6)
+				""", Integer.class)).isZero();
 	}
 
 	@Test

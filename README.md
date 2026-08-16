@@ -1,42 +1,88 @@
 # Lab Management System
 
-Hệ thống quản lý phòng thực hành và thiết bị CNTT, dùng Spring Boot, Thymeleaf, Flyway và MySQL 9.4.
+Ứng dụng quản lý phòng thực hành và thiết bị, xây dựng bằng Spring Boot, Thymeleaf, MySQL và Flyway.
 
-- Đặc tả nghiệp vụ: `docs/SRS.docx`
-- API: `docs/API-SPEC.md`
-- Kiến trúc và ERD: `docs/ARCHITECTURE.md`
-- Wireframe: `docs/WIREFRAMES.md`
-- Ma trận truy vết: `docs/TRACEABILITY.md`
-- Test case: `docs/TEST-CASES.md`
-- Kế hoạch triển khai chi tiết: `docs/IMPLEMENTATION-PLAN.md`
-- Cài đặt và vận hành: `docs/LOCAL-SETUP.md`
-- Triển khai production và release rehearsal: `docs/DEPLOYMENT.md`
-- Kịch bản demo nghiệm thu: `docs/DEMO-SCRIPT.md`
-- Biên bản nghiệm thu: `docs/ACCEPTANCE-REPORT.md`
-- Flyway: `src/main/resources/db/migration`
+## Công nghệ
 
-## Kiểm tra baseline Sprint 0
+- Java 21
+- Maven 3.9+
+- MySQL 9.x
+- Spring Boot
+- Thymeleaf
+- Flyway
 
-Yêu cầu JDK 21+ và Maven 3.9+. Chạy formatter, static analysis, test và đóng gói JAR bằng một lệnh:
+## Chạy dự án trên máy local
+
+### 1. Chuẩn bị
+
+Cài đặt và khởi động:
+
+- JDK 21
+- Maven 3.9+
+- MySQL 9.x
+
+Kiểm tra:
 
 ```powershell
-mvn -B verify
+java -version
+mvn -version
+mysql --version
 ```
 
-Để chạy với MySQL local, thiết lập `LAB_DB_PASSWORD` (và ghi đè `LAB_DB_URL`, `LAB_DB_USER` khi cần), sau đó chạy:
+### 2. Tạo database
+
+Đăng nhập MySQL:
+
+```powershell
+mysql -u root -p
+```
+
+Trong MySQL, chạy file `create.sql` một lần:
+
+```sql
+SOURCE /lab-management-system/create.sql;
+```
+
+Hoặc tự chạy câu lệnh sau:
+
+```sql
+CREATE DATABASE IF NOT EXISTS lab_management
+    CHARACTER SET utf8mb4
+    COLLATE utf8mb4_0900_ai_ci;
+```
+
+`create.sql` chỉ tạo database. Khi ứng dụng khởi động, Flyway sẽ tự chạy các file trong `src/main/resources/db/migration` để tạo bảng và dữ liệu mẫu. Không cần chạy thủ công các file `V1`, `V2`, ...
+
+### 3. Khai báo tài khoản MySQL
+
+Trong PowerShell, thay `root` và `mat-khau-mysql` bằng tài khoản MySQL trên máy:
+
+```powershell
+$env:LAB_DB_URL='jdbc:mysql://localhost:3306/lab_management?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC&useSSL=false&allowPublicKeyRetrieval=true'
+$env:LAB_DB_USER='root'
+$env:LAB_DB_PASSWORD='mat-khau-mysql'
+```
+
+Không **nên ghi mật khẩu thật trực tiếp vào `application.yml`** hoặc commit mật khẩu lên GitHub.
+
+### 4. Chạy ứng dụng
 
 ```powershell
 mvn spring-boot:run
 ```
 
-Readiness endpoint: `GET /actuator/health/readiness`.
+Sau khi thấy thông báo `Started LabManagementApplication`, mở:
 
-## Phát hành
-
-Sau khi khai báo `LAB_DB_URL`, `LAB_DB_USER`, `LAB_DB_PASSWORD`, chạy pipeline backup–validate–migrate–readiness–smoke bằng:
-
-```powershell
-.\ops\deploy-release.ps1 -DatabaseName 'lab_management' -ApplicationPort 8080
+```text
+http://localhost:8080
 ```
 
-Script mặc định chạy `mvn -B verify`, tạo backup trước migration và ghi manifest có checksum vào `target/stage14-release`. Xem các điều kiện an toàn production, chính sách seed và cách vận hành lâu dài trong `docs/DEPLOYMENT.md`.
+Để dừng ứng dụng, nhấn `Ctrl + C`.
+
+## Kiểm tra và đóng gói
+
+```powershell
+mvn -B verify
+```
+
+File JAR được tạo trong thư mục `target`.

@@ -44,6 +44,7 @@ import com.example.labmanagement.scheduling.dto.AvailabilityResponse;
 import com.example.labmanagement.scheduling.repository.TietHocRepository;
 import com.example.labmanagement.scheduling.service.SchedulingService;
 import com.example.labmanagement.usage.repository.PhienSuDungRepository;
+import com.example.labmanagement.usage.repository.PhienSuDungThietBiRepository;
 import jakarta.persistence.EntityManager;
 import java.time.Clock;
 import java.time.Instant;
@@ -90,6 +91,8 @@ class RegistrationServiceTest {
 	@Mock
 	private PhienSuDungRepository sessionRepository;
 	@Mock
+	private PhienSuDungThietBiRepository sessionDeviceRepository;
+	@Mock
 	private ApprovalService approvalService;
 	@Mock
 	private SchedulingService schedulingService;
@@ -108,10 +111,17 @@ class RegistrationServiceTest {
 
 	@BeforeEach
 	void setUp() {
-		service = new RegistrationService(userRepository, roomRepository, deviceRepository, periodRepository,
+		Clock clock = Clock.fixed(NOW, ZoneOffset.UTC);
+		RegistrationValidator validator = new RegistrationValidator(userRepository, roomRepository, deviceRepository,
+				periodRepository, registrationRepository, supervisionRepository, schedulingService);
+		RegistrationQueryService queryService = new RegistrationQueryService(userRepository, deviceRepository,
 				registrationRepository, scheduleRepository, allocationRepository, teachingRepository,
-				supervisionRepository, historyRepository, sessionRepository, approvalService, schedulingService,
-				entityManager, Clock.fixed(NOW, ZoneOffset.UTC));
+				supervisionRepository, historyRepository, sessionRepository, sessionDeviceRepository, approvalService,
+				validator, clock);
+		RegistrationCommandService commandService = new RegistrationCommandService(registrationRepository,
+				scheduleRepository, allocationRepository, teachingRepository, supervisionRepository, historyRepository,
+				sessionRepository, validator, queryService, entityManager, clock);
+		service = new RegistrationService(commandService, queryService);
 		AvailabilityResponse available = org.mockito.Mockito.mock(AvailabilityResponse.class);
 		org.mockito.Mockito.lenient().when(available.available()).thenReturn(true);
 		org.mockito.Mockito.lenient()
@@ -129,6 +139,28 @@ class RegistrationServiceTest {
 				PhongTrangThai.SAN_SANG);
 		firstPeriod = new TietHoc(1, "Tiết 1", LocalTime.of(7, 0), LocalTime.of(7, 50));
 		secondPeriod = new TietHoc(2, "Tiết 2", LocalTime.of(8, 0), LocalTime.of(8, 50));
+	}
+
+	@Test
+	void deviceOptionsSeparateManagementRoomFromCurrentUsageRoom() {
+		Phong managementRoom = new Phong("P-MANAGE", "Phòng quản lý", new NhomPhong("NP-MANAGE", "Nhóm", null), "Kho",
+				10, PhongTrangThai.SAN_SANG);
+		ThietBi mobileDevice = device("TB-MOBILE", false, true, managementRoom, ThietBiTrangThai.DANG_SU_DUNG);
+		PhienSuDungThietBiRepository.ActiveDeviceLocation location = org.mockito.Mockito
+				.mock(PhienSuDungThietBiRepository.ActiveDeviceLocation.class);
+		when(deviceRepository.findAllByStatusInOrderByNameAsc(
+				java.util.Set.of(ThietBiTrangThai.SAN_SANG, ThietBiTrangThai.DANG_SU_DUNG)))
+				.thenReturn(List.of(mobileDevice));
+		when(sessionDeviceRepository.findActiveDeviceLocations(List.of(mobileDevice.getId()),
+				com.example.labmanagement.usage.domain.PhienSuDungTrangThai.DANG_SU_DUNG))
+				.thenReturn(List.of(location));
+		when(location.getDeviceId()).thenReturn(mobileDevice.getId());
+		when(location.getUsageRoomId()).thenReturn("P-USE");
+
+		var option = service.deviceOptions().getFirst();
+
+		assertThat(option.managementRoomId()).isEqualTo("P-MANAGE");
+		assertThat(option.currentUsageRoomId()).isEqualTo("P-USE");
 	}
 
 	@Test

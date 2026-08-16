@@ -85,6 +85,7 @@ class UsageSessionServiceTest {
 	private PhienSuDung session;
 	private ThietBi device;
 	private PhieuDangKyThietBi allocation;
+	private Phong managementRoom;
 
 	@BeforeEach
 	void setUp() {
@@ -93,15 +94,17 @@ class UsageSessionServiceTest {
 				Clock.fixed(NOW, ZoneOffset.UTC));
 		actor = new NguoiDung("GV-USE", "Giảng viên", EMAIL, "hash", null, new VaiTro("GV", "Giảng viên"),
 				NguoiDungTrangThai.HOAT_DONG);
-		Phong room = new Phong("P-USE", "Phòng dùng", new NhomPhong("N-USE", "Nhóm", null), "A1", 20,
+		Phong usageRoom = new Phong("P-USE", "Phòng dùng", new NhomPhong("N-USE", "Nhóm", null), "A1", 20,
 				PhongTrangThai.SAN_SANG);
-		registration = new PhieuDangKy("PDK-USE", actor, room, LoaiPhieu.GIANG_DAY, "Thực hành", 10,
+		managementRoom = new Phong("P-MANAGE", "Phòng quản lý", new NhomPhong("N-MANAGE", "Nhóm", null), "Kho", 20,
+				PhongTrangThai.SAN_SANG);
+		registration = new PhieuDangKy("PDK-USE", actor, usageRoom, LoaiPhieu.GIANG_DAY, "Thực hành", 10,
 				LocalDate.of(2026, 8, 1), LocalDate.of(2026, 8, 1), PhieuDangKyTrangThai.DA_DUYET);
 		TietHoc period = new TietHoc(1, "Tiết 1", LocalTime.of(7, 30), LocalTime.of(9, 0));
 		session = new PhienSuDung(new LichDangKy(registration, 7, period), LocalDate.of(2026, 8, 1),
 				PhienSuDungTrangThai.CHUA_BAT_DAU, null, null, null, null);
 		LoaiThietBi type = new LoaiThietBi("LT-USE", "Máy đo", false, true, null);
-		device = new ThietBi("TB-USE", "Máy đo 01", type, "SN-USE", "M1", room, ThietBiTrangThai.SAN_SANG);
+		device = new ThietBi("TB-USE", "Máy đo 01", type, "SN-USE", "M1", managementRoom, ThietBiTrangThai.SAN_SANG);
 		allocation = new PhieuDangKyThietBi(registration, device, true);
 		when(userRepository.findByEmailIgnoreCase(EMAIL)).thenReturn(Optional.of(actor));
 		when(sessionRepository.findDetailByIdForUpdate(1L)).thenReturn(Optional.of(session));
@@ -119,6 +122,7 @@ class UsageSessionServiceTest {
 		assertThat(response.status()).isEqualTo(PhienSuDungTrangThai.DANG_SU_DUNG);
 		assertThat(registration.getStatus()).isEqualTo(PhieuDangKyTrangThai.DANG_SU_DUNG);
 		assertThat(device.getStatus()).isEqualTo(ThietBiTrangThai.DANG_SU_DUNG);
+		assertThat(device.getRoom()).isSameAs(managementRoom);
 		verify(sessionDeviceRepository).saveAll(org.mockito.ArgumentMatchers.anyList());
 	}
 
@@ -151,6 +155,7 @@ class UsageSessionServiceTest {
 		assertThat(response.status()).isEqualTo(PhienSuDungTrangThai.HOAN_THANH);
 		assertThat(registration.getStatus()).isEqualTo(PhieuDangKyTrangThai.HOAN_THANH);
 		assertThat(device.getStatus()).isEqualTo(ThietBiTrangThai.HONG);
+		assertThat(device.getRoom()).isSameAs(managementRoom);
 		assertThat(sessionDevice.getReturnedCondition()).isEqualTo("Hỏng đầu đo");
 		assertThat(response.incidentIds()).hasSize(1);
 		@SuppressWarnings("unchecked")

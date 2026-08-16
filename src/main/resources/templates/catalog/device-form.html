@@ -71,12 +71,12 @@
                     <p class="field-error" id="model-error" role="alert" th:errors="*{model}"></p>
                 </div>
                 <div class="field">
-                    <label for="roomId">Phòng hiện tại</label>
+                    <label for="roomId">Phòng quản lý / lưu trữ</label>
                     <select id="roomId" th:field="*{roomId}" aria-describedby="room-help room-error">
                         <option value="">Chưa gán phòng</option>
                         <option th:each="item : ${rooms}" th:value="${item.id}" th:text="|${item.id} — ${item.name}|"></option>
                     </select>
-                    <p class="helper" id="room-help">Phòng ngừng sử dụng không xuất hiện trong danh sách.</p>
+                    <p class="helper" id="room-help">Phòng quản lý không tự thay đổi khi thiết bị được sử dụng tại phòng khác. Phòng ngừng sử dụng không xuất hiện trong danh sách.</p>
                     <p class="field-error" id="room-error" role="alert" th:errors="*{roomId}"></p>
                 </div>
                 <div class="field">

@@ -35,6 +35,11 @@ class SecurityConfigurationTest {
 	}
 
 	@Test
+	void faviconIsPubliclyAccessible() throws Exception {
+		mockMvc.perform(get("/favicon.ico")).andExpect(status().isOk());
+	}
+
+	@Test
 	void stateChangingRequestRequiresCsrfToken() throws Exception {
 		mockMvc.perform(post("/secured").with(user("tester"))).andExpect(status().isForbidden());
 		mockMvc.perform(post("/secured").with(user("tester")).with(csrf())).andExpect(status().isOk());

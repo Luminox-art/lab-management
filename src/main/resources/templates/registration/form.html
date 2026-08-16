@@ -221,13 +221,16 @@
                            th:for="|device-${deviceStatus.index}|">
                         <input th:id="|device-${deviceStatus.index}|" name="deviceIds" type="checkbox"
                                th:value="${device.id}" th:checked="${#lists.contains(registrationForm.deviceIds, device.id)}"
-                               th:attr="data-instructor-required=${device.instructorRequired},data-mobile=${device.mobile},data-room-id=${device.roomId}">
+                               th:attr="data-instructor-required=${device.instructorRequired},data-mobile=${device.mobile},data-room-id=${device.managementRoomId}">
                         <span class="device-option-copy">
                             <strong th:text="|${device.id} — ${device.name}|"></strong>
                             <span th:text="${device.typeName}"></span>
                             <small th:if="${device.instructorRequired}">Cần GVHD</small>
                             <small th:if="${device.mobile}">Di động</small>
-                            <small th:if="${device.roomId != null}" th:text="|Hiện ở phòng ${device.roomId}|"></small>
+                            <small th:if="${device.currentUsageRoomId != null}"
+                                   th:text="|Đang sử dụng tại ${device.currentUsageRoomId} · Phòng quản lý: ${device.managementRoomId ?: 'Chưa gán'}|"></small>
+                            <small th:unless="${device.currentUsageRoomId != null}"
+                                   th:text="|Phòng quản lý: ${device.managementRoomId ?: 'Chưa gán'}|"></small>
                         </span>
                     </label>
                 </div>
