@@ -34,11 +34,11 @@ public class NotificationProjectionRepository {
 		return jdbcTemplate.query("""
 				SELECT history.MaXuLy, history.HanhDong, history.LyDo, history.ThoiDiem,
 				       registration.MaPhieu
-				FROM XuLyPhieu history
-				JOIN PhieuDangKy registration ON registration.MaPhieu = history.MaPhieu
+				FROM xulyphieu history
+				JOIN phieudangky registration ON registration.MaPhieu = history.MaPhieu
 				WHERE registration.MaNguoiTao = ?
 				   OR EXISTS (
-				       SELECT 1 FROM PhieuHuongDan supervision
+				       SELECT 1 FROM phieuhuongdan supervision
 				       WHERE supervision.MaPhieu = registration.MaPhieu
 				         AND supervision.MaGVHuongDan = ?)
 				""", (resultSet, rowNumber) -> {
@@ -63,16 +63,16 @@ public class NotificationProjectionRepository {
 		return jdbcTemplate.query("""
 				SELECT DISTINCT session.MaPhien, session.NgaySuDung, period.GioBatDau,
 				       registration.MaPhieu, room.MaPhong, room.TenPhong
-				FROM PhienSuDung session
-				JOIN LichDangKy schedule ON schedule.MaLich = session.MaLich
-				JOIN TietHoc period ON period.MaTiet = schedule.MaTiet
-				JOIN PhieuDangKy registration ON registration.MaPhieu = schedule.MaPhieu
-				JOIN Phong room ON room.MaPhong = registration.MaPhong
+				FROM phiensudung session
+				JOIN lichdangky schedule ON schedule.MaLich = session.MaLich
+				JOIN tiethoc period ON period.MaTiet = schedule.MaTiet
+				JOIN phieudangky registration ON registration.MaPhieu = schedule.MaPhieu
+				JOIN phong room ON room.MaPhong = registration.MaPhong
 				WHERE session.TrangThai = 'CHUA_BAT_DAU'
 				  AND session.NgaySuDung BETWEEN ? AND ?
 				  AND (registration.MaNguoiTao = ?
 				       OR EXISTS (
-				           SELECT 1 FROM PhieuHuongDan supervision
+				           SELECT 1 FROM phieuhuongdan supervision
 				           WHERE supervision.MaPhieu = registration.MaPhieu
 				             AND supervision.MaGVHuongDan = ?))
 				""", (resultSet, rowNumber) -> {
@@ -93,14 +93,14 @@ public class NotificationProjectionRepository {
 		return jdbcTemplate.query("""
 				SELECT DISTINCT incident.MaSuCo, incident.MucDo, incident.MoTa, incident.TrangThai,
 				       incident.ThoiDiemBao
-				FROM SuCo incident
-				LEFT JOIN PhienSuDung session ON session.MaPhien = incident.MaPhien
-				LEFT JOIN LichDangKy schedule ON schedule.MaLich = session.MaLich
-				LEFT JOIN PhieuDangKy registration ON registration.MaPhieu = schedule.MaPhieu
+				FROM suco incident
+				LEFT JOIN phiensudung session ON session.MaPhien = incident.MaPhien
+				LEFT JOIN lichdangky schedule ON schedule.MaLich = session.MaLich
+				LEFT JOIN phieudangky registration ON registration.MaPhieu = schedule.MaPhieu
 				WHERE incident.MaNguoiBao = ? OR incident.MaNguoiXuLy = ?
 				   OR registration.MaNguoiTao = ?
 				   OR EXISTS (
-				       SELECT 1 FROM PhieuHuongDan supervision
+				       SELECT 1 FROM phieuhuongdan supervision
 				       WHERE supervision.MaPhieu = registration.MaPhieu
 				         AND supervision.MaGVHuongDan = ?)
 				""", (resultSet, rowNumber) -> {
@@ -116,17 +116,17 @@ public class NotificationProjectionRepository {
 		return jdbcTemplate.query("""
 				SELECT DISTINCT progress.MaTienDo, progress.ThoiDiem, progress.TrangThai, progress.NoiDung,
 				       maintenance.MaBaoTri, maintenance.MaNguoiPhuTrach, sourceIncident.MaSuCo
-				FROM TienDoBaoTri progress
-				JOIN BaoTri maintenance ON maintenance.MaBaoTri = progress.MaBaoTri
-				LEFT JOIN BaoTriSuCo sourceLink ON sourceLink.MaBaoTri = maintenance.MaBaoTri
-				LEFT JOIN SuCo sourceIncident ON sourceIncident.MaSuCo = sourceLink.MaSuCo
-				LEFT JOIN PhienSuDung session ON session.MaPhien = sourceIncident.MaPhien
-				LEFT JOIN LichDangKy schedule ON schedule.MaLich = session.MaLich
-				LEFT JOIN PhieuDangKy registration ON registration.MaPhieu = schedule.MaPhieu
+				FROM tiendobaotri progress
+				JOIN baotri maintenance ON maintenance.MaBaoTri = progress.MaBaoTri
+				LEFT JOIN baotrisuco sourceLink ON sourceLink.MaBaoTri = maintenance.MaBaoTri
+				LEFT JOIN suco sourceIncident ON sourceIncident.MaSuCo = sourceLink.MaSuCo
+				LEFT JOIN phiensudung session ON session.MaPhien = sourceIncident.MaPhien
+				LEFT JOIN lichdangky schedule ON schedule.MaLich = session.MaLich
+				LEFT JOIN phieudangky registration ON registration.MaPhieu = schedule.MaPhieu
 				WHERE maintenance.MaNguoiPhuTrach = ? OR sourceIncident.MaNguoiBao = ?
 				   OR registration.MaNguoiTao = ?
 				   OR EXISTS (
-				       SELECT 1 FROM PhieuHuongDan supervision
+				       SELECT 1 FROM phieuhuongdan supervision
 				       WHERE supervision.MaPhieu = registration.MaPhieu
 				         AND supervision.MaGVHuongDan = ?)
 				""", (resultSet, rowNumber) -> {

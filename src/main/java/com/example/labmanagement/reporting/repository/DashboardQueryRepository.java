@@ -31,12 +31,12 @@ public class DashboardQueryRepository {
 				  SUM(CASE WHEN session.TrangThai = 'HOAN_THANH' THEN 1 ELSE 0 END) completed_sessions,
 				  SUM(CASE WHEN session.TrangThai = 'DANG_SU_DUNG' THEN 1 ELSE 0 END) in_progress_sessions,
 				  SUM(CASE WHEN session.TrangThai = 'VANG_MAT' THEN 1 ELSE 0 END) absent_sessions,
-				  (SELECT COUNT(*) FROM SuCo incident
+				  (SELECT COUNT(*) FROM suco incident
 				   WHERE DATE(incident.ThoiDiemBao) BETWEEN ? AND ?) incidents,
-				  (SELECT COUNT(*) FROM BaoTri maintenance
+				  (SELECT COUNT(*) FROM baotri maintenance
 				   WHERE maintenance.TrangThai IN ('CHO_XU_LY','DANG_BAO_TRI')
 				     AND DATE(maintenance.NgayBatDau) <= ?) active_maintenances
-				FROM PhienSuDung session
+				FROM phiensudung session
 				WHERE session.NgaySuDung BETWEEN ? AND ?
 				""",
 				(resultSet, rowNumber) -> new DashboardCounts(resultSet.getLong("actual_sessions"),
@@ -51,10 +51,10 @@ public class DashboardQueryRepository {
 			return jdbcTemplate.query(
 					"""
 							SELECT room.MaPhong id, room.TenPhong name, COUNT(*) frequency
-							FROM PhienSuDung session
-							JOIN LichDangKy schedule ON schedule.MaLich = session.MaLich
-							JOIN PhieuDangKy registration ON registration.MaPhieu = schedule.MaPhieu
-							JOIN Phong room ON room.MaPhong = registration.MaPhong
+							FROM phiensudung session
+							JOIN lichdangky schedule ON schedule.MaLich = session.MaLich
+							JOIN phieudangky registration ON registration.MaPhieu = schedule.MaPhieu
+							JOIN phong room ON room.MaPhong = registration.MaPhong
 							WHERE session.NgaySuDung BETWEEN ? AND ?
 							  AND session.TrangThai IN ('DANG_SU_DUNG','HOAN_THANH')
 							GROUP BY room.MaPhong, room.TenPhong
@@ -66,9 +66,9 @@ public class DashboardQueryRepository {
 		}
 		return jdbcTemplate.query("""
 				SELECT device.MaThietBi id, device.TenThietBi name, COUNT(*) frequency
-				FROM PhienSuDung session
-				JOIN PhienSuDungThietBi usedDevice ON usedDevice.MaPhien = session.MaPhien
-				JOIN ThietBi device ON device.MaThietBi = usedDevice.MaThietBi
+				FROM phiensudung session
+				JOIN phiensudungthietbi usedDevice ON usedDevice.MaPhien = session.MaPhien
+				JOIN thietbi device ON device.MaThietBi = usedDevice.MaThietBi
 				WHERE session.NgaySuDung BETWEEN ? AND ?
 				  AND session.TrangThai IN ('DANG_SU_DUNG','HOAN_THANH')
 				GROUP BY device.MaThietBi, device.TenThietBi
@@ -82,7 +82,7 @@ public class DashboardQueryRepository {
 		return jdbcTemplate
 				.query("""
 						SELECT incident.MucDo severity, COUNT(*) incident_count
-						FROM SuCo incident
+						FROM suco incident
 						WHERE DATE(incident.ThoiDiemBao) BETWEEN ? AND ?
 						GROUP BY incident.MucDo
 						""",
@@ -98,10 +98,10 @@ public class DashboardQueryRepository {
 				       COALESCE(room.MaPhong, device.MaThietBi) reference_id,
 				       COALESCE(room.TenPhong, device.TenThietBi) resource_name,
 				       maintenance.TrangThai, maintenance.NgayBatDau
-				FROM BaoTri maintenance
-				JOIN TaiNguyen resource ON resource.MaTaiNguyen = maintenance.MaTaiNguyen
-				LEFT JOIN Phong room ON room.MaPhong = resource.MaPhong
-				LEFT JOIN ThietBi device ON device.MaThietBi = resource.MaThietBi
+				FROM baotri maintenance
+				JOIN tainguyen resource ON resource.MaTaiNguyen = maintenance.MaTaiNguyen
+				LEFT JOIN phong room ON room.MaPhong = resource.MaPhong
+				LEFT JOIN thietbi device ON device.MaThietBi = resource.MaThietBi
 				WHERE maintenance.TrangThai IN ('CHO_XU_LY','DANG_BAO_TRI')
 				  AND DATE(maintenance.NgayBatDau) <= ?
 				ORDER BY maintenance.NgayBatDau DESC, maintenance.MaBaoTri

@@ -29,7 +29,7 @@ public interface TaiNguyenRepository extends JpaRepository<TaiNguyen, String> {
 	long countByDevice_Id(String deviceId);
 
 	@Query(value = """
-			select resource.* from TaiNguyen resource
+			select resource.* from tainguyen resource
 			where resource.MaPhong = :roomId or resource.MaThietBi in (:deviceIds)
 			order by resource.MaTaiNguyen
 			for update
