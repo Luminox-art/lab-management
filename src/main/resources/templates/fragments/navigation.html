@@ -4,91 +4,111 @@
 <th:block th:fragment="header">
     <button class="sidebar-toggle" type="button" aria-controls="app-sidebar" aria-expanded="false"
             aria-label="Mở menu điều hướng" data-sidebar-toggle>
-        <svg class="sidebar-menu-icon" aria-hidden="true" viewBox="0 0 24 24">
-            <path d="M4 7h16M4 12h16M4 17h16"></path>
-        </svg>
-        <svg class="sidebar-close-icon" aria-hidden="true" viewBox="0 0 24 24">
-            <path d="m6 6 12 12M18 6 6 18"></path>
-        </svg>
+        <svg class="sidebar-menu-icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"></path></svg>
+        <svg class="sidebar-close-icon" aria-hidden="true" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"></path></svg>
     </button>
-    <header class="app-header" id="app-sidebar" data-sidebar>
+
+    <aside class="app-header" id="app-sidebar" data-sidebar>
         <div class="header-inner">
-            <a class="brand" th:href="@{/home}">
+            <a class="brand" th:href="@{/home}" aria-label="LabOS - Trang chủ">
                 <span class="brand-mark" aria-hidden="true">
                     <svg viewBox="0 0 24 24"><path d="M9 3h6M10 3v5l-5 9a2 2 0 0 0 1.7 3h10.6a2 2 0 0 0 1.7-3l-5-9V3M8 14h8"></path></svg>
                 </span>
-                <span class="nav-label">Quản lý phòng lab</span>
+                <span class="brand-copy">
+                    <strong>LAB<span>/OS</span></strong>
+                    <small>Operations workspace</small>
+                </span>
             </a>
+
+            <div class="system-state" aria-label="Trạng thái hệ thống: đang hoạt động">
+                <span class="system-state-dot" aria-hidden="true"></span>
+                <span>Hệ thống đang hoạt động</span>
+            </div>
+
             <nav class="main-nav" aria-label="Điều hướng chính">
-                <a th:attr="aria-current=${currentPath == '/' or currentPath == '/home' ? 'page' : null}"
-                   th:href="@{/home}">
+                <p class="nav-section-label">Không gian làm việc</p>
+                <a th:attr="aria-current=${currentPath == '/' or currentPath == '/home' ? 'page' : null}" th:href="@{/home}">
                     <svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><path d="m3 11 9-8 9 8M5 10v10h14V10M9 20v-6h6v6"></path></svg>
-                    <span class="nav-label">Trang chủ</span>
+                    <span class="nav-label">Tổng quan</span>
                 </a>
-                <a th:attr="aria-current=${#strings.startsWith(currentPath ?: '', '/catalog/rooms') ? 'page' : null}"
-                   th:href="@{/catalog/rooms}">
-                    <svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M4 21V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v16M8 7h2m4 0h2M8 11h2m4 0h2M8 15h2m4 0h2M2 21h20"></path></svg>
-                    <span class="nav-label">Phòng</span>
+                <a th:if="${navManager}" th:attr="aria-current=${#strings.startsWith(currentPath ?: '', '/dashboard') ? 'page' : null}" th:href="@{/dashboard}">
+                    <svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M4 13h6v8H4zM14 3h6v18h-6zM4 3h6v6H4z"></path></svg>
+                    <span class="nav-label">Bảng điều khiển</span>
                 </a>
-                <a th:attr="aria-current=${#strings.startsWith(currentPath ?: '', '/catalog/devices') ? 'page' : null}"
-                   th:href="@{/catalog/devices}">
-                    <svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M4 5h16v11H4zM8 20h8M12 16v4"></path></svg>
-                    <span class="nav-label">Thiết bị</span>
-                </a>
-                <a th:attr="aria-current=${#strings.startsWith(currentPath ?: '', '/registrations') ? 'page' : null}"
-                   th:href="@{/registrations}">
+                <a th:attr="aria-current=${#strings.startsWith(currentPath ?: '', '/registrations') ? 'page' : null}" th:href="@{/registrations}">
                     <svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M7 3h10v4H7zM6 5H4v16h16V5h-2M8 12h8M8 16h6"></path></svg>
-                    <span class="nav-label">Phiếu</span>
+                    <span class="nav-label">Phiếu đăng ký</span>
                 </a>
-                <a th:attr="aria-current=${#strings.startsWith(currentPath ?: '', '/sessions') ? 'page' : null}"
-                   th:href="@{/sessions}">
+                <a th:attr="aria-current=${#strings.startsWith(currentPath ?: '', '/sessions') ? 'page' : null}" th:href="@{/sessions}">
                     <svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M4 6h16v14H4zM8 3v6m8-6v6M4 10h16"></path></svg>
-                    <span class="nav-label">Phiên</span>
+                    <span class="nav-label">Phiên sử dụng</span>
                 </a>
-                <a th:attr="aria-current=${#strings.startsWith(currentPath ?: '', '/incidents') ? 'page' : null}"
-                   th:href="@{/incidents}">
+                <a th:attr="aria-current=${#strings.startsWith(currentPath ?: '', '/schedule/') ? 'page' : null}" th:href="@{/schedule/calendar}">
+                    <svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M4 5h16v16H4zM8 3v4m8-4v4M4 10h16M8 14h2m4 0h2m-8 3h2"></path></svg>
+                    <span class="nav-label">Lịch phòng</span>
+                </a>
+                <a th:attr="aria-current=${#strings.startsWith(currentPath ?: '', '/incidents') ? 'page' : null}" th:href="@{/incidents}">
                     <svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3 2.5 20h19zM12 9v5m0 3h.01"></path></svg>
                     <span class="nav-label">Sự cố</span>
                 </a>
-                <a th:attr="aria-current=${#strings.startsWith(currentPath ?: '', '/schedule/') ? 'page' : null}"
-                   th:href="@{/schedule/calendar}">
-                    <svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M4 5h16v16H4zM8 3v4m8-4v4M4 10h16M8 14h2m4 0h2m-8 3h2"></path></svg>
-                    <span class="nav-label">Lịch</span>
-                </a>
-                <a th:attr="aria-current=${#strings.startsWith(currentPath ?: '', '/notifications') ? 'page' : null}"
-                   th:href="@{/notifications}">
+                <a th:attr="aria-current=${#strings.startsWith(currentPath ?: '', '/notifications') ? 'page' : null}" th:href="@{/notifications}">
                     <svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"></path></svg>
                     <span class="nav-label">Thông báo</span>
                 </a>
-                <a th:if="${navManager}"
-                   th:attr="aria-current=${#strings.startsWith(currentPath ?: '', '/dashboard') ? 'page' : null}"
-                   th:href="@{/dashboard}">
-                    <svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M4 13h6v8H4zM14 3h6v18h-6zM4 3h6v6H4z"></path></svg>
-                    <span class="nav-label">Dashboard</span>
+
+                <p class="nav-section-label">Tài nguyên</p>
+                <a th:attr="aria-current=${#strings.startsWith(currentPath ?: '', '/catalog/rooms') ? 'page' : null}" th:href="@{/catalog/rooms}">
+                    <svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M4 21V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v16M8 7h2m4 0h2M8 11h2m4 0h2M8 15h2m4 0h2M2 21h20"></path></svg>
+                    <span class="nav-label">Phòng</span>
                 </a>
+                <a th:attr="aria-current=${#strings.startsWith(currentPath ?: '', '/catalog/devices') ? 'page' : null}" th:href="@{/catalog/devices}">
+                    <svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M4 5h16v11H4zM8 20h8M12 16v4"></path></svg>
+                    <span class="nav-label">Thiết bị</span>
+                </a>
+
                 <details class="nav-menu" th:if="${navManager}"
-                         th:classappend="${#strings.startsWith(currentPath ?: '', '/admin/users') or #strings.startsWith(currentPath ?: '', '/maintenances') or #strings.startsWith(currentPath ?: '', '/admin-blocks') or #strings.startsWith(currentPath ?: '', '/catalog/room-groups') or #strings.startsWith(currentPath ?: '', '/catalog/device-types')} ? ' nav-menu-active'">
+                         th:classappend="${#strings.startsWith(currentPath ?: '', '/admin/users') or #strings.startsWith(currentPath ?: '', '/maintenances') or #strings.startsWith(currentPath ?: '', '/admin-blocks') or #strings.startsWith(currentPath ?: '', '/catalog/room-groups') or #strings.startsWith(currentPath ?: '', '/catalog/device-types')} ? ' nav-menu-active'"
+                         th:open="${#strings.startsWith(currentPath ?: '', '/admin/users') or #strings.startsWith(currentPath ?: '', '/maintenances') or #strings.startsWith(currentPath ?: '', '/admin-blocks') or #strings.startsWith(currentPath ?: '', '/catalog/room-groups') or #strings.startsWith(currentPath ?: '', '/catalog/device-types')}">
                     <summary>
                         <svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3a3 3 0 1 0 0 6 3 3 0 0 0 0-6M5 21v-2a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v2M18 8l1 1 2-2"></path></svg>
-                        <span class="nav-label">Quản trị</span>
+                        <span class="nav-label">Quản trị hệ thống</span>
                     </summary>
                     <div class="nav-menu-panel">
-                        <a th:href="@{/admin/users}"><span class="nav-label">Quản lý tài khoản</span></a>
+                        <a th:href="@{/admin/users}"><span class="nav-label">Tài khoản</span></a>
                         <a th:href="@{/maintenances}"><span class="nav-label">Bảo trì</span></a>
                         <a th:href="@{/admin-blocks}"><span class="nav-label">Lịch chặn</span></a>
                         <a th:href="@{/catalog/room-groups}"><span class="nav-label">Nhóm phòng</span></a>
                         <a th:href="@{/catalog/device-types}"><span class="nav-label">Loại thiết bị</span></a>
                     </div>
                 </details>
-                <a class="nav-profile"
-                   th:attr="aria-current=${#strings.startsWith(currentPath ?: '', '/profile') ? 'page' : null}"
-                   th:href="@{/profile}">
-                    <svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8M4 21a8 8 0 0 1 16 0"></path></svg>
-                    <span class="nav-label">Hồ sơ</span>
-                </a>
             </nav>
+
+            <a class="sidebar-profile" th:attr="aria-current=${#strings.startsWith(currentPath ?: '', '/profile') ? 'page' : null}" th:href="@{/profile}">
+                <span class="profile-avatar" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path d="M12 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8M4 21a8 8 0 0 1 16 0"></path></svg>
+                </span>
+                <span class="profile-copy"><strong>Hồ sơ cá nhân</strong><small>Xem và cập nhật tài khoản</small></span>
+                <svg class="profile-arrow" aria-hidden="true" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"></path></svg>
+            </a>
+        </div>
+    </aside>
+
+    <header class="app-topbar">
+        <div class="topbar-context">
+            <span class="topbar-kicker">LAB OPERATIONS</span>
+            <strong>Trung tâm quản lý phòng thí nghiệm</strong>
+        </div>
+        <div class="topbar-actions">
+            <a class="topbar-action" th:href="@{/schedule/availability}">
+                <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 1 1-14 0 7 7 0 0 1 14 0"></path></svg>
+                <span>Kiểm tra khả dụng</span>
+            </a>
+            <a class="topbar-icon" th:href="@{/notifications}" aria-label="Mở thông báo">
+                <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"></path></svg>
+            </a>
         </div>
     </header>
+
     <div class="sidebar-scrim" aria-hidden="true" data-sidebar-dismiss></div>
     <script defer th:src="@{/js/app-ui.js}"></script>
 </th:block>

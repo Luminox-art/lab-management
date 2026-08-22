@@ -11,16 +11,27 @@
 <header class="app-header" th:replace="~{fragments/navigation :: header}"></header>
 <main class="page-shell" id="main-content" tabindex="-1">
     <section class="home-hero" aria-labelledby="home-heading">
-        <div>
+        <div class="hero-copy">
 			<p class="eyebrow" th:text="${profile.roleId == 'ADMIN' ? 'Không gian quản trị' : (profile.roleId == 'CBQL' ? 'Không gian quản lý' : (profile.roleId == 'GV' ? 'Không gian giảng viên' : 'Không gian sinh viên'))}"></p>
             <h1 id="home-heading" th:text="|Xin chào, ${profile.fullName}|"></h1>
-            <p class="subtitle">Truy cập nhanh các công việc và dữ liệu phù hợp với vai trò của bạn.</p>
+            <p class="subtitle">Một không gian duy nhất để điều phối phòng, thiết bị, lịch sử dụng và các công việc đang diễn ra.</p>
+            <div class="hero-actions">
+                <a class="button button-primary" th:if="${navCanCreateRegistration}" th:href="@{/registrations/new}"><svg class="button-icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"></path></svg>Tạo phiếu mới</a>
+                <a class="button button-primary" th:if="${navManager}" th:href="@{/admin/users}"><svg class="button-icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8"></path></svg>Quản lý tài khoản</a>
+            </div>
         </div>
-        <a class="button button-primary" th:if="${navCanCreateRegistration}" th:href="@{/registrations/new}"><svg class="button-icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"></path></svg>Tạo phiếu mới</a>
-        <a class="button button-primary" th:if="${navManager}" th:href="@{/admin/users}"><svg class="button-icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8"></path></svg>Quản lý tài khoản</a>
+        <div class="hero-console" aria-hidden="true">
+            <div class="hero-console-head"><span>Workspace</span><span>Live / 01</span></div>
+            <div class="hero-console-mark">LAB<span>/OS</span></div>
+            <div class="hero-console-list">
+                <div class="hero-console-row"><strong>Room network</strong><span></span></div>
+                <div class="hero-console-row"><strong>Device registry</strong><span></span></div>
+                <div class="hero-console-row"><strong>Schedule engine</strong><span></span></div>
+            </div>
+        </div>
     </section>
 
-    <section aria-labelledby="primary-work-heading">
+    <section class="home-section" aria-labelledby="primary-work-heading">
         <div class="section-heading"><h2 id="primary-work-heading">Công việc chính</h2></div>
         <div class="home-grid">
             <a class="home-card" th:href="@{/registrations}"><svg class="home-card-icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M7 3h10v4H7zM6 5H4v16h16V5h-2M8 12h8M8 16h6"></path></svg><strong>Phiếu đăng ký</strong><span th:text="${navManager ? 'Duyệt, từ chối và theo dõi phân bổ.' : 'Tạo và theo dõi các phiếu của bạn.'}"></span></a>
@@ -32,7 +43,7 @@
         </div>
     </section>
 
-    <section aria-labelledby="manager-work-heading" th:if="${navManager}">
+    <section class="home-section" aria-labelledby="manager-work-heading" th:if="${navManager}">
         <div class="section-heading"><h2 id="manager-work-heading">Quản trị vận hành</h2></div>
         <div class="home-grid">
             <a class="home-card" th:href="@{/admin/users}"><svg class="home-card-icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"></path></svg><strong>Quản lý tài khoản</strong><span>Tìm kiếm, chỉnh sửa, duyệt, khóa và mở khóa tài khoản.</span></a>

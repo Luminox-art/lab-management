@@ -27,7 +27,8 @@ class StageTwelveUiTest {
 		String navigation = read("templates/fragments/navigation.html");
 		assertThat(navigation).contains("th:if=\"${navManager}\"").contains("/dashboard").contains("/admin/users")
 				.contains("/maintenances").contains("/admin-blocks").contains("data-sidebar-toggle")
-				.contains("data-sidebar-dismiss");
+				.contains("data-sidebar-dismiss").contains("class=\"app-topbar\"").contains("class=\"system-state\"")
+				.contains("class=\"sidebar-profile\"");
 	}
 
 	@Test
@@ -39,6 +40,7 @@ class StageTwelveUiTest {
 				"--sidebar-collapsed-width", ".app-header:hover", "body.nav-open .app-header");
 		assertThat(javascript).contains("aria-invalid", "aria-busy", "showModal", "requestSubmit", "nav-open", "Escape",
 				"aria-expanded", "event.defaultPrevented");
+		assertThat(read("templates/home.html")).contains("class=\"hero-console\"", "class=\"home-section\"");
 	}
 
 	@Test
