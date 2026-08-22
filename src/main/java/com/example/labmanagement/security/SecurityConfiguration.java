@@ -53,10 +53,10 @@ public class SecurityConfiguration {
 				.requestMatchers("/catalog/**").hasAnyRole("CBQL", "ADMIN").anyRequest().authenticated())
 				.formLogin(form -> form.loginPage("/login").usernameParameter("email").failureUrl("/login?error")
 						.successHandler((req, res, auth) -> {
-						boolean mgr = auth.getAuthorities().stream().anyMatch(
-								a -> "ROLE_CBQL".equals(a.getAuthority()) || "ROLE_ADMIN".equals(a.getAuthority()));
-						res.sendRedirect(req.getContextPath() + (mgr ? "/dashboard" : "/home"));
-					}).permitAll())
+							boolean mgr = auth.getAuthorities().stream().anyMatch(
+									a -> "ROLE_CBQL".equals(a.getAuthority()) || "ROLE_ADMIN".equals(a.getAuthority()));
+							res.sendRedirect(req.getContextPath() + (mgr ? "/dashboard" : "/home"));
+						}).permitAll())
 				.logout(logout -> logout.logoutUrl("/logout").logoutSuccessUrl("/login?logout")
 						.invalidateHttpSession(true).clearAuthentication(true))
 				.sessionManagement(session -> session.sessionFixation(fixation -> fixation.changeSessionId()))
